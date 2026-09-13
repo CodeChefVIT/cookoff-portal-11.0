@@ -4,6 +4,15 @@ import { persist } from 'zustand/middleware';
 
 import { createSelectors } from './create-selectors';
 
+/**
+ * A stable shared reference for "no chain yet". A fresh `[]` literal as a
+ * selector's fallback (`state.chains[id] ?? []`) allocates a new array every
+ * call, which breaks `useSyncExternalStore`'s `Object.is` snapshot check and
+ * causes an infinite render loop ("The result of getSnapshot should be
+ * cached"). Reusing one constant keeps the fallback referentially stable.
+ */
+export const EMPTY_CHAIN: string[] = [];
+
 interface ChainState {
   /**
    * questionId -> ordered block ids currently assembled in the chain. This
@@ -26,12 +35,12 @@ const useChainStoreBase = create<ChainState>()(
   persist(
     (set, get) => ({
       chains: {},
-      getChain: questionId => get().chains[questionId] ?? [],
+      getChain: questionId => get().chains[questionId] ?? EMPTY_CHAIN,
       setChain: (questionId, blockIds) =>
         set(state => ({ chains: { ...state.chains, [questionId]: blockIds } })),
       addBlock: (questionId, blockId, index) =>
         set(state => {
-          const chain = state.chains[questionId] ?? [];
+          const chain = state.chains[questionId] ?? EMPTY_CHAIN;
           if (chain.includes(blockId)) return state;
           const next = [...chain];
           next.splice(index ?? next.length, 0, blockId);
@@ -41,12 +50,12 @@ const useChainStoreBase = create<ChainState>()(
         set(state => ({
           chains: {
             ...state.chains,
-            [questionId]: (state.chains[questionId] ?? []).filter(id => id !== blockId),
+            [questionId]: (state.chains[questionId] ?? EMPTY_CHAIN).filter(id => id !== blockId),
           },
         })),
       moveBlock: (questionId, from, to) =>
         set(state => {
-          const chain = state.chains[questionId] ?? [];
+          const chain = state.chains[questionId] ?? EMPTY_CHAIN;
           if (from === to || from < 0 || from >= chain.length || to < 0 || to >= chain.length) {
             return state;
           }

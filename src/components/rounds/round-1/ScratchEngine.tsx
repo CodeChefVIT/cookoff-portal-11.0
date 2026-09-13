@@ -11,7 +11,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 
-import { useChainStore } from '@/stores';
+import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
 import { useRoundTimer, useVisualBlocks, useVisualSubmissionState } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
@@ -43,7 +43,7 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
   const blocksQuery = useVisualBlocks(question.id);
   const blocks = blocksQuery.data ?? [];
 
-  const chain = useChainStore(state => state.chains[question.id] ?? []);
+  const chain = useChainStore(state => state.chains[question.id] ?? EMPTY_CHAIN);
   const setChain = useChainStore.use.setChain();
   const addBlock = useChainStore.use.addBlock();
   const removeBlock = useChainStore.use.removeBlock();

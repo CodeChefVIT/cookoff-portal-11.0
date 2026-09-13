@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 
 import { isApiError } from '@/api';
 import { Button } from '@/components/ui/button';
-import { useChainStore } from '@/stores';
+import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
 import { useRoundTimer, useVisualSubmission } from '../hooks';
 
@@ -20,7 +20,7 @@ export interface ChainSubmitButtonProps {
  * (read in `ScratchEngine`), never through this component directly.
  */
 export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
-  const chain = useChainStore(state => state.chains[questionId] ?? []);
+  const chain = useChainStore(state => state.chains[questionId] ?? EMPTY_CHAIN);
   const submission = useVisualSubmission(questionId);
   const { isExpired } = useRoundTimer();
 
