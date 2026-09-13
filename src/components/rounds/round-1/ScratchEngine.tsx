@@ -148,10 +148,10 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
             <ProblemPanel
               question={question}
               index={index}
-              heading={<ScratchPanelTitle>question</ScratchPanelTitle>}
+              heading={<ScratchPanelTitle>Question</ScratchPanelTitle>}
               className={cn(
                 scratchPanelVariants({ tone: 'question' }),
-                'block overflow-y-auto px-5 pt-0 pb-5 font-scratch-sans'
+                'block overflow-y-auto px-5 pt-0 pb-5'
               )}
             />
           }

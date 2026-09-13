@@ -14,7 +14,7 @@ export interface VisualQuestionWorkspaceProps {
  * composes `BuyInGate` (a pass-through: R1 has no buy-in) + `ScratchEngine`.
  */
 export function VisualQuestionWorkspace({ questionId }: VisualQuestionWorkspaceProps) {
-  const { question, isLoading, isError, refetch } = useQuestion(1, questionId);
+  const { question, index, isLoading, isError, refetch } = useQuestion(1, questionId);
 
   if (isLoading) {
     return (
@@ -41,7 +41,7 @@ export function VisualQuestionWorkspace({ questionId }: VisualQuestionWorkspaceP
 
   return (
     <BuyInGate questionId={questionId} roundId={1} question={question}>
-      <ScratchEngine question={question} />
+      <ScratchEngine question={question} index={index} />
     </BuyInGate>
   );
 }

@@ -9,6 +9,8 @@ import {
   Instrument_Serif,
   Inter,
   Quicksand,
+  Roboto,
+  Space_Grotesk,
 } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
@@ -55,6 +57,14 @@ const dmSerifText = DM_Serif_Text({
 const dmSans = DM_Sans({ variable: '--font-scratch-sans', subsets: ['latin'], axes: ['opsz'] });
 const quicksand = Quicksand({ variable: '--font-tab', subsets: ['latin'], weight: '700' });
 
+// Problem title + points chip, from Figma `Desktop - 15` (312:1101).
+const spaceGrotesk = Space_Grotesk({
+  variable: '--font-problem',
+  subsets: ['latin'],
+  weight: '700',
+});
+const roboto = Roboto({ variable: '--font-chip', subsets: ['latin'], weight: '700' });
+
 export const metadata: Metadata = {
   title: 'CookOff 11.0',
   description: 'CodeChef-VIT CookOff 11.0 — competitive programming contest platform.',
@@ -80,6 +90,8 @@ export default function RootLayout({
         dmSerifText.variable,
         dmSans.variable,
         quicksand.variable,
+        spaceGrotesk.variable,
+        roboto.variable,
         'font-sans',
         inter.variable
       )}

@@ -9,6 +9,15 @@ import { useRoundQuestions } from './use-round-questions';
  */
 export function useQuestion(roundId: number, questionId: string) {
   const list = useRoundQuestions(roundId);
-  const question = list.data?.find(candidate => candidate.id === questionId);
-  return { question, isLoading: list.isLoading, isError: list.isError, refetch: list.refetch };
+  const position = list.data?.findIndex(candidate => candidate.id === questionId) ?? -1;
+  const question = position >= 0 ? list.data?.[position] : undefined;
+  // 1-based, in the same order as the question tabs, for the "Problem N:" prefix.
+  const index = position >= 0 ? position + 1 : undefined;
+  return {
+    question,
+    index,
+    isLoading: list.isLoading,
+    isError: list.isError,
+    refetch: list.refetch,
+  };
 }

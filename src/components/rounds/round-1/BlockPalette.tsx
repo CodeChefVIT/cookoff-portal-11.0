@@ -60,7 +60,7 @@ export function BlockPalette({ blocks, onAdd, disabled }: BlockPaletteProps) {
       aria-label="Available blocks"
       className={cn(scratchPanelVariants({ tone: 'blocks' }), 'lg:h-[calc(100%-4px)]')}
     >
-      <ScratchPanelTitle>scratch blocks</ScratchPanelTitle>
+      <ScratchPanelTitle>Scratch Blocks</ScratchPanelTitle>
       {/* Figma's category tabs are dropped (L16), so the well rises to sit under the title. */}
       <div className="mx-3 mt-[14px] mb-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-[20px] border border-scratch-border/50 bg-scratch-well/50 p-3 lg:mx-[20px] lg:mb-[32px]">
         {blocks.length === 0 ? (

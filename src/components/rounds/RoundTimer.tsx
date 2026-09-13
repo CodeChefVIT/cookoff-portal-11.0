@@ -61,7 +61,8 @@ export function RoundTimer({ onExpire, className, variant }: RoundTimerProps) {
       {variant === 'box' ? (
         <>
           <Image
-            src="/clock.png"
+            src="/clock.svg"
+            unoptimized
             alt=""
             aria-hidden="true"
             width={36}

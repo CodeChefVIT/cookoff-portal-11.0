@@ -6,7 +6,7 @@ export const scratchPanelVariants = cva(
   {
     variants: {
       tone: {
-        question: 'rounded-none from-scratch-panel-q to-scratch-panel-end to-[69.712%]',
+        question: 'rounded-[20px] from-scratch-panel-q to-scratch-panel-end to-[69.712%]',
         chain: 'rounded-[20px] from-scratch-panel-chain to-scratch-panel-end to-[69.712%]',
         blocks: 'rounded-[20px] from-scratch-panel-blocks to-scratch-panel-end to-70%',
       },

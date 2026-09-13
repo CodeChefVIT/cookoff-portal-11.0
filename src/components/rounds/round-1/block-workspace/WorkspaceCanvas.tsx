@@ -112,7 +112,7 @@ export function WorkspaceCanvas({
       aria-label="Your chain"
       className={cn(scratchPanelVariants({ tone: 'chain' }), 'h-auto flex-1')}
     >
-      <ScratchPanelTitle>scratch interface</ScratchPanelTitle>
+      <ScratchPanelTitle>Scratch Interface</ScratchPanelTitle>
       {blocks.length > 0 && (
         <Button
           type="button"
