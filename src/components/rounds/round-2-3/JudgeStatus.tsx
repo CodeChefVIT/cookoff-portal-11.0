@@ -1,15 +1,18 @@
-import { isTerminalStatus, JUDGE0_LABELS } from '@/api';
-
 export interface JudgeStatusProps {
-  statusId?: number;
+  /** Overall verdict description from `dto.ResultResponse.description`, e.g. "All 3 testcases passed". */
+  description?: string;
   isPolling: boolean;
-  pollCapExceeded: boolean;
+  timedOut: boolean;
   onRetry?: () => void;
 }
 
-/** Judge0 id -> human label. `role="status"` announces the verdict once, not per poll tick. */
-export function JudgeStatus({ statusId, isPolling, pollCapExceeded, onRetry }: JudgeStatusProps) {
-  if (pollCapExceeded) {
+/**
+ * `GET /result/:id` long-polls server-side and returns a terminal verdict
+ * directly — no Judge0 numeric status id to map here. `role="status"`
+ * announces the verdict once, not per poll tick.
+ */
+export function JudgeStatus({ description, isPolling, timedOut, onRetry }: JudgeStatusProps) {
+  if (timedOut) {
     return (
       <div role="status" className="flex items-center gap-2 text-sm text-muted-foreground">
         <span>Taking longer than expected.</span>
@@ -20,14 +23,19 @@ export function JudgeStatus({ statusId, isPolling, pollCapExceeded, onRetry }: J
     );
   }
 
-  if (!statusId) return null;
+  if (isPolling) {
+    return (
+      <div role="status" aria-live="polite" className="text-sm text-muted-foreground">
+        Judging your submission…
+      </div>
+    );
+  }
 
-  const label = JUDGE0_LABELS[statusId] ?? 'Unknown';
-  const terminal = isTerminalStatus(statusId);
+  if (!description) return null;
 
   return (
     <div role="status" aria-live="polite" className="text-sm text-muted-foreground">
-      {terminal ? label : `${label}${isPolling ? '…' : ''}`}
+      {description}
     </div>
   );
 }

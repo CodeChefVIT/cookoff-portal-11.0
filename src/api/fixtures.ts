@@ -1,12 +1,11 @@
 /**
- * Deterministic fixtures for every R2/R3 endpoint (L1 — `router.go` wires
- * only `/health` and `/docs`, so nothing below is real backend behaviour).
+ * Deterministic fixtures for the endpoints not yet safe to hit for local/CI
+ * development (`GET /getTime` doesn't exist on the backend at all — L2).
  * Selected when `NEXT_PUBLIC_USE_MOCK_API=true`; also reused directly by
  * component/integration tests so test data and demo data never drift apart.
- *
- * Flip the env var off the moment the backend ships these endpoints — no
- * component changes are required, since every resource module in `src/api`
- * calls `readFixture` behind the exact same return type as the real request.
+ * Every resource module calls `readFixture` behind the exact same return
+ * type as the real request, so flipping the env var off requires no
+ * component changes.
  */
 import type { Question, Testcase } from '@/components/rounds/types';
 
@@ -79,6 +78,8 @@ const R3_FIXTURE_QUESTIONS: Question[] = R3_QUESTION_IDS.map((id, index) =>
   })
 );
 
+const ALL_FIXTURE_QUESTIONS = [...R2_FIXTURE_QUESTIONS, ...R3_FIXTURE_QUESTIONS];
+
 const FIXTURE_TESTCASES: Record<string, Testcase[]> = {};
 function testcasesFor(questionId: string): Testcase[] {
   FIXTURE_TESTCASES[questionId] ??= [1, 2, 3].map(index => ({
@@ -93,9 +94,12 @@ function testcasesFor(questionId: string): Testcase[] {
   return FIXTURE_TESTCASES[questionId];
 }
 
+const FIXTURE_SUBMISSION_QUESTIONS = new Map<string, string>();
+
 interface FixtureMap {
   session: [[], Session];
   questionsByRound: [[round: number], Question[]];
+  questionById: [[questionId: string], Question];
   publicTestcases: [[questionId: string], Testcase[]];
   attempt: [[questionId: string], AttemptOutcome];
   submit: [[payload: SubmissionRequestInput], { submissionId: string }];
@@ -114,7 +118,7 @@ function buildFixture<K extends keyof FixtureMap>(
       balance: 237,
       score: 40,
       roundQualified: 3,
-      isBanned: false,
+      questions: [],
     };
     return session as FixtureMap[K][1];
   }
@@ -123,37 +127,46 @@ function buildFixture<K extends keyof FixtureMap>(
     const questions = round === 3 ? R3_FIXTURE_QUESTIONS : R2_FIXTURE_QUESTIONS;
     return questions as FixtureMap[K][1];
   }
+  if (key === 'questionById') {
+    const [questionId] = args as FixtureMap['questionById'][0];
+    const question = ALL_FIXTURE_QUESTIONS.find(candidate => candidate.id === questionId);
+    if (!question) throw new Error(`No fixture question registered for "${questionId}"`);
+    return question as FixtureMap[K][1];
+  }
   if (key === 'publicTestcases') {
     const [questionId] = args as FixtureMap['publicTestcases'][0];
-    return testcasesFor(questionId) as FixtureMap[K][1];
+    return testcasesFor(questionId).filter(testcase => !testcase.hidden) as FixtureMap[K][1];
   }
   if (key === 'attempt') {
     const outcome: AttemptOutcome = { unlocked: true, insufficientBalance: false };
     return outcome as FixtureMap[K][1];
   }
   if (key === 'submit') {
-    return { submissionId: `fixture-submission-${Date.now()}` } as FixtureMap[K][1];
+    const [payload] = args as FixtureMap['submit'][0];
+    const submissionId = `fixture-submission-${Date.now()}`;
+    FIXTURE_SUBMISSION_QUESTIONS.set(submissionId, payload.questionId);
+    return { submissionId } as FixtureMap[K][1];
   }
   if (key === 'result') {
     const [submissionId] = args as FixtureMap['result'][0];
+    const questionId = FIXTURE_SUBMISSION_QUESTIONS.get(submissionId) ?? R2_QUESTION_IDS[0];
+    const cases = testcasesFor(questionId);
     const verdict: SubmissionVerdict = {
       submissionId,
-      statusId: 3,
-      statusDescription: 'Accepted',
-      testcasesPassed: 3,
-      testcasesFailed: 0,
-      results: [1, 2, 3].map(index => ({
-        testcaseId: `tc-${index}`,
-        hidden: index === 3,
-        passed: true,
-        statusId: 3,
-        statusDescription: 'Accepted',
+      questionId,
+      passed: cases.length,
+      failed: 0,
+      runtime: 0.02,
+      memory: 256,
+      submissionTime: new Date().toISOString(),
+      description: `All ${cases.length} testcases passed`,
+      testcases: cases.map(testcase => ({
+        testcaseId: testcase.id,
         runtime: 0.02,
         memory: 256,
-        stdout: index === 3 ? undefined : 'Hello World !',
+        status: 'Success',
+        description: 'Success',
       })),
-      pointsAwarded: 10,
-      alreadyAnswered: false,
     };
     return verdict as FixtureMap[K][1];
   }
