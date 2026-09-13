@@ -9,7 +9,7 @@ import { Button, buttonVariants } from '@/components/ui/button';
 
 import { useAttempt, useSession } from './hooks';
 import { getRoundConfig } from './round-config';
-import type { Question } from './types';
+import type { Question, RoundId } from './types';
 
 /**
  * SHARED BUY-IN GATE
@@ -21,7 +21,7 @@ import type { Question } from './types';
 export interface BuyInGateProps {
   children: ReactNode;
   questionId: string;
-  roundId: 2 | 3;
+  roundId: RoundId;
   question: Question;
   /** Re-locks the editor when `/submit` reports the attempt was never purchased (stale client cache). */
   forceLocked?: boolean;

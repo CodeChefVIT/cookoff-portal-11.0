@@ -1,10 +1,11 @@
 import { getRoundConfig } from './round-config';
 import { RoundTimer } from './RoundTimer';
+import type { RoundId } from './types';
 
 export type IntermissionVariant = 'pending' | 'ended' | 'notQualified' | 'finished';
 
 export interface RoundIntermissionProps {
-  roundId: 2 | 3;
+  roundId: RoundId;
   variant: IntermissionVariant;
 }
 

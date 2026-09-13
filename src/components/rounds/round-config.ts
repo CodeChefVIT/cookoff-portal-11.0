@@ -1,21 +1,25 @@
-import type { Question } from './types';
+import type { Question, RoundId } from './types';
 
 /**
- * The single seam between Round 2 ("Chef's Pantry") and Round 3
- * ("the Crucible"). Every behavioural difference between the two rounds
- * belongs here — a `roundId === 3` branch anywhere else in `src/components`
+ * The single seam between Round 1 ("Scratch"), Round 2 ("Chef's Pantry") and
+ * Round 3 ("the Crucible"). Every behavioural difference between the rounds
+ * belongs here — a `roundId === <n>` branch anywhere else in `src/components`
  * is a defect (see AGENTS.md "Rounds architecture").
  */
 export interface RoundConfig {
-  id: 2 | 3;
+  id: RoundId;
   name: string;
   label: string;
-  /** R2 gates the editor behind `POST /question/:id/attempt`; R3 does not. */
+  /** Which gameplay engine renders the question: block-chain (R1) or Monaco (R2/R3). */
+  engine: 'visual' | 'code';
+  /** R1 has no buy-in; R2 gates the editor behind `POST /question/:id/attempt`; R3 does not. */
   hasBuyIn: boolean;
-  /** R3 hides the balance HUD entirely (product doc: "as minimal as possible"). */
+  /** R1/R3 hide the balance HUD entirely — R1 has no in-round currency, R3 wants it minimal. */
   hasCurrency: boolean;
   /** R3 drops chrome beyond the timer and question tabs. */
   minimalHud: boolean;
+  /** R1's Submit lives in the header next to the timer, not inside the engine. */
+  headerSubmit: boolean;
   expectedQuestionCount: number;
   nominalDurationLabel: string;
   /** R3 has no next round: completion freezes the platform. */
@@ -27,14 +31,34 @@ export interface RoundConfig {
   };
 }
 
-const ROUND_CONFIG: Record<2 | 3, RoundConfig> = {
+const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
+  1: {
+    id: 1,
+    name: 'Scratch',
+    label: 'Round 1',
+    engine: 'visual',
+    hasBuyIn: false,
+    hasCurrency: false,
+    minimalHud: false,
+    headerSubmit: true,
+    expectedQuestionCount: 4,
+    nominalDurationLabel: '01:00',
+    isFinalRound: false,
+    intermissionCopy: {
+      pending: 'Round 1 begins shortly. Warm up your block-building skills.',
+      ended: 'Round 1 has ended. Thank you for cooking — results are being tallied.',
+      notQualified: 'Round 1 hasn’t opened for you yet.',
+    },
+  },
   2: {
     id: 2,
     name: "Chef's Pantry",
     label: 'Round 2',
+    engine: 'code',
     hasBuyIn: true,
     hasCurrency: true,
     minimalHud: false,
+    headerSubmit: false,
     expectedQuestionCount: 12,
     nominalDurationLabel: '01:30',
     isFinalRound: false,
@@ -48,9 +72,11 @@ const ROUND_CONFIG: Record<2 | 3, RoundConfig> = {
     id: 3,
     name: 'the Crucible',
     label: 'Round 3',
+    engine: 'code',
     hasBuyIn: false,
     hasCurrency: false,
     minimalHud: true,
+    headerSubmit: false,
     expectedQuestionCount: 4,
     nominalDurationLabel: '02:00',
     isFinalRound: true,
@@ -63,7 +89,7 @@ const ROUND_CONFIG: Record<2 | 3, RoundConfig> = {
   },
 };
 
-export function getRoundConfig(roundId: 2 | 3): RoundConfig {
+export function getRoundConfig(roundId: RoundId): RoundConfig {
   return ROUND_CONFIG[roundId];
 }
 

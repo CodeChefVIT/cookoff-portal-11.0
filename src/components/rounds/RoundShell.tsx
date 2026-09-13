@@ -6,22 +6,25 @@ import { useRoundQuestions, useSession } from './hooks';
 import { QuestionTabs } from './QuestionTabs';
 import { getRoundConfig } from './round-config';
 import { RoundHeader } from './RoundHeader';
+import type { RoundId } from './types';
 
 /**
  * SHARED SHELL COMPONENT
  *
- * The "Master Layout" for Round 2 and Round 3 (Round 1 owns its own shell —
- * see AGENTS.md). Renders `RoundHeader` (with `CurrencyBox` config-gated)
- * and the question tab strip, then the round Engine as `children`.
+ * The "Master Layout" for all three rounds. Renders `RoundHeader` (with
+ * `CurrencyBox`/`headerAction` config-gated) and the question tab strip,
+ * then the round Engine as `children`.
  */
 export interface RoundShellProps {
   children: ReactNode;
-  roundId: 2 | 3;
+  roundId: RoundId;
   /** Highlights the active tab when viewing a single question. */
   activeQuestionId?: string;
+  /** Rendered in the header next to the timer when `config.headerSubmit` is true (R1's Submit button). */
+  headerAction?: ReactNode;
 }
 
-export function RoundShell({ children, roundId, activeQuestionId }: RoundShellProps) {
+export function RoundShell({ children, roundId, activeQuestionId, headerAction }: RoundShellProps) {
   const config = getRoundConfig(roundId);
   const session = useSession();
   const { data: questions } = useRoundQuestions(roundId);
@@ -31,6 +34,7 @@ export function RoundShell({ children, roundId, activeQuestionId }: RoundShellPr
       <RoundHeader
         roundId={roundId}
         balance={config.hasCurrency ? session.data?.balance : undefined}
+        headerAction={headerAction}
       />
       {!config.minimalHud && questions && questions.length > 0 && (
         <QuestionTabs roundId={roundId} questions={questions} activeId={activeQuestionId} />
