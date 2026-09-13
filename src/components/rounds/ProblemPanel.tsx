@@ -1,6 +1,6 @@
 import { QuestionHeader } from '@/components/ui/question-header';
 
-import type { Question } from '../types';
+import type { Question } from './types';
 
 export interface ProblemPanelProps {
   question: Question;

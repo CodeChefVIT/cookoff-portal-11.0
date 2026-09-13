@@ -2,7 +2,6 @@
 
 import { Dialog } from '@base-ui/react/dialog';
 
-import type { SubmissionVerdict } from '@/api';
 import { buttonVariants } from '@/components/ui/button';
 
 import type { Question } from './types';
@@ -10,21 +9,28 @@ import type { Question } from './types';
 /**
  * SHARED RESULT MODAL
  *
- * First-solve payout celebration only — the full verdict (pass/fail per
- * case) renders inline in `TestcasePanel`, matching Desktop - 15.png. Never
- * shows payout copy for `alreadyAnswered` (payout fires once, LLD §2.6).
+ * First-solve payout celebration, shared by every round's engine (R1's
+ * `ScratchEngine` and R2/R3's `CodeEngine`) — the full verdict (pass/fail
+ * per testcase, or the visual chain's correctness) renders inline in each
+ * engine, matching the Figma. Never shows payout copy for `alreadyAnswered`
+ * (payout fires once, LLD §2.6). The caller decides *when* to open this —
+ * it renders unconditionally once mounted.
  */
 export interface ResultModalProps {
   open: boolean;
   onClose: () => void;
-  result: SubmissionVerdict;
   question: Question;
+  pointsAwarded: number;
+  alreadyAnswered: boolean;
 }
 
-export function ResultModal({ open, onClose, result, question }: ResultModalProps) {
-  const allPassed = result.testcasesFailed === 0 && result.testcasesPassed > 0;
-  if (!allPassed) return null;
-
+export function ResultModal({
+  open,
+  onClose,
+  question,
+  pointsAwarded,
+  alreadyAnswered,
+}: ResultModalProps) {
   return (
     <Dialog.Root open={open} onOpenChange={next => !next && onClose()}>
       <Dialog.Portal>
@@ -40,9 +46,9 @@ export function ResultModal({ open, onClose, result, question }: ResultModalProp
           <Dialog.Description className="mt-1 text-sm text-muted-foreground">
             {question.title}
           </Dialog.Description>
-          {!result.alreadyAnswered ? (
+          {!alreadyAnswered ? (
             <div className="mt-4 flex justify-center gap-6 text-sm">
-              <span className="text-primary">+{question.points} score</span>
+              <span className="text-primary">+{pointsAwarded} score</span>
               {Number(question.reward) > 0 && (
                 <span className="text-coin">+{question.reward} coins</span>
               )}

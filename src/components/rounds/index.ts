@@ -13,5 +13,6 @@ export * from './RoundIntermission';
 export * from './QuestionTabs';
 export * from './BuyInGate';
 export * from './QuestionList';
+export * from './ProblemPanel';
 export * from './ResultModal';
 export * from './hooks';
