@@ -15,10 +15,12 @@ export interface AttemptOutcome {
 }
 
 /**
- * `POST /attempts/:id` (`attempt_routes.go`). No request body; the fixed
- * `question.buyIn` is debited server-side and a pre-seeded `available` row is
- * upgraded to `bought`. A `409` means the question is already bought or
- * answered — per L3 that is a successful unlock, never an error.
+ * `POST /attempts/:id` (`internal/router/attempt_routes.go` ->
+ * `AttemptController.CreateAttempt`). No request body; the question's fixed
+ * `buy_in` is debited server-side in one transaction. A `409` means an
+ * `attempts` row already exists for this `(user, question)` — per L3 that
+ * is treated as a successful unlock, never as an error. `402` is
+ * "insufficient balance".
  */
 export async function createAttempt(questionId: string): Promise<AttemptOutcome> {
   if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('attempt', questionId);

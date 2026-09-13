@@ -7,6 +7,8 @@ import type { SubmissionVerdict } from '@/api';
 import type { Testcase } from '../../types';
 import { TestcasePanel } from '../TestcasePanel';
 
+// `GET /question/:id/testcases/public` only ever returns visible cases —
+// TestcasePanel receives exactly that list.
 const visibleCase: Testcase = {
   id: 'tc1',
   questionId: 'q1',
@@ -17,32 +19,20 @@ const visibleCase: Testcase = {
   hidden: false,
 };
 
-const hiddenCase: Testcase = {
-  id: 'tc2',
-  questionId: 'q1',
-  input: 'super-secret-hidden-input',
-  expectedOutput: 'super-secret-hidden-output',
-  memory: 256,
-  runtime: 0.01,
-  hidden: true,
-};
-
+// `dto.ResultResponse.testcases` covers every testcase for the question
+// (public + hidden — the submission runs against all of them via
+// GetAllTestCasesByQuestion). "tc2" has no matching entry in the public
+// list above, so TestcasePanel must treat it as hidden by exclusion.
 const verdict: SubmissionVerdict = {
   submissionId: 'sub1',
-  statusId: 4,
-  testcasesPassed: 1,
-  testcasesFailed: 1,
-  results: [
-    { testcaseId: 'tc1', hidden: false, passed: true, stdout: 'super-secret-visible-output' },
-    {
-      testcaseId: 'tc2',
-      hidden: true,
-      passed: false,
-      stdout: 'a-hidden-actual-output-that-must-never-leak',
-    },
+  questionId: 'q1',
+  passed: 1,
+  failed: 1,
+  description: '1/2 testcases passed (Wrong Answer)',
+  testcases: [
+    { testcaseId: 'tc1', status: 'Success', description: 'Success' },
+    { testcaseId: 'tc2', status: 'Wrong Answer', description: 'super-secret-hidden-detail' },
   ],
-  pointsAwarded: 0,
-  alreadyAnswered: false,
 };
 
 function renderPanel(testcases: Testcase[]) {
@@ -52,28 +42,28 @@ function renderPanel(testcases: Testcase[]) {
 }
 
 describe('TestcasePanel — hidden testcase masking', () => {
-  it('never renders a hidden case input, expected output, or actual stdout', () => {
-    renderPanel([visibleCase, hiddenCase]);
+  it('never renders a hidden case input, expected output, or actual verdict detail', () => {
+    renderPanel([visibleCase]);
 
     expect(screen.queryByText('super-secret-hidden-input')).not.toBeInTheDocument();
     expect(screen.queryByText('super-secret-hidden-output')).not.toBeInTheDocument();
-    expect(screen.queryByText(/a-hidden-actual-output/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/super-secret-hidden-detail/)).not.toBeInTheDocument();
   });
 
   it('shows only the aggregate pass/fail count for hidden cases', () => {
-    renderPanel([visibleCase, hiddenCase]);
+    renderPanel([visibleCase]);
 
-    expect(screen.getByText(/Hidden Testcases/)).toBeInTheDocument();
+    expect(screen.getByText(/Hidden Testcases 0\/1/)).toBeInTheDocument();
   });
 
   it('still shows visible case content', () => {
-    renderPanel([visibleCase, hiddenCase]);
+    renderPanel([visibleCase]);
 
     expect(screen.getByText('super-secret-visible-input')).toBeInTheDocument();
   });
 
   it('renders the verdict banner with pass/total counts', () => {
-    renderPanel([visibleCase, hiddenCase]);
+    renderPanel([visibleCase]);
 
     expect(screen.getByText(/1\/2 Test Cases Passed/)).toBeInTheDocument();
   });

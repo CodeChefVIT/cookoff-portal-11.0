@@ -1,17 +1,13 @@
+import * as z from 'zod';
+
 /**
  * Wire-casing seam (see AGENTS.md "Rounds architecture", conflict C6).
  *
- * Three casings are attested across the sources for the same backend:
- * - `cookoff-portal-11.0/src/components/rounds/types.ts` (this repo, before
- *   this change) — camelCase.
- * - `cookoff-admin-11.0/src/api/*.ts` — PascalCase.
- * - `database/schema/*.sql` — snake_case.
- *
- * No R2/R3 endpoint is implemented (`router.go` wires only /health, /docs),
- * so none of the three is a confirmed wire format. `pickField` accepts all
- * three spellings of a field and normalises to camelCase before the domain
- * Zod schema runs, so a future casing correction is a one-line change here
- * instead of a call-site-by-call-site refactor.
+ * The live backend (confirmed against `cookoff-11.0-be` after it wired real
+ * routes) uses snake_case JSON tags throughout (`internal/dto/*.go`).
+ * `pickField` still tries camelCase and PascalCase first for resilience —
+ * cheap insurance against a future DTO rename — before falling back to
+ * snake_case, so a casing change stays a one-line fix here.
  */
 
 export type WireRecord = Record<string, unknown>;
@@ -65,4 +61,19 @@ export function isSuccessEnvelope(value: unknown): value is SuccessEnvelope<unkn
 export function unwrapEnvelope(value: unknown): unknown {
   if (isSuccessEnvelope(value)) return value.data;
   return value;
+}
+
+/**
+ * Wraps a "shape" schema (validating the domain payload) so it also accepts
+ * the live backend's `dto.SuccessResponse{success,message,data}` envelope,
+ * unwrapping `data` first. Every real GET/POST response is wrapped this way
+ * (`internal/dto/common.go`); fixtures and unit tests pass the domain shape
+ * directly, so this is applied at the call site (each `getX()`/`postX()`
+ * function), not inside the shape schemas themselves.
+ */
+export function envelope<T extends z.ZodType>(inner: T) {
+  return z
+    .unknown()
+    .transform(raw => unwrapEnvelope(raw))
+    .pipe(inner);
 }

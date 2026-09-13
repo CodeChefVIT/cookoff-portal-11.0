@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { questionListSchema, questionSchema } from '../questions';
+import type { Question } from '@/components/rounds/types';
+
+import { mergeAttemptStatus, questionSchema } from '../questions';
 
 describe('questionSchema', () => {
   it('parses camelCase wire fields (portal convention)', () => {
@@ -64,22 +66,40 @@ describe('questionSchema', () => {
   });
 });
 
-describe('questionListSchema', () => {
-  it('unwraps the /question/round envelope (dto.SuccessResponse)', () => {
-    const parsed = questionListSchema.parse({
-      success: true,
-      message: 'Questions retrieved',
-      data: [{ id: 'q1', title: 'Assemble', type: 'visual', round: 1, points: 10, buy_in: '0' }],
-    });
-    expect(parsed).toHaveLength(1);
-    expect(parsed[0]).toMatchObject({ id: 'q1', type: 'visual', round: 1, buyIn: '0' });
+describe('mergeAttemptStatus', () => {
+  const base = questionSchema.parse({ id: 'q0', title: 'T', round: 1 });
+  const make = (id: string, overrides: Partial<Question> = {}): Question => ({
+    ...base,
+    id,
+    ...overrides,
   });
 
-  it('treats a null data payload as an empty list', () => {
-    expect(questionListSchema.parse({ success: true, message: 'ok', data: null })).toEqual([]);
+  it('maps answered → solved + bought, bought → bought, available → neither', () => {
+    const [answered, bought, available] = mergeAttemptStatus(
+      [make('a'), make('b'), make('c')],
+      [
+        { id: 'a', title: 'A', points: 10, round: 1, attemptStatus: 'answered' },
+        { id: 'b', title: 'B', points: 10, round: 1, attemptStatus: 'bought' },
+        { id: 'c', title: 'C', points: 10, round: 1, attemptStatus: 'available' },
+      ]
+    );
+    expect(answered).toMatchObject({ solved: true, bought: true });
+    expect(bought).toMatchObject({ solved: false, bought: true });
+    expect(available).toMatchObject({ solved: false, bought: false });
   });
 
-  it('still accepts a bare array', () => {
-    expect(questionListSchema.parse([{ id: 'q2', title: 'T', round: 2 }])).toHaveLength(1);
+  it('leaves questions the dashboard does not list untouched', () => {
+    const question = make('x', { bought: true });
+    expect(
+      mergeAttemptStatus(
+        [question],
+        [{ id: 'other', title: 'O', points: 1, round: 1, attemptStatus: 'answered' }]
+      )[0]
+    ).toBe(question);
+  });
+
+  it('returns the list as-is while the session is still loading', () => {
+    const questions = [make('a')];
+    expect(mergeAttemptStatus(questions, undefined)).toBe(questions);
   });
 });

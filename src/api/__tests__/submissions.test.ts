@@ -1,29 +1,17 @@
 import { describe, expect, it } from 'vitest';
 
-import { isTerminalStatus, JUDGE0_LABELS, submissionRequestSchema } from '../submissions';
+import { isPassed, PASSED_STATUS, submissionRequestSchema } from '../submissions';
 
-describe('isTerminalStatus', () => {
-  it('is not terminal for in-queue (1) or processing (2)', () => {
-    expect(isTerminalStatus(1)).toBe(false);
-    expect(isTerminalStatus(2)).toBe(false);
+describe('isPassed', () => {
+  it('is true only for the Judge0 "Success" status string', () => {
+    expect(isPassed({ status: 'Success' })).toBe(true);
+    expect(isPassed({ status: PASSED_STATUS })).toBe(true);
   });
 
-  it('is terminal for every id 3 through 14', () => {
-    for (let id = 3; id <= 14; id++) {
-      expect(isTerminalStatus(id)).toBe(true);
-    }
-  });
-
-  it('is not terminal for undefined', () => {
-    expect(isTerminalStatus(undefined)).toBe(false);
-  });
-});
-
-describe('JUDGE0_LABELS', () => {
-  it('has a human label for every terminal status id', () => {
-    for (let id = 1; id <= 14; id++) {
-      expect(JUDGE0_LABELS[id]).toBeTruthy();
-    }
+  it('is false for any other status', () => {
+    expect(isPassed({ status: 'Wrong Answer' })).toBe(false);
+    expect(isPassed({ status: 'Time Limit Exceeded' })).toBe(false);
+    expect(isPassed({ status: 'Compilation Error' })).toBe(false);
   });
 });
 
