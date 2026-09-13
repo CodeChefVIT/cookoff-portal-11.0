@@ -1,37 +1,41 @@
+'use client';
+
 import type { ReactNode } from 'react';
 
-import type { Question } from './types';
+import { useRoundQuestions, useSession } from './hooks';
+import { QuestionTabs } from './QuestionTabs';
+import { getRoundConfig } from './round-config';
+import { RoundHeader } from './RoundHeader';
 
 /**
  * SHARED SHELL COMPONENT
  *
- * This is the "Master Layout" for all rounds (1, 2, and 3).
- * It handles:
- * - Round Timer (countdown/elapsed)
- * - Question Header (Title, Points, Constraints)
- * - Bounty Toggle
- *
- * It conditionally renders the <CurrencyBox> based on the roundId.
- * (Note: Round 3 does NOT show the currency box).
+ * The "Master Layout" for Round 2 and Round 3 (Round 1 owns its own shell —
+ * see AGENTS.md). Renders `RoundHeader` (with `CurrencyBox` config-gated)
+ * and the question tab strip, then the round Engine as `children`.
  */
 export interface RoundShellProps {
-  /** Page content rendered within the shell (the round Engine). */
   children: ReactNode;
-  /** Current round id used to select styling and hide currency for round 3. */
-  roundId: number;
-  /** Current question shown to the user. */
-  question: Question;
+  roundId: 2 | 3;
+  /** Highlights the active tab when viewing a single question. */
+  activeQuestionId?: string;
 }
 
-export function RoundShell({ children, roundId, question }: RoundShellProps) {
-  void roundId;
-  void question;
+export function RoundShell({ children, roundId, activeQuestionId }: RoundShellProps) {
+  const config = getRoundConfig(roundId);
+  const session = useSession();
+  const { data: questions } = useRoundQuestions(roundId);
+
   return (
-    <div className="round-shell">
-      {/* Timer Logic */}
-      {/* Header Logic */}
-      {/* {roundId !== 3 && <CurrencyBox />} */}
-      {children}
+    <div className="flex min-h-dvh flex-col bg-background">
+      <RoundHeader
+        roundId={roundId}
+        balance={config.hasCurrency ? session.data?.balance : undefined}
+      />
+      {!config.minimalHud && questions && questions.length > 0 && (
+        <QuestionTabs roundId={roundId} questions={questions} activeId={activeQuestionId} />
+      )}
+      <main className="flex-1">{children}</main>
     </div>
   );
 }
