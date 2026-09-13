@@ -6,40 +6,70 @@ import { createQueryKeys } from '@/lib/query';
 import { api } from './client';
 import { readFixture } from './fixtures';
 import { request } from './request';
-import { normalizeWire } from './wire';
+import { envelope, normalizeWire } from './wire';
+
+const DASHBOARD_QUESTION_FIELDS = ['id', 'title', 'points', 'round', 'attemptStatus'] as const;
+
+/** One row of `DashboardResponse.questions` — the current round only (server-scoped by round_qualified). */
+const dashboardQuestionShape = z.object({
+  id: z.string(),
+  title: z.string(),
+  points: z.coerce.number(),
+  round: z.coerce.number(),
+  attemptStatus: z.union([z.literal('available'), z.literal('bought'), z.literal('answered')]),
+});
+
+export type DashboardQuestionSummary = z.infer<typeof dashboardQuestionShape>;
+
+function parseDashboardQuestions(raw: unknown): DashboardQuestionSummary[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(row =>
+    dashboardQuestionShape.parse(
+      normalizeWire(row as Record<string, unknown>, DASHBOARD_QUESTION_FIELDS)
+    )
+  );
+}
+
+const DASHBOARD_FIELDS = [
+  'id',
+  'email',
+  'balance',
+  'score',
+  'roundQualified',
+  'questions',
+] as const;
+
+const sessionShape = z.object({
+  userId: z.string(),
+  email: z.string(),
+  balance: z.coerce.number(),
+  score: z.coerce.number(),
+  roundQualified: z.coerce.number().int().min(0),
+  /** Current-round questions with this user's per-question attempt status (dto.DashboardResponse.questions). */
+  questions: z.array(dashboardQuestionShape),
+});
 
 /**
- * `GET /dashboard` — SPEC-ONLY (LLD §2.2). No response shape is documented;
- * this schema covers exactly the fields R2/R3 actually need (balance, score,
- * round_qualified) and is tolerant of camel/Pascal/snake casing (C6).
+ * `GET /dashboard` (`internal/controllers/dashboard.go`). No `is_banned`
+ * field is returned here — a banned user is rejected by `BanCheckUser`
+ * middleware before this handler runs, so the frontend never needs to
+ * branch on it directly.
  */
-export const sessionSchema = z
-  .object({})
-  .loose()
-  .transform(raw => {
-    const wire = normalizeWire(raw, [
-      'userId',
-      'email',
-      'balance',
-      'score',
-      'roundQualified',
-      'isBanned',
-    ]);
-    return {
-      userId: z.string().parse(wire.userId ?? ''),
-      email: z.string().parse(wire.email ?? ''),
-      balance: z.coerce.number().parse(wire.balance ?? 0),
-      score: z.coerce.number().parse(wire.score ?? 0),
-      roundQualified: z.coerce
-        .number()
-        .int()
-        .min(0)
-        .parse(wire.roundQualified ?? 0),
-      isBanned: z.coerce.boolean().parse(wire.isBanned ?? false),
-    };
-  });
+export const sessionSchema = envelope(
+  z.looseObject({}).transform(raw => {
+    const wire = normalizeWire(raw, DASHBOARD_FIELDS);
+    return sessionShape.parse({
+      userId: wire.id,
+      email: wire.email,
+      balance: wire.balance,
+      score: wire.score,
+      roundQualified: wire.roundQualified,
+      questions: parseDashboardQuestions(wire.questions),
+    });
+  })
+);
 
-export type Session = z.infer<typeof sessionSchema>;
+export type Session = z.infer<typeof sessionShape>;
 
 export const sessionKeys = createQueryKeys('session');
 

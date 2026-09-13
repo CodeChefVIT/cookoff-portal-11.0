@@ -11,18 +11,28 @@ import type { Question } from './types';
  * SHARED RESULT MODAL
  *
  * First-solve payout celebration only — the full verdict (pass/fail per
- * case) renders inline in `TestcasePanel`, matching Desktop - 15.png. Never
- * shows payout copy for `alreadyAnswered` (payout fires once, LLD §2.6).
+ * case) renders inline in `TestcasePanel`, matching Desktop - 15.png.
+ * `dto.ResultResponse` carries no "already answered" flag (payout still
+ * fires at most once server-side per LLD §2.6) — `wasAlreadySolved` is
+ * `question.solved` captured *before* this submission, so a resubmission
+ * after an existing solve never re-shows payout copy.
  */
 export interface ResultModalProps {
   open: boolean;
   onClose: () => void;
   result: SubmissionVerdict;
   question: Question;
+  wasAlreadySolved: boolean;
 }
 
-export function ResultModal({ open, onClose, result, question }: ResultModalProps) {
-  const allPassed = result.testcasesFailed === 0 && result.testcasesPassed > 0;
+export function ResultModal({
+  open,
+  onClose,
+  result,
+  question,
+  wasAlreadySolved,
+}: ResultModalProps) {
+  const allPassed = result.failed === 0 && result.passed > 0;
   if (!allPassed) return null;
 
   return (
@@ -40,7 +50,7 @@ export function ResultModal({ open, onClose, result, question }: ResultModalProp
           <Dialog.Description className="mt-1 text-sm text-muted-foreground">
             {question.title}
           </Dialog.Description>
-          {!result.alreadyAnswered ? (
+          {!wasAlreadySolved ? (
             <div className="mt-4 flex justify-center gap-6 text-sm">
               <span className="text-primary">+{question.points} score</span>
               {Number(question.reward) > 0 && (

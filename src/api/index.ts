@@ -1,11 +1,18 @@
 export { api, createApiClient } from './client';
 export { ApiError, isApiError, toApiError } from './errors';
 export { request } from './request';
+export { envelope, normalizeWire, unwrapEnvelope } from './wire';
 
 export { getSession, logout, sessionKeys, sessionSchema } from './session';
-export type { Session } from './session';
+export type { Session, DashboardQuestionSummary } from './session';
 
-export { getQuestionsByRound, questionKeys, questionSchema } from './questions';
+export {
+  getQuestionsByRound,
+  getQuestionById,
+  mergeAttemptStatus,
+  questionKeys,
+  questionSchema,
+} from './questions';
 
 export { getPublicTestcases, testcaseKeys, testcaseSchema } from './testcases';
 
@@ -14,8 +21,8 @@ export type { AttemptOutcome } from './attempts';
 
 export {
   CAPABILITIES,
-  JUDGE0_LABELS,
-  isTerminalStatus,
+  PASSED_STATUS,
+  isPassed,
   submissionKeys,
   submissionRequestSchema,
   submitCode,
