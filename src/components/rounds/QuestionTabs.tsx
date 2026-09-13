@@ -11,7 +11,14 @@ export interface QuestionTabsProps {
   activeId?: string;
 }
 
-/** Numbered arch tabs (Desktop - 15.png). Real ARIA tablist — keyboard-navigable with arrows/Home/End. */
+/**
+ * Solid dome tabs matching `design/Desktop - 14.svg` through `- 21.svg` —
+ * the same half-circle shape and active/inactive size contrast as R1's
+ * `ScratchQuestionTabs` (the one question-selector design confirmed correct
+ * against Figma), recoloured for the R2/R3 dark/red identity instead of
+ * R1's scratch-tab tan. Real ARIA tablist — keyboard-navigable with
+ * arrows/Home/End.
+ */
 export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps) {
   const { go, onKeyDown } = useQuestionTabNav(roundId, questions);
 
@@ -19,7 +26,7 @@ export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps
     <div
       role="tablist"
       aria-label="Questions"
-      className="flex [scrollbar-width:none] gap-1 overflow-x-auto px-4 pt-3 sm:px-6"
+      className="flex [scrollbar-width:none] items-end gap-1 overflow-x-auto px-4 pt-3 sm:px-6"
     >
       {questions.map((question, index) => {
         const isActive = question.id === activeId;
@@ -33,10 +40,10 @@ export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps
             onClick={() => go(index)}
             onKeyDown={event => onKeyDown(event, index)}
             className={cn(
-              'flex shrink-0 cursor-pointer items-center gap-1 rounded-t-full border border-b-0 border-hairline/50 px-4 py-2 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none',
+              'flex shrink-0 cursor-pointer items-end justify-center gap-0.5 rounded-[50%_50%_3px_3px/100%_100%_3px_3px] pb-1.5 text-sm font-bold text-background transition-colors focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none',
               isActive
-                ? 'bg-card text-card-foreground'
-                : 'bg-transparent text-muted-foreground hover:text-foreground'
+                ? 'h-11 w-14 bg-foreground'
+                : 'h-9 w-12 bg-muted-foreground/70 hover:bg-muted-foreground'
             )}
           >
             {index + 1}
