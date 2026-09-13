@@ -6,14 +6,7 @@ import { LoginCard } from './login-card';
 export default function LoginPage() {
   return (
     <div className="relative flex min-h-dvh items-center justify-center overflow-hidden bg-login-bg p-6">
-      <Image
-        src="/login-background.webp"
-        alt=""
-        fill
-        priority
-        className="object-cover"
-        sizes="100vw"
-      />
+      <Image src="/login.svg" alt="" fill priority className="object-cover" sizes="100vw" />
       <LoginCard />
     </div>
   );
