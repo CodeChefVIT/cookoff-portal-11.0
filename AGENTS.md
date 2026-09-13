@@ -296,58 +296,85 @@ Use the PR template (`.github/pull_request_template.md`). Every PR must:
 
 ---
 
-## Rounds architecture (Round 2 "Chef's Pantry" / Round 3 "the Crucible")
+## Rounds architecture (Round 1 "Scratch" / Round 2 "Chef's Pantry" / Round 3 "the Crucible")
 
-Round 2 and Round 3 share one gameplay implementation configured by
-`src/components/rounds/round-config.ts`. **A `roundId === 3` conditional
+All three rounds share one shell configured by
+`src/components/rounds/round-config.ts`. **A `roundId === <n>` conditional
 anywhere outside that file is a defect** — every behavioural difference
-between the two rounds belongs in `RoundConfig`.
+between the rounds belongs in `RoundConfig` (`engine`, `hasBuyIn`,
+`hasCurrency`, `headerSubmit`, `minimalHud`, `isFinalRound`, …).
 
 ```
 RoundGate (qualification + window)
-  └─ RoundShell (header, currency, question tabs — config-gated)
-       └─ QuestionList  |  BuyInGate (pass-through on R3) → CodeEngine
-                                          └─ WorkspaceLayout
-                                               ├─ ProblemPanel
-                                               ├─ MonacoWrapper + EditorToolbar
-                                               └─ TestcasePanel + JudgeStatus
+  └─ RoundShell (header — currency/headerAction config-gated — question tabs)
+       │
+       ├─ R1 ("visual" engine): QuestionList | VisualQuestionWorkspace
+       │        └─ BuyInGate (pass-through, R1 has no buy-in) → ScratchEngine
+       │             └─ ScratchLayout
+       │                  ├─ ProblemPanel
+       │                  ├─ WorkspaceCanvas (the chain) + VisualVerdict
+       │                  └─ BlockPalette
+       │        Submit lives in the header (`ChainSubmitButton`,
+       │        `RoundConfig.headerSubmit`), not inside the engine.
+       │
+       └─ R2/R3 ("code" engine): QuestionList | QuestionWorkspace
+                └─ BuyInGate (pass-through on R3) → CodeEngine
+                     └─ WorkspaceLayout
+                          ├─ ProblemPanel
+                          ├─ MonacoWrapper + EditorToolbar
+                          └─ TestcasePanel + JudgeStatus
 ```
+
+`ProblemPanel` and `ResultModal` are shared verbatim by both engines
+(`src/components/rounds/ProblemPanel.tsx` / `ResultModal.tsx`) — `ResultModal`
+takes plain `{ pointsAwarded, alreadyAnswered }`, not a code-shaped verdict,
+so it has no testcase dependency.
 
 ### Design source of truth
 
-`src/figma/Desktop - 15.png` (dark, LeetCode-style IDE) is the **only**
-valid R2/R3 design. **`design/R2.svg` and `design/R3.svg` are a different
-product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go
-to new station", "Realm Name: Jotunheim", "Leave Team") with no code editor,
-testcases, or betting. They were rendered and inspected frame-by-frame and
-rejected; do not use them for R2/R3 work.
+- `src/figma/scratch.png` is the **only** valid Round 1 design: a
+  three-panel layout (question | chain drop-zone | block palette) with the
+  header's Submit button and numbered question tabs. Its
+  Motion/Control/Operators/Variables palette tabs are **not** implemented —
+  a block is just `{id, content}` with no category column, so `BlockPalette`
+  is one flat list. This is a deliberate divergence from the mock, not a gap.
+- `src/figma/Desktop - 15.png` (dark, LeetCode-style IDE) is the **only**
+  valid R2/R3 design. **`design/R2.svg` and `design/R3.svg` are a different
+  product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go
+  to new station", "Realm Name: Jotunheim", "Leave Team") with no code editor,
+  testcases, or betting. They were rendered and inspected frame-by-frame and
+  rejected; do not use them for R2/R3 work.
 
 ### Server-authoritative state
 
 Never mirror these into client state — always read them via TanStack Query:
 `round_qualified`, `balance`, `score`, `attempts` status (question unlock),
-question list/points/buyIn/reward, testcases, submission verdicts, and the
-round clock (`server_time`/`round_start_time`/`round_end_time`). Client
-state (Zustand `round-store.ts`) only holds the code/language/custom-input
-draft, which is presentation, not gameplay authority. A `402/403` from
-`POST /submit` always re-locks the question — the server wins over any
-client-side "unlocked" cache.
+question list/points/buyIn/reward, testcases, submission and visual-chain
+verdicts, and the round clock (`server_time`/`round_start_time`/
+`round_end_time`). Client state is presentation only, never gameplay
+authority: Zustand `round-store.ts` holds the R2/R3 code/language/
+custom-input draft, and `chain-store.ts` holds the R1 in-progress block
+chain the same way. A `402/403` from `POST /submit` always re-locks the R2
+question — the server wins over any client-side "unlocked" cache.
 
 ### Backend limitations (do not "fix" by touching `cookoff-11.0-be`)
 
-| #     | Limitation                                                                                                                                    | Frontend handling                                                                                                                                             |
-| ----- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| L1    | No R2/R3 endpoint is implemented (`router.go` wires only `/health`, `/docs`).                                                                 | `src/api/*.ts` is Zod-schema'd against the LLD; `src/api/fixtures.ts` + `NEXT_PUBLIC_USE_MOCK_API=true` serve deterministic fixtures until the backend ships. |
-| L2    | No endpoint names "the current round".                                                                                                        | Derived from `session.roundQualified`; `/getTime` supplies that round's window.                                                                               |
-| L3    | `POST /question/:id/attempt` has no read counterpart.                                                                                         | `200` and `409` (already bought) are both treated as a successful unlock.                                                                                     |
-| L4    | `GET /question/round` may not carry per-user `solved`/`bought` flags.                                                                         | Badges render only when those fields are present; never guessed.                                                                                              |
-| L6    | No `questions.difficulty` or ordering column.                                                                                                 | `sortQuestionsForRound()` orders by `points` ascending, title as tiebreak — isolated to one function.                                                         |
-| L7    | Buy-in is a fixed `question.buyIn`, not a user-chosen wager (`attempts.is_buy_in_paid` is boolean; `/attempt` takes no body).                 | `BuyInGate` shows a fixed-amount confirmation modal. This is a genuine product/backend gap — escalate, don't patch the backend.                               |
-| L8    | `/runcode` and `/runcustom` have no documented contract.                                                                                      | Gated behind `CAPABILITIES.runCode` (currently `false`); the UI shows a disabled, explained "Run Code" button.                                                |
-| L10   | No Judge0 language-id list exists in the backend.                                                                                             | Hard-coded in `round-2-3/languages.ts` (C 50, C++ 54, Java 62, Python 71, JS 63) — **verify against the deployed Judge0 instance before the contest**.        |
-| L11   | No WebSocket/SSE for verdicts.                                                                                                                | `useCodeSubmission` polls `GET /result/:id` every ~1.2s, capped at ~60 polls, then offers "Check again".                                                      |
-| L13   | Error bodies are inconsistent (`{message}` vs `{error}` vs `{success,message,errors}`).                                                       | `api/errors.ts#toApiError` tolerates all three.                                                                                                               |
-| C3/L9 | `internal/middlewares/jwt.go` expects a Bearer header, but it is attached to no route; the LLD and `cookoff-admin-11.0` use httpOnly cookies. | `api/client.ts` uses `withCredentials` + a single-shot `401 → POST /refreshToken → replay` interceptor. Confined to one file.                                 |
+| #     | Limitation                                                                                                                                                                                       | Frontend handling                                                                                                                                                                             |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L1    | No R1/R2/R3 endpoint is implemented (`router.go` wires only `/health`, `/docs`).                                                                                                                 | `src/api/*.ts` is Zod-schema'd against the LLD; `src/api/fixtures.ts` + `NEXT_PUBLIC_USE_MOCK_API=true` serve deterministic fixtures until the backend ships.                                 |
+| L2    | No endpoint names "the current round".                                                                                                                                                           | Derived from `session.roundQualified`; `/getTime` supplies that round's window.                                                                                                               |
+| L3    | `POST /question/:id/attempt` has no read counterpart.                                                                                                                                            | `200` and `409` (already bought) are both treated as a successful unlock.                                                                                                                     |
+| L4    | `GET /question/round` may not carry per-user `solved`/`bought` flags.                                                                                                                            | Badges render only when those fields are present; never guessed.                                                                                                                              |
+| L6    | No `questions.difficulty` or ordering column.                                                                                                                                                    | `sortQuestionsForRound()` orders by `points` ascending, title as tiebreak — isolated to one function.                                                                                         |
+| L7    | Buy-in is a fixed `question.buyIn`, not a user-chosen wager (`attempts.is_buy_in_paid` is boolean; `/attempt` takes no body).                                                                    | `BuyInGate` shows a fixed-amount confirmation modal. This is a genuine product/backend gap — escalate, don't patch the backend.                                                               |
+| L8    | `/runcode` and `/runcustom` have no documented contract.                                                                                                                                         | Gated behind `CAPABILITIES.runCode` (currently `false`); the UI shows a disabled, explained "Run Code" button.                                                                                |
+| L10   | No Judge0 language-id list exists in the backend.                                                                                                                                                | Hard-coded in `round-2-3/languages.ts` (C 50, C++ 54, Java 62, Python 71, JS 63) — **verify against the deployed Judge0 instance before the contest**.                                        |
+| L11   | No WebSocket/SSE for verdicts.                                                                                                                                                                   | `useCodeSubmission` polls `GET /result/:id` every ~1.2s, capped at ~60 polls, then offers "Check again".                                                                                      |
+| L13   | Error bodies are inconsistent (`{message}` vs `{error}` vs `{success,message,errors}`).                                                                                                          | `api/errors.ts#toApiError` tolerates all three.                                                                                                                                               |
+| L14   | `submit_round1.go` 403s ("Question not bought yet") unless an `attempts` row exists with a non-`available` status — but Round 1 has no buy-in flow, so no `attempts` row is ever created for it. | A genuine backend gap, not something the frontend can paper over: escalate to drop the attempt check for round 1, or auto-create a zero-cost, pre-bought attempt at round-qualification time. |
+| L15   | `dto.SubmitVisualSolutionResponse` (`round1.go`) returns only `points_awarded` — no `correct`/`already_answered` flag.                                                                           | `visualSubmissionResultSchema` (`api/visual-submissions.ts`) derives `correct` as `pointsAwarded > 0` — the one place that guesses. Ask the backend to add both fields explicitly.            |
+| L16   | `visual_blocks` has no category/type column — the Figma's Motion/Control/Operators/Variables tabs have no backing data.                                                                          | `BlockPalette` renders one flat list; never fabricate a category from block content.                                                                                                          |
+| C3/L9 | `internal/middlewares/jwt.go` expects a Bearer header, but it is attached to no route; the LLD and `cookoff-admin-11.0` use httpOnly cookies.                                                    | `api/client.ts` uses `withCredentials` + a single-shot `401 → POST /refreshToken → replay` interceptor. Confined to one file.                                                                 |
 
 Flipping `NEXT_PUBLIC_USE_MOCK_API` to `false` the moment the backend ships
 these endpoints requires no component changes — every resource module
