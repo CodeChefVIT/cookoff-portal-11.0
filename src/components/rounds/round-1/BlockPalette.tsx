@@ -2,8 +2,12 @@
 
 import { useDraggable } from '@dnd-kit/core';
 
+import { cn } from '@/lib/utils';
+
 import type { VisualBlock } from '../types';
 import { DraggableBlock } from './block-workspace';
+import { scratchPanelVariants } from './scratch-panel';
+import { ScratchPanelTitle } from './ScratchPanelTitle';
 
 export interface BlockPaletteProps {
   /** Blocks not yet placed in the chain — a block leaves the palette once it's used (see `paletteFor` in `chain.ts`). */
@@ -54,12 +58,13 @@ export function BlockPalette({ blocks, onAdd, disabled }: BlockPaletteProps) {
   return (
     <section
       aria-label="Available blocks"
-      className="flex h-full min-h-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground"
+      className={cn(scratchPanelVariants({ tone: 'blocks' }), 'lg:h-[calc(100%-4px)]')}
     >
-      <h2 className="font-display text-lg text-brand">Available Blocks</h2>
-      <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto">
+      <ScratchPanelTitle>scratch blocks</ScratchPanelTitle>
+      {/* Figma's category tabs are dropped (L16), so the well rises to sit under the title. */}
+      <div className="mx-3 mt-[14px] mb-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-[20px] border border-scratch-border/50 bg-scratch-well/50 p-3 lg:mx-[20px] lg:mb-[32px]">
         {blocks.length === 0 ? (
-          <p className="p-4 text-center text-sm text-muted-foreground">
+          <p className="p-4 text-center font-scratch-sans text-sm text-scratch-ink/70">
             Every block is in your chain.
           </p>
         ) : (

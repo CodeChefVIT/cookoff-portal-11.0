@@ -2,24 +2,24 @@
 
 import { cn } from '@/lib/utils';
 
-import { useQuestionTabNav } from './hooks';
-import type { Question } from './types';
+import { useQuestionTabNav } from '../hooks';
+import type { Question } from '../types';
 
-export interface QuestionTabsProps {
+export interface ScratchQuestionTabsProps {
   roundId: number;
   questions: Question[];
   activeId?: string;
 }
 
-/** Numbered arch tabs (Desktop - 15.png). Real ARIA tablist — keyboard-navigable with arrows/Home/End. */
-export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps) {
+/** Half-circle question tabs from Figma `scratch`: active 87×39, others 71×32.5 at 75%. */
+export function ScratchQuestionTabs({ roundId, questions, activeId }: ScratchQuestionTabsProps) {
   const { go, onKeyDown } = useQuestionTabNav(roundId, questions);
 
   return (
     <div
       role="tablist"
       aria-label="Questions"
-      className="flex [scrollbar-width:none] gap-1 overflow-x-auto px-4 pt-3 sm:px-6"
+      className="flex [scrollbar-width:none] items-end gap-[5px] overflow-x-auto px-4 pt-4 pb-[4px] lg:pt-[20px] lg:pl-[31px]"
     >
       {questions.map((question, index) => {
         const isActive = question.id === activeId;
@@ -33,10 +33,10 @@ export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps
             onClick={() => go(index)}
             onKeyDown={event => onKeyDown(event, index)}
             className={cn(
-              'flex shrink-0 cursor-pointer items-center gap-1 rounded-t-full border border-b-0 border-hairline/50 px-4 py-2 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none',
+              'flex shrink-0 cursor-pointer items-end justify-center gap-0.5 rounded-[50%_50%_3px_3px/100%_100%_3px_3px] font-tab text-[21px] leading-[30px] font-bold text-black transition-colors focus-visible:ring-3 focus-visible:ring-scratch-border/60 focus-visible:outline-none',
               isActive
-                ? 'bg-card text-card-foreground'
-                : 'bg-transparent text-muted-foreground hover:text-foreground'
+                ? 'h-[39px] w-[87px] bg-scratch-tab pb-[2px]'
+                : 'h-[32.5px] w-[71px] bg-scratch-tab/75 hover:bg-scratch-tab/90'
             )}
           >
             {index + 1}

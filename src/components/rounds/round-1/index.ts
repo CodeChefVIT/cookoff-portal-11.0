@@ -6,6 +6,10 @@ import type { ScratchEngineProps } from './ScratchEngine';
  */
 export * from './ScratchEngine';
 export * from './ScratchLayout';
+export * from './ScratchHeader';
+export * from './ScratchQuestionTabs';
+export * from './ScratchPanelTitle';
+export * from './scratch-panel';
 export * from './BlockPalette';
 export * from './VisualVerdict';
 export * from './ChainSubmitButton';

@@ -10,14 +10,14 @@ import { cn } from '@/lib/utils';
 import type { VisualBlock } from '../../types';
 
 const draggableBlockVariants = cva(
-  'flex items-center gap-2 rounded-xl border px-3 py-2 text-left text-sm text-card-foreground shadow-sm transition-colors focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none',
+  'flex items-center gap-2 rounded-[7px] border bg-scratch-well px-3 py-2 text-left text-sm text-scratch-ink shadow-sm transition-colors focus-visible:ring-3 focus-visible:ring-scratch-border/40 focus-visible:outline-none',
   {
     variants: {
       variant: {
         palette:
-          'w-full cursor-grab border-border bg-card hover:border-primary active:cursor-grabbing',
-        chain: 'w-full border-border bg-secondary',
-        overlay: 'w-full cursor-grabbing border-primary bg-card shadow-lg',
+          'w-full cursor-grab border-scratch-border/50 hover:border-scratch-border active:cursor-grabbing',
+        chain: 'w-full border-scratch-border/50',
+        overlay: 'w-full cursor-grabbing border-scratch-border shadow-lg',
       },
     },
     defaultVariants: { variant: 'palette' },
@@ -69,7 +69,7 @@ export const DraggableBlock = forwardRef<HTMLDivElement, DraggableBlockProps>(
         {...rest}
       >
         {variant !== 'overlay' && (
-          <GripVertical aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground" />
+          <GripVertical aria-hidden="true" className="size-3.5 shrink-0 text-scratch-ink/50" />
         )}
         <span className="flex-1 font-mono text-xs break-words sm:text-sm">{block.content}</span>
       </div>

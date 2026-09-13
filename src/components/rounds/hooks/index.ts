@@ -3,6 +3,7 @@ export { useRoundTimer } from './use-round-timer';
 export type { UseRoundTimerResult } from './use-round-timer';
 export { useRoundQuestions } from './use-round-questions';
 export { useQuestion } from './use-question';
+export { useQuestionTabNav } from './use-question-tab-nav';
 export { useAttempt } from './use-attempt';
 export { useCodeSubmission } from './use-code-submission';
 export { useVisualBlocks } from './use-visual-blocks';

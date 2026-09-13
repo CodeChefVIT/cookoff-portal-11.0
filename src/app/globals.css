@@ -11,6 +11,24 @@
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
   --font-display: var(--font-display);
+  --font-wordmark: var(--font-wordmark);
+  --font-scratch-display: var(--font-scratch-display);
+  --font-scratch-text: var(--font-scratch-text);
+  --font-scratch-sans: var(--font-scratch-sans);
+  --font-tab: var(--font-tab);
+  --color-brand-accent: var(--brand-accent);
+  --color-scratch-bg: var(--scratch-bg);
+  --color-scratch-panel-q: var(--scratch-panel-q);
+  --color-scratch-panel-chain: var(--scratch-panel-chain);
+  --color-scratch-panel-blocks: var(--scratch-panel-blocks);
+  --color-scratch-panel-end: var(--scratch-panel-end);
+  --color-scratch-border: var(--scratch-border);
+  --color-scratch-ink: var(--scratch-ink);
+  --color-scratch-well: var(--scratch-well);
+  --color-scratch-timer-from: var(--scratch-timer-from);
+  --color-scratch-submit: var(--scratch-submit);
+  --color-scratch-submit-ink: var(--scratch-submit-ink);
+  --color-scratch-tab: var(--scratch-tab);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -101,6 +119,22 @@
   --chip: oklch(0.36 0 0); /* #484848 points chip */
   --round-badge: oklch(0.24 0.09 29); /* #36150F countdown field */
   --hairline: oklch(0.6 0.03 34 / 45%); /* #98716A header rule */
+  /* Round 1 "scratch" identity — exact values from Figma frame 312:1042 */
+  --brand-accent: #d9533b;
+  --scratch-bg: #151515;
+  --scratch-panel-q: #242a32;
+  --scratch-panel-chain: #262c35;
+  --scratch-panel-blocks: #252b33;
+  --scratch-panel-end: #0d0e0e;
+  --scratch-border: #bd857b;
+  --scratch-ink: #e7ddce;
+  --scratch-well: #1a1a18;
+  --scratch-timer-from: #171817;
+  --scratch-submit: #b94527;
+  --scratch-submit-ink: #171817;
+  --scratch-tab: #d9d9d9;
+  --scratch-panel-shadow: 0 0 10px rgb(189 133 123 / 0.08);
+  --scratch-timer-shadow: 0 0 10px rgb(201 185 159 / 0.08);
 }
 
 /*
@@ -146,6 +180,21 @@
   --chip: oklch(0.36 0 0);
   --round-badge: oklch(0.24 0.09 29);
   --hairline: oklch(0.6 0.03 34 / 45%);
+  --brand-accent: #d9533b;
+  --scratch-bg: #151515;
+  --scratch-panel-q: #242a32;
+  --scratch-panel-chain: #262c35;
+  --scratch-panel-blocks: #252b33;
+  --scratch-panel-end: #0d0e0e;
+  --scratch-border: #bd857b;
+  --scratch-ink: #e7ddce;
+  --scratch-well: #1a1a18;
+  --scratch-timer-from: #171817;
+  --scratch-submit: #b94527;
+  --scratch-submit-ink: #171817;
+  --scratch-tab: #d9d9d9;
+  --scratch-panel-shadow: 0 0 10px rgb(189 133 123 / 0.08);
+  --scratch-timer-shadow: 0 0 10px rgb(201 185 159 / 0.08);
 }
 
 @layer base {

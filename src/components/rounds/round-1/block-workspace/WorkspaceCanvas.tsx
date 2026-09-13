@@ -6,8 +6,11 @@ import { CSS } from '@dnd-kit/utilities';
 import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 import type { VisualBlock } from '../../types';
+import { scratchPanelVariants } from '../scratch-panel';
+import { ScratchPanelTitle } from '../ScratchPanelTitle';
 import { DraggableBlock } from './DraggableBlock';
 
 export interface WorkspaceCanvasProps {
@@ -40,7 +43,7 @@ function ChainItem({ block, index, total, onRemove, onMove, disabled }: ChainIte
 
   return (
     <div
-      className="flex items-center gap-1"
+      className="flex items-center gap-1 text-scratch-ink"
       style={{
         transform: CSS.Transform.toString(transform),
         transition: transition ?? undefined,
@@ -107,27 +110,38 @@ export function WorkspaceCanvas({
   return (
     <section
       aria-label="Your chain"
-      className="flex h-full min-h-0 flex-col gap-3 rounded-2xl border border-border bg-card p-4 text-card-foreground"
+      className={cn(scratchPanelVariants({ tone: 'chain' }), 'h-auto flex-1')}
     >
-      <div className="flex items-center justify-between gap-2">
-        <h2 className="font-display text-lg text-brand">Your Chain</h2>
-        {blocks.length > 0 && (
-          <Button type="button" variant="ghost" size="sm" onClick={onClear} disabled={disabled}>
-            Clear chain
-          </Button>
-        )}
-      </div>
-      <div
-        ref={setNodeRef}
-        className="flex min-h-[12rem] flex-1 flex-col gap-2 overflow-y-auto rounded-xl border border-dashed border-hairline/50 p-3"
-      >
-        {blocks.length === 0 ? (
-          <div className="flex flex-1 flex-col items-center justify-center gap-1 text-center text-sm text-muted-foreground">
-            <p className="font-medium text-foreground">Start building your chain</p>
+      <ScratchPanelTitle>scratch interface</ScratchPanelTitle>
+      {blocks.length > 0 && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onClear}
+          disabled={disabled}
+          className="absolute top-4 right-4 font-scratch-sans text-scratch-ink"
+        >
+          Clear chain
+        </Button>
+      )}
+      {blocks.length === 0 && (
+        // Centred on the whole panel (not the area under the title), 8px low — as in the Figma.
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pt-4 text-center">
+          <p className="font-scratch-display text-[24px] leading-normal tracking-[0.6px] text-scratch-ink lg:text-[30px]">
+            Start building your chain
+          </p>
+          <div className="mt-3 font-scratch-sans text-[18px] leading-normal font-thin tracking-[0.48px] text-white [font-variation-settings:'opsz'_14] lg:text-[24px]">
             <p>Drag blocks and drop here</p>
             <p>Only one chain is allowed</p>
           </div>
-        ) : (
+        </div>
+      )}
+      <div
+        ref={setNodeRef}
+        className="flex min-h-[12rem] flex-1 flex-col gap-2 overflow-y-auto px-6 pb-6"
+      >
+        {blocks.length > 0 && (
           <SortableContext items={blocks.map(b => b.id)} strategy={verticalListSortingStrategy}>
             {blocks.map((block, index) => (
               <ChainItem

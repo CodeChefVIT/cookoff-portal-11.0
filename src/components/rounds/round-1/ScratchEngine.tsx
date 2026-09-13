@@ -11,6 +11,7 @@ import {
   type DragStartEvent,
 } from '@dnd-kit/core';
 
+import { cn } from '@/lib/utils';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
 import { useRoundTimer, useVisualBlocks, useVisualSubmissionState } from '../hooks';
@@ -20,7 +21,9 @@ import type { Question, VisualSubmissionResult } from '../types';
 import { DraggableBlock, WorkspaceCanvas } from './block-workspace';
 import { BlockPalette } from './BlockPalette';
 import { paletteFor, resolveChain } from './chain';
+import { scratchPanelVariants } from './scratch-panel';
 import { ScratchLayout } from './ScratchLayout';
+import { ScratchPanelTitle } from './ScratchPanelTitle';
 import { VisualVerdict } from './VisualVerdict';
 
 /**
@@ -141,7 +144,17 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
         onDragCancel={onDragCancel}
       >
         <ScratchLayout
-          question={<ProblemPanel question={question} index={index} />}
+          question={
+            <ProblemPanel
+              question={question}
+              index={index}
+              heading={<ScratchPanelTitle>question</ScratchPanelTitle>}
+              className={cn(
+                scratchPanelVariants({ tone: 'question' }),
+                'block overflow-y-auto px-5 pt-0 pb-5 font-scratch-sans'
+              )}
+            />
+          }
           chain={
             <div className="flex h-full min-h-0 flex-col gap-2">
               <WorkspaceCanvas

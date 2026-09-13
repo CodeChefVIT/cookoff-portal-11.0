@@ -332,12 +332,17 @@ so it has no testcase dependency.
 
 ### Design source of truth
 
-- `src/figma/scratch.png` is the **only** valid Round 1 design: a
-  three-panel layout (question | chain drop-zone | block palette) with the
-  header's Submit button and numbered question tabs. Its
+- `src/figma/scratch.png` (Figma file `Qc0hMJFVUSxi6jsnhx54Vk`, node
+  `312:1042`) is the **only** valid Round 1 design: a three-panel layout
+  (question | chain drop-zone | block palette) with the header's Submit
+  button and numbered question tabs. R1 implements it pixel-exact via
+  `RoundConfig.chrome: 'scratch'` (`ScratchHeader`, `ScratchQuestionTabs`,
+  `scratchPanelVariants`, the `--scratch-*` tokens and fonts in
+  `layout.tsx`); R2/R3 keep `chrome: 'code'`. Its
   Motion/Control/Operators/Variables palette tabs are **not** implemented —
   a block is just `{id, content}` with no category column, so `BlockPalette`
-  is one flat list. This is a deliberate divergence from the mock, not a gap.
+  is one flat list and its well rises into the space the tabs occupied.
+  This is a deliberate divergence from the mock, not a gap.
 - `src/figma/Desktop - 15.png` (dark, LeetCode-style IDE) is the **only**
   valid R2/R3 design. **`design/R2.svg` and `design/R3.svg` are a different
   product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go

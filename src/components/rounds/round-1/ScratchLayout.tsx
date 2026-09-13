@@ -21,10 +21,11 @@ const PANEL_LABELS: Record<Panel, string> = {
 };
 
 /**
- * ROUND 1 counterpart of `WorkspaceLayout` (round-2-3): a `question |
- * scratch interface | scratch blocks` split at >=1024px matching
- * `scratch.png`; below that, a `Question | Chain | Blocks` tab strip, since
- * three columns don't fit a phone (AGENTS.md).
+ * ROUND 1 counterpart of `WorkspaceLayout` (round-2-3). At >=1024px the
+ * Figma `scratch` grid: columns 314 : 559 : 465 with 28px / 19px gutters,
+ * starting 178px from the top (header + tabs) and ending 29px above the
+ * bottom. Below that, a `Question | Chain | Blocks` tab strip, since three
+ * columns don't fit a phone (AGENTS.md).
  */
 export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) {
   const [panel, setPanel] = useQueryState(
@@ -33,7 +34,7 @@ export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) 
   );
 
   return (
-    <div className="flex h-[calc(100dvh-8rem)] min-h-0 flex-col gap-3 p-3 lg:h-[calc(100dvh-10rem)] lg:flex-row">
+    <div className="flex h-[75dvh] min-h-0 flex-col gap-3 px-4 pb-4 lg:grid lg:h-[calc(100dvh-178px)] lg:grid-cols-[314fr_28px_559fr_19px_465fr] lg:gap-0 lg:pr-[24px] lg:pb-[29px] lg:pl-[31px]">
       <div className="flex gap-1 lg:hidden" role="tablist" aria-label="Workspace panel">
         {PANELS.map(name => (
           <button
@@ -43,10 +44,10 @@ export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) 
             aria-selected={panel === name}
             onClick={() => void setPanel(name)}
             className={cn(
-              'flex-1 rounded-full border px-3 py-1.5 text-sm font-medium',
+              'flex-1 rounded-full border px-3 py-1.5 font-scratch-sans text-sm font-medium',
               panel === name
-                ? 'border-primary bg-primary/10'
-                : 'border-border text-muted-foreground'
+                ? 'border-scratch-border bg-scratch-border/15 text-scratch-ink'
+                : 'border-scratch-border/40 text-scratch-ink/60'
             )}
           >
             {PANEL_LABELS[name]}
@@ -56,24 +57,24 @@ export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) 
 
       <div
         className={cn(
-          'min-h-0 flex-1 lg:block lg:w-1/4',
-          panel === 'question' ? 'block' : 'hidden lg:block'
+          'min-h-0 flex-1 lg:col-start-1 lg:row-start-1 lg:block',
+          panel === 'question' ? 'block' : 'hidden'
         )}
       >
         {question}
       </div>
       <div
         className={cn(
-          'min-h-0 flex-[2] lg:block lg:w-1/2',
-          panel === 'chain' ? 'block' : 'hidden lg:block'
+          'min-h-0 flex-1 lg:col-start-3 lg:row-start-1 lg:block',
+          panel === 'chain' ? 'block' : 'hidden'
         )}
       >
         {chain}
       </div>
       <div
         className={cn(
-          'min-h-0 flex-1 lg:block lg:w-1/4',
-          panel === 'blocks' ? 'block' : 'hidden lg:block'
+          'min-h-0 flex-1 lg:col-start-5 lg:row-start-1 lg:block',
+          panel === 'blocks' ? 'block' : 'hidden'
         )}
       >
         {palette}

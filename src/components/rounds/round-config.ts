@@ -20,6 +20,8 @@ export interface RoundConfig {
   minimalHud: boolean;
   /** R1's Submit lives in the header next to the timer, not inside the engine. */
   headerSubmit: boolean;
+  /** Visual identity of the header, tabs and page: R1's Figma `scratch` frame vs the R2/R3 IDE look. */
+  chrome: 'scratch' | 'code';
   expectedQuestionCount: number;
   nominalDurationLabel: string;
   /** R3 has no next round: completion freezes the platform. */
@@ -41,6 +43,7 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     hasCurrency: false,
     minimalHud: false,
     headerSubmit: true,
+    chrome: 'scratch',
     expectedQuestionCount: 4,
     nominalDurationLabel: '01:00',
     isFinalRound: false,
@@ -59,6 +62,7 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     hasCurrency: true,
     minimalHud: false,
     headerSubmit: false,
+    chrome: 'code',
     expectedQuestionCount: 12,
     nominalDurationLabel: '01:30',
     isFinalRound: false,
@@ -77,6 +81,7 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     hasCurrency: false,
     minimalHud: true,
     headerSubmit: false,
+    chrome: 'code',
     expectedQuestionCount: 4,
     nominalDurationLabel: '02:00',
     isFinalRound: true,

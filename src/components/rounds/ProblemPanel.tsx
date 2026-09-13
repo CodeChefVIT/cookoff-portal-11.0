@@ -1,19 +1,29 @@
+import type { ReactNode } from 'react';
+
 import { QuestionHeader } from '@/components/ui/question-header';
+import { cn } from '@/lib/utils';
 
 import type { Question } from './types';
 
 export interface ProblemPanelProps {
   question: Question;
   index?: number;
+  /** Panel title above the problem (R1's "question"); R2/R3 render none. */
+  heading?: ReactNode;
+  className?: string;
 }
 
 /** Left column of Desktop - 15.png: full problem statement, independently scrollable. */
-export function ProblemPanel({ question, index }: ProblemPanelProps) {
+export function ProblemPanel({ question, index, heading, className }: ProblemPanelProps) {
   return (
     <section
       aria-labelledby="problem-heading"
-      className="h-full min-h-0 overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground"
+      className={cn(
+        'h-full min-h-0 overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground',
+        className
+      )}
     >
+      {heading}
       <div id="problem-heading">
         <QuestionHeader question={question} index={index} />
       </div>

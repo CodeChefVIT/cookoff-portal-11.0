@@ -29,6 +29,7 @@ describe('getRoundConfig', () => {
     expect(config.hasBuyIn).toBe(false);
     expect(config.hasCurrency).toBe(false);
     expect(config.headerSubmit).toBe(true);
+    expect(config.chrome).toBe('scratch');
     expect(config.minimalHud).toBe(false);
     expect(config.expectedQuestionCount).toBe(4);
     expect(config.isFinalRound).toBe(false);
@@ -38,6 +39,7 @@ describe('getRoundConfig', () => {
     const config = getRoundConfig(2);
     expect(config.hasBuyIn).toBe(true);
     expect(config.hasCurrency).toBe(true);
+    expect(config.chrome).toBe('code');
     expect(config.minimalHud).toBe(false);
     expect(config.expectedQuestionCount).toBe(12);
     expect(config.isFinalRound).toBe(false);
@@ -50,6 +52,7 @@ describe('getRoundConfig', () => {
     expect(config.hasCurrency).toBe(false);
     expect(config.minimalHud).toBe(true);
     expect(config.headerSubmit).toBe(false);
+    expect(config.chrome).toBe('code');
     expect(config.expectedQuestionCount).toBe(4);
     expect(config.isFinalRound).toBe(true);
   });
