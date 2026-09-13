@@ -16,6 +16,8 @@
   --font-scratch-text: var(--font-scratch-text);
   --font-scratch-sans: var(--font-scratch-sans);
   --font-tab: var(--font-tab);
+  --font-login-display: var(--font-login-display);
+  --font-login-body: var(--font-login-body);
   --color-brand-accent: var(--brand-accent);
   --color-scratch-bg: var(--scratch-bg);
   --color-scratch-panel-q: var(--scratch-panel-q);
@@ -71,6 +73,7 @@
   --color-chip: var(--chip);
   --color-round-badge: var(--round-badge);
   --color-hairline: var(--hairline);
+  --color-login-bg: var(--login-bg);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -147,6 +150,8 @@
   --chip-foreground: #c6beaf;
   --scratch-panel-shadow: 0 0 10px rgb(189 133 123 / 0.08);
   --scratch-timer-shadow: 0 0 10px rgb(201 185 159 / 0.08);
+  /* Login screen background base — Figma `Qc0hMJFVUSxi6jsnhx54Vk` node 352:499 */
+  --login-bg: #111216;
 }
 
 /*
@@ -212,6 +217,7 @@
   --chip-foreground: #c6beaf;
   --scratch-panel-shadow: 0 0 10px rgb(189 133 123 / 0.08);
   --scratch-timer-shadow: 0 0 10px rgb(201 185 159 / 0.08);
+  --login-bg: #111216;
 }
 
 @layer base {

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import {
+  Bebas_Neue,
   Cinzel,
   DM_Sans,
   DM_Serif_Display,
@@ -65,6 +66,20 @@ const spaceGrotesk = Space_Grotesk({
 });
 const roboto = Roboto({ variable: '--font-chip', subsets: ['latin'], weight: '700' });
 
+// Login screen wordmark, from Figma `Qc0hMJFVUSxi6jsnhx54Vk` (352:459/352:499).
+const bebasNeue = Bebas_Neue({
+  variable: '--font-login-display',
+  subsets: ['latin'],
+  weight: '400',
+});
+// Login screen Google-style button copy — separate from `--font-chip` (Roboto 700,
+// dedicated to the R2/R3 points chip) since these rows need 400/500 weights.
+const robotoLogin = Roboto({
+  variable: '--font-login-body',
+  subsets: ['latin'],
+  weight: ['400', '500'],
+});
+
 export const metadata: Metadata = {
   title: 'CookOff 11.0',
   description: 'CodeChef-VIT CookOff 11.0 — competitive programming contest platform.',
@@ -92,6 +107,8 @@ export default function RootLayout({
         quicksand.variable,
         spaceGrotesk.variable,
         roboto.variable,
+        bebasNeue.variable,
+        robotoLogin.variable,
         'font-sans',
         inter.variable
       )}
