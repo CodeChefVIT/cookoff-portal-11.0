@@ -1,5 +1,12 @@
-// ROUND 2 - Question list.
-// TODO: Render <QuestionList roundId={2} />. Uses GET /question/round.
+import { QuestionList, RoundGate, RoundShell } from '@/components/rounds';
+
+// ROUND 2 - Question list ("Chef's Pantry").
 export default function RoundTwoPage() {
-  return <div>Round 2 Questions</div>;
+  return (
+    <RoundGate roundId={2}>
+      <RoundShell roundId={2}>
+        <QuestionList roundId={2} />
+      </RoundShell>
+    </RoundGate>
+  );
 }

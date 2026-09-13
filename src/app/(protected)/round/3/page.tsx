@@ -1,5 +1,12 @@
-// ROUND 3 - Question list.
-// TODO: Render <QuestionList roundId={3} />. Uses GET /question/round.
+import { QuestionList, RoundGate, RoundShell } from '@/components/rounds';
+
+// ROUND 3 - Question list ("the Crucible").
 export default function RoundThreePage() {
-  return <div>Round 3 Questions</div>;
+  return (
+    <RoundGate roundId={3}>
+      <RoundShell roundId={3}>
+        <QuestionList roundId={3} />
+      </RoundShell>
+    </RoundGate>
+  );
 }

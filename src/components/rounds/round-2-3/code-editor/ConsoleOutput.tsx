@@ -1,15 +1,18 @@
-/**
- * Code Editor - ConsoleOutput
- *
- * Displays the stdout/stderr output returned from Judge0.
- * Renders the `stdout` and any error messages after a submission completes.
- */
 export interface ConsoleOutputProps {
-  /** Raw stdout/stderr text from the latest Judge0 result. */
   output: string;
+  variant?: 'stdout' | 'stderr';
 }
 
-export function ConsoleOutput({ output }: ConsoleOutputProps) {
-  void output;
-  return <div className="console-output"></div>;
+/** stdout/stderr/compile output, monospace, scrollable without widening the layout. */
+export function ConsoleOutput({ output, variant = 'stdout' }: ConsoleOutputProps) {
+  if (!output) return null;
+  return (
+    <pre
+      className={`overflow-x-auto rounded-lg bg-secondary p-3 font-mono text-xs break-words whitespace-pre-wrap ${
+        variant === 'stderr' ? 'text-destructive' : 'text-secondary-foreground'
+      }`}
+    >
+      {output}
+    </pre>
+  );
 }
