@@ -5,6 +5,9 @@ import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import { cn } from '@/lib/utils';
 
+import { ColumnResizer } from './ColumnResizer';
+import { useColumnResize } from './use-column-resize';
+
 export interface ScratchLayoutProps {
   question: ReactNode;
   chain: ReactNode;
@@ -20,21 +23,34 @@ const PANEL_LABELS: Record<Panel, string> = {
   blocks: 'Blocks',
 };
 
+const GUTTER_PX = 12;
+
 /**
- * ROUND 1 counterpart of `WorkspaceLayout` (round-2-3). At >=1024px the
- * Figma `scratch` grid: columns 314 : 559 : 465 with 28px / 19px gutters,
- * starting 148px from the top (header + tabs) and ending 29px above the
- * bottom. Below that, a `Question | Chain | Blocks` tab strip, since three
- * columns don't fit a phone (AGENTS.md).
+ * ROUND 1 counterpart of `WorkspaceLayout` (round-2-3). At >=1024px a
+ * `question | chain | blocks` grid starting 148px from the top (header +
+ * tabs), whose 12px gutters are drag handles for resizing the columns
+ * (`useColumnResize`). Below that, a `Question | Chain | Blocks` tab strip,
+ * since three columns don't fit a phone (AGENTS.md).
  */
 export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) {
   const [panel, setPanel] = useQueryState(
     'panel',
     parseAsStringEnum<Panel>([...PANELS]).withDefault('question')
   );
+  const { columns, onPointerDown, onKeyDown } = useColumnResize();
+
+  const total = columns.reduce((sum, value) => sum + value, 0);
+  const edge = (index: number) =>
+    Math.round((columns.slice(0, index + 1).reduce((sum, value) => sum + value, 0) / total) * 100);
+  const gridTemplateColumns = columns
+    .map(fraction => `minmax(0, ${fraction}fr)`)
+    .join(` ${GUTTER_PX}px `);
 
   return (
-    <div className="flex h-[75dvh] min-h-0 flex-col gap-3 px-4 pb-4 lg:grid lg:h-[calc(100dvh-148px)] lg:grid-cols-[314fr_28px_559fr_19px_465fr] lg:gap-0 lg:pr-[24px] lg:pb-[29px] lg:pl-[31px]">
+    <div
+      style={{ gridTemplateColumns }}
+      className="flex h-[75dvh] min-h-0 flex-col gap-3 px-4 pb-4 lg:grid lg:h-[calc(100dvh-148px)] lg:gap-0 lg:pr-[24px] lg:pb-[29px] lg:pl-[31px]"
+    >
       <div className="flex gap-1 lg:hidden" role="tablist" aria-label="Workspace panel">
         {PANELS.map(name => (
           <button
@@ -63,6 +79,13 @@ export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) 
       >
         {question}
       </div>
+      <ColumnResizer
+        label="Resize question and chain panels"
+        position={edge(0)}
+        onPointerDown={event => onPointerDown(0, event)}
+        onKeyDown={event => onKeyDown(0, event)}
+        className="lg:col-start-2"
+      />
       <div
         className={cn(
           'min-h-0 flex-1 lg:col-start-3 lg:row-start-1 lg:block',
@@ -71,6 +94,13 @@ export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) 
       >
         {chain}
       </div>
+      <ColumnResizer
+        label="Resize chain and blocks panels"
+        position={edge(1)}
+        onPointerDown={event => onPointerDown(1, event)}
+        onKeyDown={event => onKeyDown(1, event)}
+        className="lg:col-start-4"
+      />
       <div
         className={cn(
           'min-h-0 flex-1 lg:col-start-5 lg:row-start-1 lg:block',
