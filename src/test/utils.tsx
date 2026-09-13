@@ -26,9 +26,9 @@ export function renderWithProviders(ui: ReactElement) {
   return { queryClient, ...render(ui, { wrapper: Wrapper }) };
 }
 
-/** Clears persisted draft state between tests so one test's code never leaks into the next. */
+/** Clears persisted draft/bounty state between tests so one test never leaks into the next. */
 export function resetRoundStore() {
-  useRoundStore.setState({ drafts: {} });
+  useRoundStore.setState({ drafts: {}, bountyResolved: {} });
 }
 
 /** Clears persisted chain state between tests so one test's chain never leaks into the next. */
