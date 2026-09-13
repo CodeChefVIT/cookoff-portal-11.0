@@ -9,8 +9,17 @@ export { getQuestionsByRound, questionKeys, questionSchema } from './questions';
 
 export { getPublicTestcases, testcaseKeys, testcaseSchema } from './testcases';
 
+export { blockKeys, getVisualBlocks, visualBlockSchema } from './blocks';
+
 export { createAttempt, attemptKeys } from './attempts';
 export type { AttemptOutcome } from './attempts';
+
+export {
+  submitVisual,
+  visualSubmissionKeys,
+  visualSubmissionRequestSchema,
+} from './visual-submissions';
+export type { VisualSubmissionRequestInput } from './visual-submissions';
 
 export {
   CAPABILITIES,

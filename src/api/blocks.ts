@@ -1,0 +1,41 @@
+import * as z from 'zod';
+
+import type { VisualBlock } from '@/components/rounds/types';
+import { env } from '@/env';
+import { createQueryKeys } from '@/lib/query';
+
+import { readFixture } from './fixtures';
+import { request } from './request';
+import { normalizeWire, unwrapEnvelope } from './wire';
+
+const BLOCK_FIELDS = ['id', 'content'] as const;
+
+const visualBlockShape = z.object({
+  id: z.string(),
+  content: z.string(),
+});
+
+export const visualBlockSchema = z
+  .looseObject({})
+  .transform(raw =>
+    visualBlockShape.parse(normalizeWire(raw, BLOCK_FIELDS))
+  ) satisfies z.ZodType<VisualBlock>;
+
+export const visualBlockListSchema = z
+  .union([z.array(z.unknown()), z.null(), z.undefined()])
+  .transform(value => value ?? [])
+  .pipe(z.array(visualBlockSchema));
+
+export const blockKeys = createQueryKeys('blocks');
+
+/**
+ * `GET /question/:id/blocks` — Round 1 only (LLD §2.2, `questions.go#ListBlocks`
+ * 404s for a non-`round=1`/non-`visual` question). Response is a
+ * `dto.SuccessResponse{data: VisualBlockResponse[]}` envelope; `unwrapEnvelope`
+ * strips it before the list schema runs.
+ */
+export async function getVisualBlocks(questionId: string): Promise<VisualBlock[]> {
+  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('visualBlocks', questionId);
+  const raw = await request<unknown>({ url: `/question/${questionId}/blocks`, method: 'GET' });
+  return visualBlockListSchema.parse(unwrapEnvelope(raw));
+}
