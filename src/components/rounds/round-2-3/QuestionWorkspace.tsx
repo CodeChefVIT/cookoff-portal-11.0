@@ -27,7 +27,7 @@ export interface QuestionWorkspaceProps {
  * component, not a mid-lifecycle branch of this one).
  */
 export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProps) {
-  const { question, isLoading, isError, refetch } = useQuestion(roundId, questionId);
+  const { question, index, isLoading, isError, refetch } = useQuestion(roundId, questionId);
 
   if (isLoading) {
     return (
@@ -52,13 +52,16 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
     );
   }
 
-  return <QuestionReady roundId={roundId} questionId={questionId} question={question} />;
+  return (
+    <QuestionReady roundId={roundId} questionId={questionId} question={question} index={index} />
+  );
 }
 
 interface QuestionReadyProps {
   roundId: 2 | 3;
   questionId: string;
   question: Question;
+  index?: number;
 }
 
 /**
@@ -74,7 +77,7 @@ interface QuestionReadyProps {
  * through to the store so a future mount of this question remembers the
  * dialog was already seen.
  */
-function QuestionReady({ roundId, questionId, question }: QuestionReadyProps) {
+function QuestionReady({ roundId, questionId, question, index }: QuestionReadyProps) {
   const router = useRouter();
   const [forceLocked, setForceLocked] = useState(false);
 
@@ -96,6 +99,7 @@ function QuestionReady({ roundId, questionId, question }: QuestionReadyProps) {
         <CodeEngine
           question={question}
           roundId={roundId}
+          index={index}
           onNotPurchased={() => setForceLocked(true)}
         />
       </BuyInGate>

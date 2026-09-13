@@ -3,7 +3,8 @@ import type { Question } from '../rounds/types';
 /**
  * SHARED UI - Question Header
  *
- * `Problem {n}: {title}` + points chip, matching `src/figma/Desktop - 15.png`.
+ * Two-tone `Problem {n}: {title}` in Space Grotesk Bold with the points chip
+ * beneath it, matching Figma `Desktop - 15` (312:1101).
  */
 export interface QuestionHeaderProps {
   question: Question;
@@ -13,10 +14,10 @@ export interface QuestionHeaderProps {
 
 export function QuestionHeader({ question, index }: QuestionHeaderProps) {
   return (
-    <div className="flex flex-wrap items-center justify-between gap-2">
-      <h2 className="font-display text-xl text-brand sm:text-2xl">
-        {index !== undefined ? `Problem ${index}: ` : ''}
-        {question.title}
+    <div className="flex flex-col items-start gap-4">
+      <h2 className="font-problem text-[22px] leading-tight font-bold text-brand xl:text-[28px]">
+        {index !== undefined && `Problem ${index}: `}
+        <span className="text-problem-title">{question.title}</span>
       </h2>
       <div className="flex shrink-0 items-center gap-2">
         {question.bountyActive && (
@@ -24,7 +25,7 @@ export function QuestionHeader({ question, index }: QuestionHeaderProps) {
             <span aria-hidden="true">🎯</span> Bounty
           </span>
         )}
-        <span className="rounded-full bg-chip px-2.5 py-1 text-xs font-medium text-foreground">
+        <span className="rounded-[4px] bg-chip px-[19px] font-chip text-sm leading-[19.6px] font-bold text-chip-foreground">
           {question.points} Points
         </span>
       </div>

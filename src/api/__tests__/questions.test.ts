@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
-import { questionSchema } from '../questions';
+import type { Question } from '@/components/rounds/types';
+
+import { mergeAttemptStatus, questionSchema } from '../questions';
 
 describe('questionSchema', () => {
   it('parses camelCase wire fields (portal convention)', () => {
@@ -61,5 +63,43 @@ describe('questionSchema', () => {
 
   it('throws ApiError-shaped validation error on a malformed payload', () => {
     expect(() => questionSchema.parse({ round: 2 })).toThrow();
+  });
+});
+
+describe('mergeAttemptStatus', () => {
+  const base = questionSchema.parse({ id: 'q0', title: 'T', round: 1 });
+  const make = (id: string, overrides: Partial<Question> = {}): Question => ({
+    ...base,
+    id,
+    ...overrides,
+  });
+
+  it('maps answered → solved + bought, bought → bought, available → neither', () => {
+    const [answered, bought, available] = mergeAttemptStatus(
+      [make('a'), make('b'), make('c')],
+      [
+        { id: 'a', title: 'A', points: 10, round: 1, attemptStatus: 'answered' },
+        { id: 'b', title: 'B', points: 10, round: 1, attemptStatus: 'bought' },
+        { id: 'c', title: 'C', points: 10, round: 1, attemptStatus: 'available' },
+      ]
+    );
+    expect(answered).toMatchObject({ solved: true, bought: true });
+    expect(bought).toMatchObject({ solved: false, bought: true });
+    expect(available).toMatchObject({ solved: false, bought: false });
+  });
+
+  it('leaves questions the dashboard does not list untouched', () => {
+    const question = make('x', { bought: true });
+    expect(
+      mergeAttemptStatus(
+        [question],
+        [{ id: 'other', title: 'O', points: 1, round: 1, attemptStatus: 'answered' }]
+      )[0]
+    ).toBe(question);
+  });
+
+  it('returns the list as-is while the session is still loading', () => {
+    const questions = [make('a')];
+    expect(mergeAttemptStatus(questions, undefined)).toBe(questions);
   });
 });

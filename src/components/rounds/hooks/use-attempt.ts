@@ -5,12 +5,16 @@ import { toast } from 'sonner';
 
 import { attemptKeys, createAttempt, questionKeys, sessionKeys } from '@/api';
 
+import { getRoundConfig } from '../round-config';
+import type { RoundId } from '../types';
+
 /**
- * `POST /question/:id/attempt` has no read counterpart (L3): a `200` and a
- * `409` ("already bought") are both treated as a successful unlock. No
- * optimistic update — the editor only unlocks after the server confirms.
+ * `POST /attempts/:id` has no read counterpart (L3): a `200` and a `409`
+ * ("already bought") are both treated as a successful unlock. No optimistic
+ * update — the editor only unlocks after the server confirms. The "bet
+ * placed" toast only makes sense for rounds with a real buy-in.
  */
-export function useAttempt(roundId: number, questionId: string) {
+export function useAttempt(roundId: RoundId, questionId: string) {
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -18,7 +22,7 @@ export function useAttempt(roundId: number, questionId: string) {
     mutationFn: () => createAttempt(questionId),
     onSuccess: outcome => {
       if (!outcome.unlocked) return;
-      toast.success('Bet placed — the editor is unlocked.');
+      if (getRoundConfig(roundId).hasBuyIn) toast.success('Bet placed — the editor is unlocked.');
       void queryClient.invalidateQueries({ queryKey: sessionKeys.all() });
       void queryClient.invalidateQueries({ queryKey: questionKeys.list({ round: roundId }) });
     },

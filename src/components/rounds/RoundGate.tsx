@@ -8,10 +8,12 @@ import { getRoundTime, timerKeys } from '@/api';
 import { LoadingScreen } from '@/components/ui';
 
 import { useSession } from './hooks';
+import { getRoundConfig } from './round-config';
 import { RoundIntermission } from './RoundIntermission';
+import type { RoundId } from './types';
 
 export interface RoundGateProps {
-  roundId: 2 | 3;
+  roundId: RoundId;
   children: ReactNode;
 }
 
@@ -69,7 +71,8 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
 
   if (now < start) return <RoundIntermission roundId={roundId} variant="pending" />;
   if (now >= end) {
-    return <RoundIntermission roundId={roundId} variant={roundId === 3 ? 'finished' : 'ended'} />;
+    const variant = getRoundConfig(roundId).isFinalRound ? 'finished' : 'ended';
+    return <RoundIntermission roundId={roundId} variant={variant} />;
   }
 
   return <>{children}</>;

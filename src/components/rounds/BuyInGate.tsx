@@ -1,7 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Dialog } from '@base-ui/react/dialog';
 
 import { isApiError } from '@/api';
@@ -9,19 +9,21 @@ import { Button, buttonVariants } from '@/components/ui/button';
 
 import { useAttempt, useSession } from './hooks';
 import { getRoundConfig } from './round-config';
-import type { Question } from './types';
+import type { Question, RoundId } from './types';
 
 /**
  * SHARED BUY-IN GATE
  *
- * R2: gates `children` behind `POST /question/:id/attempt`. R3
- * (`RoundConfig.hasBuyIn === false`) is a pass-through — never shows a bet
- * button, even on a spurious `402` from `/submit` (see AGENTS.md C2/L7).
+ * R2: gates `children` behind `POST /attempts/:id`. R1/R3
+ * (`RoundConfig.hasBuyIn === false`) are pass-throughs — never a bet button,
+ * even on a spurious `402` from `/submit` (see AGENTS.md C2/L7). R1
+ * (`autoAttempt`) still creates the attempt silently on open, because
+ * `/submit/visual` rejects a question with no `bought` attempt (L14).
  */
 export interface BuyInGateProps {
   children: ReactNode;
   questionId: string;
-  roundId: 2 | 3;
+  roundId: RoundId;
   question: Question;
   /** Re-locks the editor when `/submit` reports the attempt was never purchased (stale client cache). */
   forceLocked?: boolean;
@@ -39,8 +41,31 @@ export function BuyInGate({
   const attempt = useAttempt(roundId, questionId);
   const [open, setOpen] = useState(false);
 
+  const { mutate: unlock, isIdle } = attempt;
+  const autoUnlock = config.autoAttempt && question.bought !== true;
+  useEffect(() => {
+    if (autoUnlock && isIdle) unlock();
+  }, [autoUnlock, isIdle, unlock]);
+
   if (!config.hasBuyIn) {
-    return <>{children}</>;
+    const unlockFailed =
+      config.autoAttempt && (attempt.isError || attempt.data?.unlocked === false);
+    return (
+      <>
+        {unlockFailed && (
+          <div
+            role="alert"
+            className="mx-4 mb-3 flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive lg:mx-[31px]"
+          >
+            <span>Couldn&rsquo;t unlock this question — submitting will fail until it is.</span>
+            <Button size="sm" variant="outline" onClick={() => unlock()}>
+              Retry unlock
+            </Button>
+          </div>
+        )}
+        {children}
+      </>
+    );
   }
 
   const alreadyBought = question.bought === true || attempt.isSuccess;

@@ -8,6 +8,7 @@ import { getPublicTestcases, testcaseKeys } from '@/api';
 import { useCodeSubmission, useRoundTimer } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
+import { ProblemPanel } from '../ProblemPanel';
 import { ResultModal } from '../ResultModal';
 import type { Question } from '../types';
 import { ConsoleOutput } from './code-editor/ConsoleOutput';
@@ -16,7 +17,6 @@ import { MonacoWrapper } from './code-editor/MonacoWrapper';
 import { ConfirmSubmitDialog } from './ConfirmSubmitDialog';
 import { JudgeStatus } from './JudgeStatus';
 import { DEFAULT_LANGUAGE, getLanguageById } from './languages';
-import { ProblemPanel } from './ProblemPanel';
 import { TestcasePanel } from './TestcasePanel';
 import { WorkspaceLayout } from './WorkspaceLayout';
 
@@ -168,16 +168,17 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
         onConfirm={confirmSubmit}
         isSubmitting={submission.submit.isPending}
       />
-      {verdict && (
+      {verdict && allPassed && (
         <ResultModal
           open={resultOpen}
           onClose={() => {
             setDismissedSubmissionId(verdict.submissionId);
             setWasAlreadySolved(true);
           }}
-          result={verdict}
           question={question}
-          wasAlreadySolved={wasAlreadySolved}
+          // dto.ResultResponse carries no payout or "already answered" flag.
+          pointsAwarded={question.points}
+          alreadyAnswered={wasAlreadySolved}
         />
       )}
     </>

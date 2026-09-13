@@ -39,6 +39,18 @@ export interface VisualBlock {
   content: string;
 }
 
+export interface VisualSubmissionResult {
+  pointsAwarded: number;
+  /**
+   * `POST /submit/visual` (LLD, dto/round1.go) currently returns only
+   * `points_awarded` — no `correct`/`already_answered` flag exists yet.
+   * `submitVisual()` derives `correct` as `pointsAwarded > 0` when the
+   * backend omits it; ask the backend to add both fields explicitly.
+   */
+  correct: boolean;
+  alreadyAnswered: boolean;
+}
+
 export interface Attempt {
   id: string;
   questionId: string;

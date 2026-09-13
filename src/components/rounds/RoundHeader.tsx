@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
 import { LogOut } from 'lucide-react';
@@ -11,10 +12,13 @@ import { CurrencyBox } from '@/components/ui/currency-box';
 
 import { getRoundConfig } from './round-config';
 import { RoundTimer } from './RoundTimer';
+import type { RoundId } from './types';
 
 export interface RoundHeaderProps {
-  roundId: 2 | 3;
+  roundId: RoundId;
   balance?: number;
+  /** R1's Submit button — only rendered when `config.headerSubmit` is true. */
+  headerAction?: ReactNode;
 }
 
 /**
@@ -24,7 +28,7 @@ export interface RoundHeaderProps {
  * shrinks or hides its label below 640px so the header never causes
  * horizontal scroll at 320px (AGENTS.md §15).
  */
-export function RoundHeader({ roundId, balance }: RoundHeaderProps) {
+export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps) {
   const config = getRoundConfig(roundId);
   const router = useRouter();
 
@@ -55,6 +59,7 @@ export function RoundHeader({ roundId, balance }: RoundHeaderProps) {
         {config.hasCurrency && balance !== undefined && (
           <CurrencyBox balance={balance} buyIn={0} reward={0} />
         )}
+        {config.headerSubmit && headerAction}
         <Button
           variant="ghost"
           size="icon-sm"
