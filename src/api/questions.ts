@@ -6,7 +6,7 @@ import { createQueryKeys } from '@/lib/query';
 
 import { readFixture } from './fixtures';
 import { request } from './request';
-import { normalizeWire } from './wire';
+import { normalizeWire, unwrapEnvelope } from './wire';
 
 const stringArray = () =>
   z.union([z.array(z.string()), z.null(), z.undefined()]).transform(value => value ?? []);
@@ -57,18 +57,20 @@ export const questionSchema = z
     questionShape.parse(normalizeWire(raw, QUESTION_FIELDS))
   ) satisfies z.ZodType<Question>;
 
-export const questionListSchema = z
-  .union([z.array(z.unknown()), z.null(), z.undefined()])
-  .transform(value => value ?? [])
-  .pipe(z.array(questionSchema));
+export const questionListSchema = z.preprocess(
+  unwrapEnvelope,
+  z
+    .union([z.array(z.unknown()), z.null(), z.undefined()])
+    .transform(value => value ?? [])
+    .pipe(z.array(questionSchema))
+);
 
 export const questionKeys = createQueryKeys('questions');
 
 /**
- * `GET /question/round` — SPEC-ONLY (LLD §2.2). The round is filtered
- * server-side per the LLD, but we defensively re-filter by `round` since the
- * response shape (and whether it already scopes by the caller's
- * `round_qualified`) is undocumented.
+ * `GET /question/round` — returns the caller's `round_qualified` questions
+ * in the `{success,message,data}` envelope. Re-filtered by `round` so a
+ * user qualified for a later round never sees them in an earlier round's view.
  */
 export async function getQuestionsByRound(round: number): Promise<Question[]> {
   const questions = env.NEXT_PUBLIC_USE_MOCK_API

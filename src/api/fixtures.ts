@@ -266,6 +266,7 @@ function buildFixture<K extends keyof FixtureMap>(
       score: 40,
       roundQualified: 3,
       isBanned: false,
+      attemptStatuses: {},
     };
     return session as FixtureMap[K][1];
   }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { questionSchema } from '../questions';
+import { questionListSchema, questionSchema } from '../questions';
 
 describe('questionSchema', () => {
   it('parses camelCase wire fields (portal convention)', () => {
@@ -61,5 +61,25 @@ describe('questionSchema', () => {
 
   it('throws ApiError-shaped validation error on a malformed payload', () => {
     expect(() => questionSchema.parse({ round: 2 })).toThrow();
+  });
+});
+
+describe('questionListSchema', () => {
+  it('unwraps the /question/round envelope (dto.SuccessResponse)', () => {
+    const parsed = questionListSchema.parse({
+      success: true,
+      message: 'Questions retrieved',
+      data: [{ id: 'q1', title: 'Assemble', type: 'visual', round: 1, points: 10, buy_in: '0' }],
+    });
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]).toMatchObject({ id: 'q1', type: 'visual', round: 1, buyIn: '0' });
+  });
+
+  it('treats a null data payload as an empty list', () => {
+    expect(questionListSchema.parse({ success: true, message: 'ok', data: null })).toEqual([]);
+  });
+
+  it('still accepts a bare array', () => {
+    expect(questionListSchema.parse([{ id: 'q2', title: 'T', round: 2 }])).toHaveLength(1);
   });
 });

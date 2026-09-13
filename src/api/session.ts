@@ -6,38 +6,60 @@ import { createQueryKeys } from '@/lib/query';
 import { api } from './client';
 import { readFixture } from './fixtures';
 import { request } from './request';
-import { normalizeWire } from './wire';
+import { normalizeWire, pickField, unwrapEnvelope, type WireRecord } from './wire';
+
+const attemptStatusSchema = z.enum(['available', 'bought', 'answered']);
+export type AttemptStatus = z.infer<typeof attemptStatusSchema>;
+
+/** `questions[{id, attempt_status}]` → `{ [questionId]: status }`; malformed entries are skipped. */
+function readAttemptStatuses(value: unknown): Record<string, AttemptStatus> {
+  if (!Array.isArray(value)) return {};
+  const statuses: Record<string, AttemptStatus> = {};
+  for (const item of value) {
+    if (typeof item !== 'object' || item === null) continue;
+    const id = pickField(item as WireRecord, 'id');
+    const status = attemptStatusSchema.safeParse(pickField(item as WireRecord, 'attemptStatus'));
+    if (typeof id === 'string' && status.success) statuses[id] = status.data;
+  }
+  return statuses;
+}
 
 /**
- * `GET /dashboard` — SPEC-ONLY (LLD §2.2). No response shape is documented;
- * this schema covers exactly the fields R2/R3 actually need (balance, score,
- * round_qualified) and is tolerant of camel/Pascal/snake casing (C6).
+ * `GET /dashboard` — `dto.DashboardResponse` inside the `{success,message,data}`
+ * envelope. Doubles as the session probe (L12), and its
+ * `questions[].attempt_status` is the only per-user solved/bought source (L4).
+ * `balance`/`score` arrive as numeric strings.
  */
-export const sessionSchema = z
-  .object({})
-  .loose()
-  .transform(raw => {
-    const wire = normalizeWire(raw, [
-      'userId',
-      'email',
-      'balance',
-      'score',
-      'roundQualified',
-      'isBanned',
-    ]);
-    return {
-      userId: z.string().parse(wire.userId ?? ''),
-      email: z.string().parse(wire.email ?? ''),
-      balance: z.coerce.number().parse(wire.balance ?? 0),
-      score: z.coerce.number().parse(wire.score ?? 0),
-      roundQualified: z.coerce
-        .number()
-        .int()
-        .min(0)
-        .parse(wire.roundQualified ?? 0),
-      isBanned: z.coerce.boolean().parse(wire.isBanned ?? false),
-    };
-  });
+export const sessionSchema = z.preprocess(
+  unwrapEnvelope,
+  z
+    .object({})
+    .loose()
+    .transform(raw => {
+      const wire = normalizeWire(raw, [
+        'userId',
+        'email',
+        'balance',
+        'score',
+        'roundQualified',
+        'isBanned',
+        'questions',
+      ]);
+      return {
+        userId: z.string().parse(wire.userId ?? pickField(raw, 'id') ?? ''),
+        email: z.string().parse(wire.email ?? ''),
+        balance: z.coerce.number().parse(wire.balance ?? 0),
+        score: z.coerce.number().parse(wire.score ?? 0),
+        roundQualified: z.coerce
+          .number()
+          .int()
+          .min(0)
+          .parse(wire.roundQualified ?? 0),
+        isBanned: z.coerce.boolean().parse(wire.isBanned ?? false),
+        attemptStatuses: readAttemptStatuses(wire.questions),
+      };
+    })
+);
 
 export type Session = z.infer<typeof sessionSchema>;
 

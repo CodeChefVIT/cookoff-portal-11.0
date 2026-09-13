@@ -3,7 +3,7 @@ export { ApiError, isApiError, toApiError } from './errors';
 export { request } from './request';
 
 export { getSession, logout, sessionKeys, sessionSchema } from './session';
-export type { Session } from './session';
+export type { AttemptStatus, Session } from './session';
 
 export { getQuestionsByRound, questionKeys, questionSchema } from './questions';
 
