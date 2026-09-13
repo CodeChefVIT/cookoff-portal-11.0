@@ -76,8 +76,19 @@ interface QuestionReadyProps {
  * subscribed to the store for its visibility. `resolveBounty` still writes
  * through to the store so a future mount of this question remembers the
  * dialog was already seen.
+ *
+ * `'use no memo'` opts this component out of the React Compiler: with it
+ * compiled, clicking the bounty dialog's actions triggered "React has
+ * detected a change in the order of Hooks" on this exact function (verified
+ * via browser reproduction — the compiler-inserted memo cache slot shifted
+ * hook order between the mount render and the click-triggered re-render).
+ * None of this component's own hooks are conditional; this is a compiler
+ * bug workaround, not a signal to touch hook order here. Safe to remove
+ * once upgrading past the current React Compiler / Next 16.2 pairing fixes
+ * the underlying issue — re-verify the bounty flow in a browser first.
  */
 function QuestionReady({ roundId, questionId, question, index }: QuestionReadyProps) {
+  'use no memo';
   const router = useRouter();
   const [forceLocked, setForceLocked] = useState(false);
 
