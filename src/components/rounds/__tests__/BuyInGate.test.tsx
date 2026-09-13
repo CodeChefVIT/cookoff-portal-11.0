@@ -141,6 +141,54 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
   });
 });
 
+describe('BuyInGate — Round 1 (hasBuyIn: false, autoAttempt: true)', () => {
+  const r1Question = makeQuestion({ round: 1, type: 'visual', buyIn: '0', reward: '0' });
+
+  it('renders children immediately and creates the attempt exactly once', async () => {
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+
+    renderWithProviders(
+      <BuyInGate questionId="q1" roundId={1} question={r1Question}>
+        <div>workspace</div>
+      </BuyInGate>
+    );
+
+    expect(screen.getByText('workspace')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /place bet/i })).not.toBeInTheDocument();
+    await waitFor(() => expect(createAttemptMock).toHaveBeenCalledTimes(1));
+    expect(createAttemptMock).toHaveBeenCalledWith('q1');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('skips the attempt when the question is already bought', () => {
+    renderWithProviders(
+      <BuyInGate questionId="q1" roundId={1} question={{ ...r1Question, bought: true }}>
+        <div>workspace</div>
+      </BuyInGate>
+    );
+
+    expect(screen.getByText('workspace')).toBeInTheDocument();
+    expect(createAttemptMock).not.toHaveBeenCalled();
+  });
+
+  it('shows a retry banner when the unlock fails, and retries on click', async () => {
+    createAttemptMock.mockRejectedValueOnce(new Error('boom'));
+    createAttemptMock.mockResolvedValueOnce({ unlocked: true, insufficientBalance: false });
+
+    const user = userEvent.setup();
+    renderWithProviders(
+      <BuyInGate questionId="q1" roundId={1} question={r1Question}>
+        <div>workspace</div>
+      </BuyInGate>
+    );
+
+    await user.click(await screen.findByRole('button', { name: 'Retry unlock' }));
+    await waitFor(() => expect(createAttemptMock).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    expect(screen.getByText('workspace')).toBeInTheDocument();
+  });
+});
+
 describe('BuyInGate — Round 3 (hasBuyIn: false)', () => {
   it('is a pass-through: renders children immediately with no bet UI', () => {
     renderWithProviders(

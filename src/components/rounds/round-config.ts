@@ -22,6 +22,11 @@ export interface RoundConfig {
   headerSubmit: boolean;
   /** Visual identity of the header, tabs and page: R1's Figma `scratch` frame vs the R2/R3 IDE look. */
   chrome: 'scratch' | 'code';
+  /**
+   * R1 has no buy-in, yet `/submit/visual` 403s without a `bought` attempt
+   * (L14) — so the attempt is created silently when a question opens.
+   */
+  autoAttempt: boolean;
   expectedQuestionCount: number;
   nominalDurationLabel: string;
   /** R3 has no next round: completion freezes the platform. */
@@ -44,6 +49,7 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     minimalHud: false,
     headerSubmit: true,
     chrome: 'scratch',
+    autoAttempt: true,
     expectedQuestionCount: 4,
     nominalDurationLabel: '01:00',
     isFinalRound: false,
@@ -63,6 +69,7 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     minimalHud: false,
     headerSubmit: false,
     chrome: 'code',
+    autoAttempt: false,
     expectedQuestionCount: 12,
     nominalDurationLabel: '01:30',
     isFinalRound: false,
@@ -82,6 +89,7 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     minimalHud: true,
     headerSubmit: false,
     chrome: 'code',
+    autoAttempt: false,
     expectedQuestionCount: 4,
     nominalDurationLabel: '02:00',
     isFinalRound: true,

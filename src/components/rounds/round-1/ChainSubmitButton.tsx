@@ -1,8 +1,9 @@
 'use client';
 
+import { useIsMutating } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { isApiError } from '@/api';
+import { attemptKeys, isApiError } from '@/api';
 import { Button } from '@/components/ui/button';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
@@ -38,7 +39,9 @@ export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
     });
   }
 
-  const disabled = isExpired || chain.length === 0 || submission.isPending;
+  // `BuyInGate` auto-creates the R1 attempt on open; submitting before it lands would 403 (L14).
+  const unlocking = useIsMutating({ mutationKey: attemptKeys.detail(questionId) }) > 0;
+  const disabled = isExpired || chain.length === 0 || submission.isPending || unlocking;
 
   return (
     <Button

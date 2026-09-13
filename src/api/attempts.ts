@@ -15,16 +15,16 @@ export interface AttemptOutcome {
 }
 
 /**
- * `POST /question/:id/attempt` — SPEC-ONLY (LLD §2.8.3/§2.8.4). No request
- * body; the fixed `question.buyIn` is debited server-side. A `409` means an
- * `attempts` row already exists for this `(user, question)` — per L3 that is
- * treated as a successful unlock, never as an error.
+ * `POST /attempts/:id` (`attempt_routes.go`). No request body; the fixed
+ * `question.buyIn` is debited server-side and a pre-seeded `available` row is
+ * upgraded to `bought`. A `409` means the question is already bought or
+ * answered — per L3 that is a successful unlock, never an error.
  */
 export async function createAttempt(questionId: string): Promise<AttemptOutcome> {
   if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('attempt', questionId);
 
   try {
-    await request({ url: `/question/${questionId}/attempt`, method: 'POST', data: {} });
+    await request({ url: `/attempts/${questionId}`, method: 'POST', data: {} });
     return { unlocked: true, insufficientBalance: false };
   } catch (error) {
     if (isApiError(error) && error.status === 409) {

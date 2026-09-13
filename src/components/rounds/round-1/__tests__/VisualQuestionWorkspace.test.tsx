@@ -16,12 +16,14 @@ const {
   getQuestionsByRoundMock,
   getVisualBlocksMock,
   submitVisualMock,
+  createAttemptMock,
 } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),
   getRoundTimeMock: vi.fn(),
   getQuestionsByRoundMock: vi.fn(),
   getVisualBlocksMock: vi.fn(),
   submitVisualMock: vi.fn(),
+  createAttemptMock: vi.fn(),
 }));
 
 vi.mock('@/api', async () => {
@@ -33,6 +35,7 @@ vi.mock('@/api', async () => {
     getQuestionsByRound: getQuestionsByRoundMock,
     getVisualBlocks: getVisualBlocksMock,
     submitVisual: submitVisualMock,
+    createAttempt: createAttemptMock,
   };
 });
 
@@ -75,6 +78,8 @@ function mockOpenRound() {
   });
   getQuestionsByRoundMock.mockResolvedValue([QUESTION_R1]);
   getVisualBlocksMock.mockResolvedValue(BLOCKS);
+  // R1 auto-creates the attempt on open (RoundConfig.autoAttempt, L14).
+  createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
 }
 
 function renderWorkspace(questionId: string) {
@@ -114,6 +119,7 @@ describe('VisualQuestionWorkspace — Round 1 happy path', () => {
 
     await user.click(screen.getByRole('button', { name: 'Submit' }));
 
+    expect(createAttemptMock).toHaveBeenCalledWith('q1');
     expect(submitVisualMock).toHaveBeenCalledWith({ questionId: 'q1', blocks: ['b1', 'b2'] });
     expect(await screen.findByText(/Correct! \+10 points/)).toBeInTheDocument();
     expect(await screen.findByText('Solved!')).toBeInTheDocument();
