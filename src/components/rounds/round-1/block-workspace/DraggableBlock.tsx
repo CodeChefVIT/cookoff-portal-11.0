@@ -8,16 +8,17 @@ import { GripVertical } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 import type { VisualBlock } from '../../types';
+import { BlockShape } from './BlockShape';
 
+// The Scratch stack-block outline is drawn by `BlockShape`; pt clears the top notch.
 const draggableBlockVariants = cva(
-  'flex items-center gap-2 rounded-[7px] border bg-scratch-well px-3 py-2 text-left text-sm text-scratch-ink shadow-sm transition-colors focus-visible:ring-3 focus-visible:ring-scratch-border/40 focus-visible:outline-none',
+  'group relative isolate flex min-h-12 items-center gap-2 rounded-[9px] px-4 pt-3 pb-2.5 text-left text-sm text-scratch-ink focus-visible:ring-3 focus-visible:ring-scratch-border/40 focus-visible:outline-none',
   {
     variants: {
       variant: {
-        palette:
-          'w-full cursor-grab border-scratch-border/50 hover:border-scratch-border active:cursor-grabbing',
-        chain: 'w-full border-scratch-border/50',
-        overlay: 'w-full cursor-grabbing border-scratch-border shadow-lg',
+        palette: 'w-full cursor-grab active:cursor-grabbing',
+        chain: 'w-full',
+        overlay: 'w-full cursor-grabbing drop-shadow-lg',
       },
     },
     defaultVariants: { variant: 'palette' },
@@ -68,6 +69,7 @@ export const DraggableBlock = forwardRef<HTMLDivElement, DraggableBlockProps>(
         className={cn(draggableBlockVariants({ variant, className }))}
         {...rest}
       >
+        <BlockShape highlighted={variant === 'overlay'} />
         {variant !== 'overlay' && (
           <GripVertical aria-hidden="true" className="size-3.5 shrink-0 text-scratch-ink/50" />
         )}

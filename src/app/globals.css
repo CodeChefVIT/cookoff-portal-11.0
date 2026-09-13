@@ -30,6 +30,8 @@
   --color-scratch-submit-ink: var(--scratch-submit-ink);
   --color-scratch-tab: var(--scratch-tab);
   --color-scratch-rule: var(--scratch-rule);
+  --color-scratch-block: var(--scratch-block);
+  --color-scratch-block-stroke: var(--scratch-block-stroke);
   --color-problem-title: var(--problem-title);
   --color-chip-foreground: var(--chip-foreground);
   --font-problem: var(--font-problem);
@@ -139,6 +141,8 @@
   --scratch-submit-ink: #171817;
   --scratch-tab: #d9d9d9;
   --scratch-rule: #98716a;
+  --scratch-block: #131413;
+  --scratch-block-stroke: #8d8474;
   --problem-title: #d3462d;
   --chip-foreground: #c6beaf;
   --scratch-panel-shadow: 0 0 10px rgb(189 133 123 / 0.08);
@@ -202,6 +206,8 @@
   --scratch-submit-ink: #171817;
   --scratch-tab: #d9d9d9;
   --scratch-rule: #98716a;
+  --scratch-block: #131413;
+  --scratch-block-stroke: #8d8474;
   --problem-title: #d3462d;
   --chip-foreground: #c6beaf;
   --scratch-panel-shadow: 0 0 10px rgb(189 133 123 / 0.08);
