@@ -23,7 +23,7 @@ const PANEL_LABELS: Record<Panel, string> = {
 /**
  * ROUND 1 counterpart of `WorkspaceLayout` (round-2-3). At >=1024px the
  * Figma `scratch` grid: columns 314 : 559 : 465 with 28px / 19px gutters,
- * starting 178px from the top (header + tabs) and ending 29px above the
+ * starting 148px from the top (header + tabs) and ending 29px above the
  * bottom. Below that, a `Question | Chain | Blocks` tab strip, since three
  * columns don't fit a phone (AGENTS.md).
  */
@@ -34,7 +34,7 @@ export function ScratchLayout({ question, chain, palette }: ScratchLayoutProps) 
   );
 
   return (
-    <div className="flex h-[75dvh] min-h-0 flex-col gap-3 px-4 pb-4 lg:grid lg:h-[calc(100dvh-178px)] lg:grid-cols-[314fr_28px_559fr_19px_465fr] lg:gap-0 lg:pr-[24px] lg:pb-[29px] lg:pl-[31px]">
+    <div className="flex h-[75dvh] min-h-0 flex-col gap-3 px-4 pb-4 lg:grid lg:h-[calc(100dvh-148px)] lg:grid-cols-[314fr_28px_559fr_19px_465fr] lg:gap-0 lg:pr-[24px] lg:pb-[29px] lg:pl-[31px]">
       <div className="flex gap-1 lg:hidden" role="tablist" aria-label="Workspace panel">
         {PANELS.map(name => (
           <button

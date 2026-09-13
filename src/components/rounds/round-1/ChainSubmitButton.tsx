@@ -44,7 +44,7 @@ export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
     <Button
       onClick={handleSubmit}
       disabled={disabled}
-      className="h-[52px] rounded-[5px] bg-scratch-submit px-5 font-scratch-text text-[26px] leading-normal font-normal tracking-[0.72px] text-scratch-submit-ink hover:bg-scratch-submit/85 lg:h-[69px] lg:min-w-[177px] lg:px-[29px] lg:text-[36px]"
+      className="h-[52px] rounded-[5px] bg-scratch-submit px-5 font-scratch-text text-[26px] leading-normal font-normal tracking-[0.72px] text-scratch-submit-ink hover:bg-scratch-submit/85 lg:h-[56px] lg:min-w-[144px] lg:px-[24px] lg:text-[29px]"
     >
       {submission.isPending ? 'Submitting…' : 'Submit'}
     </Button>

@@ -12,8 +12,8 @@ const roundTimerVariants = cva('flex items-center tabular-nums', {
   variants: {
     variant: {
       pill: 'gap-2 rounded-full bg-round-badge px-3 py-1 font-mono text-sm text-foreground',
-      // Figma `scratch` timer: 197×69, 2px border, gradient fill, clock + "TIME LEFT".
-      box: "h-[52px] gap-2 rounded-[8px] border-2 border-scratch-border bg-linear-to-b from-scratch-timer-from to-scratch-panel-end px-3 font-scratch-sans text-white shadow-(--scratch-timer-shadow) [font-variation-settings:'opsz'_14] lg:h-[69px] lg:w-[197px] lg:items-end lg:justify-between lg:px-[15px] lg:pt-[9px] lg:pb-[6px]",
+      // Figma `scratch` timer at 80% scale: 2px border, gradient fill, clock + "TIME LEFT".
+      box: "h-[52px] gap-2 rounded-[8px] border-2 border-scratch-border bg-linear-to-b from-scratch-timer-from to-scratch-panel-end px-3 font-scratch-sans text-white shadow-(--scratch-timer-shadow) [font-variation-settings:'opsz'_14] lg:h-[56px] lg:w-[160px] lg:items-end lg:justify-between lg:px-[12px] lg:pt-[7px] lg:pb-[5px]",
     },
   },
   defaultVariants: { variant: 'pill' },
@@ -64,13 +64,13 @@ export function RoundTimer({ onExpire, className, variant }: RoundTimerProps) {
             src="/clock.png"
             alt=""
             aria-hidden="true"
-            width={45}
-            height={45}
-            className="size-8 shrink-0 lg:size-[45px]"
+            width={36}
+            height={36}
+            className="size-8 shrink-0 lg:size-[36px]"
           />
-          <span className="flex flex-col leading-normal lg:w-[113px]">
-            <span className="text-lg font-medium tracking-[0.5px] lg:text-[25px]">{time}</span>
-            <span className="text-[10px] font-light tracking-[0.26px] lg:text-[13px]">
+          <span className="flex flex-col leading-normal lg:w-[92px]">
+            <span className="text-lg font-medium tracking-[0.5px] lg:text-[20px]">{time}</span>
+            <span className="text-[10px] font-light tracking-[0.26px] lg:text-[11px]">
               {isError ? 'CLOCK UNAVAILABLE' : 'TIME LEFT'}
             </span>
           </span>

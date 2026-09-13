@@ -19,7 +19,7 @@ export function ScratchQuestionTabs({ roundId, questions, activeId }: ScratchQue
     <div
       role="tablist"
       aria-label="Questions"
-      className="flex [scrollbar-width:none] items-end gap-[5px] overflow-x-auto px-4 pt-4 pb-[4px] lg:pt-[20px] lg:pl-[31px]"
+      className="flex [scrollbar-width:none] items-end gap-[5px] overflow-x-auto px-4 pt-4 pb-[4px] lg:pt-[10px] lg:pl-[31px]"
     >
       {questions.map((question, index) => {
         const isActive = question.id === activeId;
