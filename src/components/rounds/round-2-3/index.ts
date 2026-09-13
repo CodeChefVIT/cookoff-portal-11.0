@@ -5,8 +5,13 @@ import type { CodeEngineProps } from './CodeEngine';
  * Consumers import from `@/components/rounds/round-2-3`.
  */
 export * from './CodeEngine';
+export * from './QuestionWorkspace';
 export * from './TestcasePanel';
+export * from './TestcaseCase';
 export * from './JudgeStatus';
+export * from './ProblemPanel';
+export * from './WorkspaceLayout';
+export * from './languages';
 export * from './code-editor';
 
 export type { CodeEngineProps };
