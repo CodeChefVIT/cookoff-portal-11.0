@@ -8,6 +8,8 @@ export * from './ScratchEngine';
 export * from './ScratchLayout';
 export * from './BlockPalette';
 export * from './VisualVerdict';
+export * from './ChainSubmitButton';
+export * from './VisualQuestionWorkspace';
 export * from './block-workspace';
 
 export type { ScratchEngineProps };
