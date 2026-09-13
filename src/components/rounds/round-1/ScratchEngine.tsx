@@ -107,6 +107,31 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
 
   const resultOpen = result !== undefined && result.correct && result !== dismissedResult;
 
+  if (blocksQuery.isLoading) {
+    return (
+      <div className="flex min-h-[50dvh] items-center justify-center" role="status">
+        <span className="text-sm text-muted-foreground">Loading blocks…</span>
+      </div>
+    );
+  }
+
+  if (blocksQuery.isError) {
+    return (
+      <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-3">
+        <p className="text-sm text-muted-foreground">
+          Couldn&rsquo;t load the blocks for this problem.
+        </p>
+        <button
+          type="button"
+          onClick={() => void blocksQuery.refetch()}
+          className="rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground"
+        >
+          Retry
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <DndContext
