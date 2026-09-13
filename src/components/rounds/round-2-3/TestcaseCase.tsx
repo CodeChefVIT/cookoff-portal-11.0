@@ -1,4 +1,5 @@
 import type { TestcaseResult } from '@/api';
+import { isPassed } from '@/api';
 
 import type { Testcase } from '../types';
 
@@ -10,13 +11,17 @@ export interface TestcaseCaseProps {
 /**
  * One case: Input / Expected Output / Output columns. Hidden cases NEVER
  * render input/expected/actual — only the aggregate count in TestcasePanel
- * does that job. Enforced here too as a defence against a backend leak.
+ * does that job. `dto.TestcaseResult` has no `stdout` field (only
+ * runtime/memory/status/description) — the Output column shows the verdict
+ * status instead of actual program output, which the backend doesn't
+ * return per-case.
  */
 export function TestcaseCase({ testcase, result }: TestcaseCaseProps) {
   if (testcase.hidden) {
     return (
       <p className="text-sm text-muted-foreground">
-        Hidden test case — {result?.passed ? 'passed' : 'result withheld until you pass it'}.
+        Hidden test case —{' '}
+        {result && isPassed(result) ? 'passed' : 'result withheld until you pass it'}.
       </p>
     );
   }
@@ -38,7 +43,7 @@ export function TestcaseCase({ testcase, result }: TestcaseCaseProps) {
       <div>
         <h4 className="text-xs font-semibold text-muted-foreground">Output</h4>
         <pre className="mt-1 overflow-x-auto rounded-lg bg-secondary p-2 text-xs break-words whitespace-pre-wrap text-secondary-foreground">
-          {result?.stdout ?? ''}
+          {result ? `${result.status}${result.description ? ` — ${result.description}` : ''}` : ''}
         </pre>
       </div>
     </div>

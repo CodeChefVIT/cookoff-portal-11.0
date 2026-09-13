@@ -5,7 +5,7 @@ import { createQueryKeys } from '@/lib/query';
 
 import { readFixture } from './fixtures';
 import { request } from './request';
-import { normalizeWire } from './wire';
+import { envelope, normalizeWire } from './wire';
 
 const isoOrEpoch = z.union([z.string(), z.number()]).transform(value => {
   const date = new Date(value);
@@ -19,16 +19,20 @@ const roundTimeShape = z.object({
 });
 
 /**
- * `GET /getTime` — SPEC-ONLY (LLD §2.2), shape corroborated by
- * `cookoff-admin-11.0/src/app/(protected)/timer/page.tsx`. There is no
- * per-round field (L2): the caller supplies which round's window this is,
- * derived from `session.roundQualified`.
+ * `GET /getTime` does not exist on the backend at all (confirmed against
+ * `cookoff-11.0-be/internal/router/router.go`, which now wires every other
+ * R2/R3 route) — L2 stands. `RoundGate` fails open on this query's error
+ * (qualification alone still gates access); only the timer display
+ * degrades to "clock unavailable". Envelope-wrapped for the day this
+ * lands, per `dto.SuccessResponse`.
  */
-export const roundTimeSchema = z
-  .looseObject({})
-  .transform(raw =>
-    roundTimeShape.parse(normalizeWire(raw, ['serverTime', 'roundStartTime', 'roundEndTime']))
-  );
+export const roundTimeSchema = envelope(
+  z
+    .looseObject({})
+    .transform(raw =>
+      roundTimeShape.parse(normalizeWire(raw, ['serverTime', 'roundStartTime', 'roundEndTime']))
+    )
+);
 
 export type RoundTime = z.infer<typeof roundTimeShape>;
 

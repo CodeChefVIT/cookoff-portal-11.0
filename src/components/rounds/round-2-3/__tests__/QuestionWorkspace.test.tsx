@@ -107,12 +107,11 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     submitCodeMock.mockResolvedValue({ submissionId: 'sub1' });
     getSubmissionResultMock.mockResolvedValue({
       submissionId: 'sub1',
-      statusId: 3,
-      testcasesPassed: 1,
-      testcasesFailed: 0,
-      results: [{ testcaseId: 'tc1', hidden: false, passed: true, stdout: 'out' }],
-      pointsAwarded: 10,
-      alreadyAnswered: false,
+      questionId: 'q1',
+      passed: 1,
+      failed: 0,
+      description: 'All 1 testcases passed',
+      testcases: [{ testcaseId: 'tc1', status: 'Success', description: 'Success' }],
     });
 
     const user = userEvent.setup();

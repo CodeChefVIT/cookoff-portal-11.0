@@ -6,7 +6,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getSubmissionResult,
   isApiError,
-  isTerminalStatus,
   questionKeys,
   sessionKeys,
   submissionKeys,
@@ -14,27 +13,25 @@ import {
 } from '@/api';
 import type { SubmissionRequestInput } from '@/api';
 
-const POLL_INTERVAL_MS = 1_200;
-const MAX_POLLS = 60;
-
 /**
- * Owns the submit -> poll -> verdict lifecycle. `submissionId` lives in
- * component state only (never persisted) — replaying a stale poll after a
- * refresh could show a verdict for a buffer the user has since edited.
+ * Owns the submit -> result lifecycle. `GET /result/:id` long-polls
+ * server-side for up to 2 minutes and returns the final, terminal verdict
+ * directly (see AGENTS.md) — there is no client-side interval polling loop.
+ * A `408` means it genuinely wasn't ready after 2 minutes; the query
+ * retries once automatically, then surfaces a manual "Check again".
+ * `submissionId` lives in component state only (never persisted) — a page
+ * refresh should not replay a verdict for a buffer the user has since
+ * edited.
  */
 export function useCodeSubmission(roundId: number) {
   const queryClient = useQueryClient();
   const [submissionId, setSubmissionId] = useState<string | null>(null);
-  const [pollCount, setPollCount] = useState(0);
   const [notPurchased, setNotPurchased] = useState(false);
   const invalidatedFor = useRef<string | null>(null);
 
   const submit = useMutation({
     mutationFn: (input: SubmissionRequestInput) => submitCode(input),
-    onMutate: () => {
-      setNotPurchased(false);
-      setPollCount(0);
-    },
+    onMutate: () => setNotPurchased(false),
     onSuccess: response => setSubmissionId(response.submissionId),
     onError: error => {
       if (isApiError(error) && (error.status === 402 || error.status === 403)) {
@@ -46,41 +43,32 @@ export function useCodeSubmission(roundId: number) {
   const result = useQuery({
     queryKey: submissionId ? submissionKeys.detail(submissionId) : submissionKeys.detail('none'),
     queryFn: () => getSubmissionResult(submissionId ?? ''),
-    enabled: submissionId !== null && pollCount < MAX_POLLS,
+    enabled: submissionId !== null,
     staleTime: 0,
-    refetchInterval: query =>
-      isTerminalStatus(query.state.data?.statusId) ? false : POLL_INTERVAL_MS,
+    retry: 1,
   });
 
-  const terminal = isTerminalStatus(result.data?.statusId);
+  const timedOut = result.isError && isApiError(result.error) && result.error.status === 408;
 
   useEffect(() => {
-    if (!submissionId || terminal) return;
-    const timer = setTimeout(() => setPollCount(count => count + 1), POLL_INTERVAL_MS);
-    return () => clearTimeout(timer);
-  }, [submissionId, terminal, result.dataUpdatedAt]);
-
-  useEffect(() => {
-    if (!result.data || !terminal || !submissionId) return;
+    if (!result.data || !submissionId) return;
     if (invalidatedFor.current === submissionId) return;
-    const allPassed = result.data.testcasesFailed === 0 && result.data.testcasesPassed > 0;
-    if (allPassed && !result.data.alreadyAnswered) {
+    if (result.data.failed === 0 && result.data.passed > 0) {
       invalidatedFor.current = submissionId;
       void queryClient.invalidateQueries({ queryKey: sessionKeys.all() });
       void queryClient.invalidateQueries({ queryKey: questionKeys.list({ round: roundId }) });
     }
-  }, [result.data, terminal, submissionId, roundId, queryClient]);
+  }, [result.data, submissionId, roundId, queryClient]);
 
   return {
     submit,
     result,
     submissionId,
     notPurchased,
-    pollCapExceeded: pollCount >= MAX_POLLS && !terminal,
-    retryPolling: () => setPollCount(0),
+    timedOut,
+    retryResult: () => void result.refetch(),
     reset: () => {
       setSubmissionId(null);
-      setPollCount(0);
       setNotPurchased(false);
       invalidatedFor.current = null;
     },

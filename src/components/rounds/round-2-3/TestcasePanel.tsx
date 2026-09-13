@@ -2,6 +2,7 @@
 
 import { parseAsInteger, useQueryState } from 'nuqs';
 
+import { isPassed } from '@/api';
 import type { SubmissionVerdict } from '@/api';
 import { cn } from '@/lib/utils';
 
@@ -9,6 +10,7 @@ import type { Testcase } from '../types';
 import { TestcaseCase } from './TestcaseCase';
 
 export interface TestcasePanelProps {
+  /** The set fetched from `GET /question/:id/testcases/public` — always visible-only. */
   testcases: Testcase[];
   verdict?: SubmissionVerdict;
   isPolling: boolean;
@@ -16,17 +18,21 @@ export interface TestcasePanelProps {
 
 /**
  * Verdict banner + case tabs + hidden aggregate + compiler message, matching
- * Desktop - 15.png. Hidden cases expose only pass/fail counts — never their
- * input/expected/actual (contest-integrity requirement, tested explicitly).
+ * Desktop - 15.png. `dto.ResultResponse.testcases` covers every testcase
+ * (public and hidden — the submission runs against all of them); any result
+ * whose `testcaseId` isn't in our known public set is hidden. Hidden cases
+ * expose only pass/fail counts — never their input/expected/actual (tested
+ * explicitly).
  */
 export function TestcasePanel({ testcases, verdict, isPolling }: TestcasePanelProps) {
-  const visible = testcases.filter(testcase => !testcase.hidden);
-  const hidden = testcases.filter(testcase => testcase.hidden);
   const [activeIndex, setActiveIndex] = useQueryState('case', parseAsInteger.withDefault(0));
-  const active = visible[Math.min(activeIndex, Math.max(visible.length - 1, 0))];
+  const active = testcases[Math.min(activeIndex, Math.max(testcases.length - 1, 0))];
 
-  const hiddenPassed =
-    verdict?.results.filter(result => result.hidden && result.passed).length ?? 0;
+  const verdictTestcases = verdict?.testcases ?? [];
+  const resultById = new Map(verdictTestcases.map(result => [result.testcaseId, result]));
+  const visibleIds = new Set(testcases.map(testcase => testcase.id));
+  const hiddenResults = verdictTestcases.filter(result => !visibleIds.has(result.testcaseId));
+  const hiddenPassed = hiddenResults.filter(isPassed).length;
 
   return (
     <section
@@ -39,13 +45,12 @@ export function TestcasePanel({ testcases, verdict, isPolling }: TestcasePanelPr
           aria-live="polite"
           className={cn(
             'rounded-lg px-3 py-2 text-sm font-medium',
-            verdict.testcasesFailed === 0 && verdict.testcasesPassed > 0
+            verdict.failed === 0 && verdict.passed > 0
               ? 'bg-primary/15 text-primary'
               : 'bg-destructive/15 text-destructive'
           )}
         >
-          {verdict.testcasesPassed}/{verdict.testcasesPassed + verdict.testcasesFailed} Test Cases
-          Passed !!
+          {verdict.passed}/{verdict.passed + verdict.failed} Test Cases Passed !!
         </div>
       )}
       {isPolling && !verdict && (
@@ -55,8 +60,8 @@ export function TestcasePanel({ testcases, verdict, isPolling }: TestcasePanelPr
       )}
 
       <div role="tablist" aria-label="Visible test cases" className="flex flex-wrap gap-1">
-        {visible.map((testcase, index) => {
-          const result = verdict?.results[index];
+        {testcases.map((testcase, index) => {
+          const result = resultById.get(testcase.id);
           const isActive = index === activeIndex;
           return (
             <button
@@ -74,28 +79,32 @@ export function TestcasePanel({ testcases, verdict, isPolling }: TestcasePanelPr
                 aria-hidden="true"
                 className={cn(
                   'size-1.5 rounded-full',
-                  result ? (result.passed ? 'bg-primary' : 'bg-destructive') : 'bg-muted-foreground'
+                  result
+                    ? isPassed(result)
+                      ? 'bg-primary'
+                      : 'bg-destructive'
+                    : 'bg-muted-foreground'
                 )}
               />
               Case {index + 1}
-              {result && <span className="sr-only">{result.passed ? 'passed' : 'failed'}</span>}
+              {result && <span className="sr-only">{isPassed(result) ? 'passed' : 'failed'}</span>}
             </button>
           );
         })}
-        {hidden.length > 0 && (
+        {hiddenResults.length > 0 && (
           <span className="flex items-center gap-1.5 rounded-full border border-border px-3 py-1 text-xs font-medium text-muted-foreground">
             <span aria-hidden="true">🙈</span>
-            Hidden Testcases {hiddenPassed}/{hidden.length}
+            Hidden Testcases {hiddenPassed}/{hiddenResults.length}
           </span>
         )}
       </div>
 
-      {active && <TestcaseCase testcase={active} result={verdict?.results[activeIndex]} />}
+      {active && <TestcaseCase testcase={active} result={resultById.get(active.id)} />}
 
-      {verdict?.compileOutput && (
+      {verdict?.description && (
         <div>
           <h4 className="text-xs font-semibold text-muted-foreground">Compiler Message</h4>
-          <p className="mt-1 text-sm text-destructive">{verdict.compileOutput}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{verdict.description}</p>
         </div>
       )}
     </section>

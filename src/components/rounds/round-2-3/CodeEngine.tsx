@@ -60,6 +60,11 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
 
   const [customInputEnabled, setCustomInputEnabled] = useState(false);
   const [dismissedSubmissionId, setDismissedSubmissionId] = useState<string | null>(null);
+  // Captures whether the question was already solved *before* this mount's
+  // submissions — dto.ResultResponse has no "already answered" flag, and
+  // `question.solved` itself flips to true right after a passing verdict
+  // invalidates the round question list.
+  const [wasAlreadySolved, setWasAlreadySolved] = useState(question.solved === true);
 
   const submission = useCodeSubmission(roundId);
   const { isExpired } = useRoundTimer();
@@ -69,8 +74,7 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
   }, [submission.notPurchased, onNotPurchased]);
 
   const verdict = submission.result.data;
-  const allPassed =
-    verdict !== undefined && verdict.testcasesFailed === 0 && verdict.testcasesPassed > 0;
+  const allPassed = verdict !== undefined && verdict.failed === 0 && verdict.passed > 0;
   const resultOpen = allPassed && verdict.submissionId !== dismissedSubmissionId;
 
   function handleSubmit() {
@@ -117,10 +121,10 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
               />
             )}
             <JudgeStatus
-              statusId={submission.result.data?.statusId}
+              description={verdict?.description}
               isPolling={submission.result.isFetching}
-              pollCapExceeded={submission.pollCapExceeded}
-              onRetry={submission.retryPolling}
+              timedOut={submission.timedOut}
+              onRetry={submission.retryResult}
             />
             {submission.notPurchased && (
               <p role="alert" className="text-sm text-destructive">
@@ -132,13 +136,20 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
                 Couldn&rsquo;t submit — your code is still here. Try again.
               </p>
             )}
-            <ConsoleOutput output={submission.result.data?.stderr ?? ''} variant="stderr" />
+            <ConsoleOutput
+              output={
+                submission.result.isError && !submission.timedOut
+                  ? "Couldn't fetch your submission result. Try Check again."
+                  : ''
+              }
+              variant="stderr"
+            />
           </div>
         }
         results={
           <TestcasePanel
             testcases={testcases.data ?? []}
-            verdict={submission.result.data}
+            verdict={verdict}
             isPolling={submission.result.isFetching}
           />
         }
@@ -146,9 +157,13 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
       {verdict && (
         <ResultModal
           open={resultOpen}
-          onClose={() => setDismissedSubmissionId(verdict.submissionId)}
+          onClose={() => {
+            setDismissedSubmissionId(verdict.submissionId);
+            setWasAlreadySolved(true);
+          }}
           result={verdict}
           question={question}
+          wasAlreadySolved={wasAlreadySolved}
         />
       )}
     </>
