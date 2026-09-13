@@ -1,10 +1,8 @@
 'use client';
 
-import type { KeyboardEvent } from 'react';
-import { useRouter } from 'next/navigation';
-
 import { cn } from '@/lib/utils';
 
+import { useQuestionTabNav } from './hooks';
 import type { Question } from './types';
 
 export interface QuestionTabsProps {
@@ -15,19 +13,7 @@ export interface QuestionTabsProps {
 
 /** Numbered arch tabs (Desktop - 15.png). Real ARIA tablist — keyboard-navigable with arrows/Home/End. */
 export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps) {
-  const router = useRouter();
-
-  function go(index: number) {
-    const question = questions[index];
-    if (question) router.push(`/round/${roundId}/${question.id}`);
-  }
-
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>, index: number) {
-    if (event.key === 'ArrowRight') go((index + 1) % questions.length);
-    else if (event.key === 'ArrowLeft') go((index - 1 + questions.length) % questions.length);
-    else if (event.key === 'Home') go(0);
-    else if (event.key === 'End') go(questions.length - 1);
-  }
+  const { go, onKeyDown } = useQuestionTabNav(roundId, questions);
 
   return (
     <div

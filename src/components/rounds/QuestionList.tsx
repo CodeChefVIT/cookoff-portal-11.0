@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 
 import { useRoundQuestions } from './hooks';
 import { getRoundConfig } from './round-config';
+import type { RoundId } from './types';
 
 /**
  * SHARED QUESTION LIST
@@ -14,12 +15,12 @@ import { getRoundConfig } from './round-config';
  * flags (L4) — badges render only when those flags are present, never guessed.
  */
 export interface QuestionListProps {
-  roundId: number;
+  roundId: RoundId;
 }
 
 export function QuestionList({ roundId }: QuestionListProps) {
   const { data: questions, isLoading, isError, refetch } = useRoundQuestions(roundId);
-  const hasBuyIn = roundId === 2 || roundId === 3 ? getRoundConfig(roundId).hasBuyIn : true;
+  const hasBuyIn = getRoundConfig(roundId).hasBuyIn;
   const boughtLabel = hasBuyIn ? 'Bet placed' : 'Unlocked';
 
   if (isLoading) {

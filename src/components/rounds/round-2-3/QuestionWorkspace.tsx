@@ -18,7 +18,7 @@ export interface QuestionWorkspaceProps {
  * again, per AGENTS.md rule 6: the server always wins.
  */
 export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProps) {
-  const { question, isLoading, isError, refetch } = useQuestion(roundId, questionId);
+  const { question, index, isLoading, isError, refetch } = useQuestion(roundId, questionId);
   const [forceLocked, setForceLocked] = useState(false);
 
   if (isLoading) {
@@ -54,6 +54,7 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
       <CodeEngine
         question={question}
         roundId={roundId}
+        index={index}
         onNotPurchased={() => setForceLocked(true)}
       />
     </BuyInGate>

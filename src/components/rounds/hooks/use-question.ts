@@ -21,13 +21,17 @@ export function useQuestion(roundId: number, questionId: string) {
   });
   const list = useRoundQuestions(roundId);
 
-  const flagsFromList = list.data?.find(candidate => candidate.id === questionId);
+  const position = list.data?.findIndex(candidate => candidate.id === questionId) ?? -1;
+  const flagsFromList = position >= 0 ? list.data?.[position] : undefined;
   const question = detail.data
     ? { ...detail.data, solved: flagsFromList?.solved, bought: flagsFromList?.bought }
     : flagsFromList;
+  // 1-based, in the same order as the question tabs, for the "Problem N:" prefix.
+  const index = position >= 0 ? position + 1 : undefined;
 
   return {
     question,
+    index,
     isLoading: detail.isLoading && list.isLoading,
     isError: detail.isError && !flagsFromList,
     refetch: detail.refetch,

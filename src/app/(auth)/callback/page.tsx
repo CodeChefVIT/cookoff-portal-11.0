@@ -1,5 +1,6 @@
-// OAuth redirect callback handler.
-// TODO: Exchange the OAuth code, upsert the user, redirect to /dashboard.
+import { redirect } from 'next/navigation';
+
+// The backend's /auth/google/callback already set the httpOnly session cookies.
 export default function CallbackPage() {
-  return <div>Callback</div>;
+  redirect('/dashboard');
 }

@@ -124,3 +124,106 @@ describe('RoundGate', () => {
     });
   });
 });
+
+describe('RoundGate — Round 1', () => {
+  it('shows the not-qualified screen before Round 1 is unlocked', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 0,
+      score: 0,
+      roundQualified: 0,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+
+    renderWithProviders(
+      <RoundGate roundId={1}>
+        <div>gameplay</div>
+      </RoundGate>
+    );
+
+    expect(
+      await screen.findByRole('heading', { name: /didn.t make the cut/i })
+    ).toBeInTheDocument();
+    expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
+  });
+
+  it('renders the pending intermission before Round 1 opens', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 0,
+      score: 0,
+      roundQualified: 1,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() + 60_000),
+      roundEndTime: new Date(Date.now() + 120_000),
+    });
+
+    renderWithProviders(
+      <RoundGate roundId={1}>
+        <div>gameplay</div>
+      </RoundGate>
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Scratch' })).toBeInTheDocument();
+    expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
+  });
+
+  it('renders children when qualified and the Round 1 window is open', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 0,
+      score: 0,
+      roundQualified: 1,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 60_000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+
+    renderWithProviders(
+      <RoundGate roundId={1}>
+        <div>gameplay</div>
+      </RoundGate>
+    );
+
+    await waitFor(() => expect(screen.getByText('gameplay')).toBeInTheDocument());
+  });
+
+  it('shows the ended screen once the window closes — R1 is not the final round', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 0,
+      score: 0,
+      roundQualified: 1,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 120_000),
+      roundEndTime: new Date(Date.now() - 60_000),
+    });
+
+    renderWithProviders(
+      <RoundGate roundId={1}>
+        <div>gameplay</div>
+      </RoundGate>
+    );
+
+    expect(await screen.findByRole('heading', { name: 'Scratch has ended' })).toBeInTheDocument();
+    expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
+  });
+});

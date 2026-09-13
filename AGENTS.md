@@ -296,41 +296,70 @@ Use the PR template (`.github/pull_request_template.md`). Every PR must:
 
 ---
 
-## Rounds architecture (Round 2 "Chef's Pantry" / Round 3 "the Crucible")
+## Rounds architecture (Round 1 "Scratch" / Round 2 "Chef's Pantry" / Round 3 "the Crucible")
 
-Round 2 and Round 3 share one gameplay implementation configured by
-`src/components/rounds/round-config.ts`. **A `roundId === 3` conditional
+All three rounds share one shell configured by
+`src/components/rounds/round-config.ts`. **A `roundId === <n>` conditional
 anywhere outside that file is a defect** — every behavioural difference
-between the two rounds belongs in `RoundConfig`.
+between the rounds belongs in `RoundConfig` (`engine`, `hasBuyIn`,
+`hasCurrency`, `headerSubmit`, `minimalHud`, `isFinalRound`, …).
 
 ```
 RoundGate (qualification + window)
-  └─ RoundShell (header, currency, question tabs — config-gated)
-       └─ QuestionList  |  BuyInGate (pass-through on R3) → CodeEngine
-                                          └─ WorkspaceLayout
-                                               ├─ ProblemPanel
-                                               ├─ MonacoWrapper + EditorToolbar
-                                               └─ TestcasePanel + JudgeStatus
+  └─ RoundShell (header — currency/headerAction config-gated — question tabs)
+       │
+       ├─ R1 ("visual" engine): QuestionList | VisualQuestionWorkspace
+       │        └─ BuyInGate (pass-through, R1 has no buy-in) → ScratchEngine
+       │             └─ ScratchLayout
+       │                  ├─ ProblemPanel
+       │                  ├─ WorkspaceCanvas (the chain) + VisualVerdict
+       │                  └─ BlockPalette
+       │        Submit lives in the header (`ChainSubmitButton`,
+       │        `RoundConfig.headerSubmit`), not inside the engine.
+       │
+       └─ R2/R3 ("code" engine): QuestionList | QuestionWorkspace
+                └─ BuyInGate (pass-through on R3) → CodeEngine
+                     └─ WorkspaceLayout
+                          ├─ ProblemPanel
+                          ├─ MonacoWrapper + EditorToolbar
+                          └─ TestcasePanel + JudgeStatus
 ```
+
+`ProblemPanel` and `ResultModal` are shared verbatim by both engines
+(`src/components/rounds/ProblemPanel.tsx` / `ResultModal.tsx`) — `ResultModal`
+takes plain `{ pointsAwarded, alreadyAnswered }`, not a code-shaped verdict,
+so it has no testcase dependency.
 
 ### Design source of truth
 
-`src/figma/Desktop - 15.png` (dark, LeetCode-style IDE) is the **only**
-valid R2/R3 design. **`design/R2.svg` and `design/R3.svg` are a different
-product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go
-to new station", "Realm Name: Jotunheim", "Leave Team") with no code editor,
-testcases, or betting. They were rendered and inspected frame-by-frame and
-rejected; do not use them for R2/R3 work.
+- `src/figma/scratch.png` (Figma file `Qc0hMJFVUSxi6jsnhx54Vk`, node
+  `312:1042`) is the **only** valid Round 1 design: a three-panel layout
+  (question | chain drop-zone | block palette) with the header's Submit
+  button and numbered question tabs. R1 implements it pixel-exact via
+  `RoundConfig.chrome: 'scratch'` (`ScratchHeader`, `ScratchQuestionTabs`,
+  `scratchPanelVariants`, the `--scratch-*` tokens and fonts in
+  `layout.tsx`); R2/R3 keep `chrome: 'code'`. Its
+  Motion/Control/Operators/Variables palette tabs are **not** implemented —
+  a block is just `{id, content}` with no category column, so `BlockPalette`
+  is one flat list and its well rises into the space the tabs occupied.
+  This is a deliberate divergence from the mock, not a gap.
+- `src/figma/Desktop - 15.png` (dark, LeetCode-style IDE) is the **only**
+  valid R2/R3 design. **`design/R2.svg` and `design/R3.svg` are a different
+  product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go
+  to new station", "Realm Name: Jotunheim", "Leave Team") with no code editor,
+  testcases, or betting. They were rendered and inspected frame-by-frame and
+  rejected; do not use them for R2/R3 work.
 
 ### Server-authoritative state
 
 Never mirror these into client state — always read them via TanStack Query:
 `round_qualified`, `balance`, `score`, attempt status (question unlock),
-question list/points/buyIn/reward, testcases, submission verdicts. Client
-state (Zustand `round-store.ts`) only holds the code/language/custom-input
-draft, which is presentation, not gameplay authority. A `402/403` from
-`POST /submit` always re-locks the question — the server wins over any
-client-side "unlocked" cache.
+question list/points/buyIn/reward, testcases, submission and visual-chain
+verdicts. Client state is presentation only, never gameplay authority:
+Zustand `round-store.ts` holds the R2/R3 code/language/custom-input draft,
+and `chain-store.ts` holds the R1 in-progress block chain the same way. A
+`402/403` from `POST /submit` always re-locks the R2 question — the server
+wins over any client-side "unlocked" cache.
 
 ### Real backend contract (confirmed against a live `cookoff-11.0-be` pull)
 
@@ -350,18 +379,24 @@ envelope-agnostic so fixtures/tests can pass the domain shape directly.
 | `submitCode`          | `POST /submit`                       | Body is snake_case `{question_id, language_id, source_code}`. **Does not check attempt/purchase status before enqueueing Judge0** — buy-in accounting instead happens at result-finalize time via `EnsureAttempt`, so a `402/403 "not purchased"` is defensive handling for a contract the LLD describes but this implementation doesn't enforce synchronously.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `getSubmissionResult` | `GET /result/:submission_id`         | **Long-polls server-side for up to 2 minutes** and returns the final, terminal verdict directly — there is no Judge0 numeric status id in the response and no client-side polling loop (`useCodeSubmission` calls it once per submission, `timeout: 130_000`). A `408` means it genuinely wasn't ready; the query retries once, then surfaces "Check again". `dto.ResultResponse.testcases[]` covers **every** testcase (public + hidden — the judge runs against all of them); `TestcasePanel` treats any `testcaseId` absent from the public list as hidden. No `stdout` per case and no `alreadyAnswered` flag — the Output column shows the verdict status instead of real program output, and `ResultModal`'s "already solved" copy is driven by `question.solved` captured _before_ the submission (`CodeEngine`'s `wasAlreadySolved` state). |
 | `getRoundTime`        | _(none)_                             | `GET /getTime` does not exist anywhere in the backend — confirmed even after every other route landed. `RoundGate` fails open on this query's error (qualification alone still gates access); only the timer display degrades to "clock unavailable".                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `getVisualBlocks`     | `GET /question/:id/blocks`           | Round 1 only: 404 unless the question is `round = 1`, `q_type = visual` and in the caller's `round_qualified`. Returns `[{id, content}]` ordered by UUID (effectively shuffled); no category column (L16).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| `submitVisual`        | `POST /submit/visual`                | Body `{question_id, blocks: uuid[]}`, graded synchronously against `visual_solutions` (exact order match; several accepted orders allowed). Returns `{status: "", points_awarded}` — `correct` is derived from `points_awarded > 0` (L15). `403 "Question not bought yet"` without a `bought` attempt (L14).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### Remaining backend limitations (do not "fix" by touching `cookoff-11.0-be`)
 
-| #   | Limitation                                                                                                                                                                      | Frontend handling                                                                                                                                      |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| L2  | No endpoint reports the round window or names "the current round".                                                                                                              | Derived from `session.roundQualified`; timer degrades gracefully (see above).                                                                          |
-| L4  | `GET /question/round` carries no per-user flag.                                                                                                                                 | Resolved by merging `GET /dashboard`'s embedded `questions[].attempt_status` (`mergeAttemptStatus`) — real data, not a placeholder.                    |
-| L6  | No `questions.difficulty` or ordering column.                                                                                                                                   | `sortQuestionsForRound()` orders by `points` ascending, title as tiebreak — isolated to one function.                                                  |
-| L7  | Buy-in is a fixed `question.buy_in`, not a user-chosen wager (`attempts.is_buy_in_paid` is boolean; `/attempts/:id` takes no body).                                             | `BuyInGate` shows a fixed-amount confirmation modal. Genuine product/backend gap — escalate, don't patch the backend.                                  |
-| L8  | `/runcode`/`/runcustom` are wired but return a raw Judge0-callback array with no envelope and no persisted submission id — a different contract from `/submit` + `/result/:id`. | Gated behind `CAPABILITIES.runCode` (`false`); "Run Code" stays visibly disabled with an explanation.                                                  |
-| L10 | No Judge0 language-id list exists in the backend.                                                                                                                               | Hard-coded in `round-2-3/languages.ts` (C 50, C++ 54, Java 62, Python 71, JS 63) — **verify against the deployed Judge0 instance before the contest**. |
-| L13 | Error bodies are inconsistent (`{message}` vs `{error}` vs `{success,message,errors}`).                                                                                         | `api/errors.ts#toApiError` tolerates all three.                                                                                                        |
+| #   | Limitation                                                                                                                                                                                            | Frontend handling                                                                                                                                                                                                                                                                                                                                   |
+| --- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| L2  | No endpoint reports the round window or names "the current round".                                                                                                                                    | Derived from `session.roundQualified`; timer degrades gracefully (see above).                                                                                                                                                                                                                                                                       |
+| L4  | `GET /question/round` carries no per-user flag.                                                                                                                                                       | Resolved by merging `GET /dashboard`'s embedded `questions[].attempt_status` (`mergeAttemptStatus`) — real data, not a placeholder.                                                                                                                                                                                                                 |
+| L6  | No `questions.difficulty` or ordering column.                                                                                                                                                         | `sortQuestionsForRound()` orders by `points` ascending, title as tiebreak — isolated to one function.                                                                                                                                                                                                                                               |
+| L7  | Buy-in is a fixed `question.buy_in`, not a user-chosen wager (`attempts.is_buy_in_paid` is boolean; `/attempts/:id` takes no body).                                                                   | `BuyInGate` shows a fixed-amount confirmation modal. Genuine product/backend gap — escalate, don't patch the backend.                                                                                                                                                                                                                               |
+| L8  | `/runcode`/`/runcustom` are wired but return a raw Judge0-callback array with no envelope and no persisted submission id — a different contract from `/submit` + `/result/:id`.                       | Gated behind `CAPABILITIES.runCode` (`false`); "Run Code" stays visibly disabled with an explanation.                                                                                                                                                                                                                                               |
+| L10 | No Judge0 language-id list exists in the backend.                                                                                                                                                     | Hard-coded in `round-2-3/languages.ts` (C 50, C++ 54, Java 62, Python 71, JS 63) — **verify against the deployed Judge0 instance before the contest**.                                                                                                                                                                                              |
+| L13 | Error bodies are inconsistent (`{message}` vs `{error}` vs `{success,message,errors}`).                                                                                                               | `api/errors.ts#toApiError` tolerates all three.                                                                                                                                                                                                                                                                                                     |
+| L14 | `submit_round1.go` 403s ("Question not bought yet") unless a non-`available` `attempts` row exists, but Round 1 has no buy-in flow. `EnsureAttempt` exists but only the R2/R3 result worker calls it. | `RoundConfig.autoAttempt` (R1): `BuyInGate` silently calls `POST /attempts/:id` when a question opens (409 = fine), shows a "Retry unlock" banner on failure, and `ChainSubmitButton` stays disabled while it is in flight. Requires R1 questions to have `buy_in = 0`. Ask the backend to call `EnsureAttempt` in `/submit/visual` so this can go. |
+| L15 | `dto.SubmitVisualSolutionResponse` (`round1_submit.go`) declares `status`/`note`, but the handler only sets `points_awarded` (`status` arrives as `""`).                                              | `visualSubmissionResultSchema` (`api/visual-submissions.ts`) derives `correct` as `pointsAwarded > 0` — the one place that guesses. Ask the backend to populate `status` (or add `correct`/`already_answered`).                                                                                                                                     |
+| L16 | `visual_blocks` has no category/type column — the Figma's Motion/Control/Operators/Variables tabs have no backing data.                                                                               | `BlockPalette` renders one flat list; never fabricate a category from block content.                                                                                                                                                                                                                                                                |
+| L18 | `NumericToFloat64` (`helpers/utils/numeric.go`) errors on NULL, so a NULL `questions.buy_in`/`reward` makes `/attempts/:id` and a correct `/submit/visual` return 500.                                | Not patchable client-side. Seed R1 questions with `buy_in = 0` and a `reward`, or ask the backend to treat NULL as 0.                                                                                                                                                                                                                               |
 
 C3/L9 (Bearer-header auth vs cookies) is **resolved**: `VerifyJWTMiddleware`
 now reads the `access_token` cookie directly, matching `api/client.ts`'s

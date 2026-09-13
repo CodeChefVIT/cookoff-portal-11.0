@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render } from '@testing-library/react';
 
 import { MotionProvider } from '@/components/motion';
-import { useRoundStore } from '@/stores';
+import { useChainStore, useRoundStore } from '@/stores';
 
 /**
  * Every round test needs the same provider stack. A fresh `QueryClient` per
@@ -29,4 +29,9 @@ export function renderWithProviders(ui: ReactElement) {
 /** Clears persisted draft state between tests so one test's code never leaks into the next. */
 export function resetRoundStore() {
   useRoundStore.setState({ drafts: {} });
+}
+
+/** Clears persisted chain state between tests so one test's chain never leaks into the next. */
+export function resetChainStore() {
+  useChainStore.setState({ chains: {} });
 }
