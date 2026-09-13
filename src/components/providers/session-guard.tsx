@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { useSession } from '@/components/rounds/hooks';
+import { LoadingScreen } from '@/components/ui';
 
 /**
  * `GET /dashboard` doubles as the session probe (L12 — no dedicated
@@ -20,11 +21,7 @@ export function SessionGuard({ children }: { children: ReactNode }) {
   }, [session.isError, router]);
 
   if (session.isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-background" role="status">
-        <span className="text-sm text-muted-foreground">Loading…</span>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (session.isError) return null;

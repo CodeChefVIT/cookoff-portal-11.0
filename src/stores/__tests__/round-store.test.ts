@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { useRoundStore } from '../round-store';
 
 function reset() {
-  useRoundStore.setState({ drafts: {} });
+  useRoundStore.setState({ drafts: {}, bountyResolved: {} });
 }
 
 describe('useRoundStore', () => {
@@ -44,5 +44,14 @@ describe('useRoundStore', () => {
       sourceCode: 'code',
       customInput: '5\n10',
     });
+  });
+
+  it('tracks bounty resolution per question id, independent of others', () => {
+    expect(useRoundStore.getState().bountyResolved.q1).toBeUndefined();
+
+    useRoundStore.getState().resolveBounty('q1');
+
+    expect(useRoundStore.getState().bountyResolved.q1).toBe(true);
+    expect(useRoundStore.getState().bountyResolved.q2).toBeUndefined();
   });
 });

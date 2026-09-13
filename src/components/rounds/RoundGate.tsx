@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { getRoundTime, timerKeys } from '@/api';
+import { LoadingScreen } from '@/components/ui';
 
 import { useSession } from './hooks';
 import { RoundIntermission } from './RoundIntermission';
@@ -42,11 +43,7 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
   }, []);
 
   if (session.isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-background" role="status">
-        <span className="text-sm text-muted-foreground">Loading your session…</span>
-      </div>
-    );
+    return <LoadingScreen message="Loading your session…" />;
   }
 
   if (session.isError || !session.data) {
@@ -64,11 +61,7 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
   }
 
   if (time.isLoading || !time.data || now === null) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-background" role="status">
-        <span className="text-sm text-muted-foreground">Checking round schedule…</span>
-      </div>
-    );
+    return <LoadingScreen message="Checking round schedule…" />;
   }
 
   const start = time.data.roundStartTime?.getTime() ?? now;

@@ -72,6 +72,11 @@ export function QuestionList({ roundId }: QuestionListProps) {
             </span>
           </div>
           <h3 className="font-display text-lg text-brand">{question.title}</h3>
+          {question.bountyActive && (
+            <span className="w-fit rounded-full bg-coin/20 px-2 py-0.5 text-xs font-medium text-coin">
+              <span aria-hidden="true">🎯</span> Bounty
+            </span>
+          )}
           {question.solved !== undefined || question.bought !== undefined ? (
             <span
               className={cn(

@@ -13,6 +13,7 @@ import type { Question } from '../types';
 import { ConsoleOutput } from './code-editor/ConsoleOutput';
 import { EditorToolbar } from './code-editor/EditorToolbar';
 import { MonacoWrapper } from './code-editor/MonacoWrapper';
+import { ConfirmSubmitDialog } from './ConfirmSubmitDialog';
 import { JudgeStatus } from './JudgeStatus';
 import { DEFAULT_LANGUAGE, getLanguageById } from './languages';
 import { ProblemPanel } from './ProblemPanel';
@@ -77,11 +78,18 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
   const allPassed = verdict !== undefined && verdict.failed === 0 && verdict.passed > 0;
   const resultOpen = allPassed && verdict.submissionId !== dismissedSubmissionId;
 
-  function handleSubmit() {
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+
+  function requestSubmit() {
     if (!sourceCode.trim()) {
       toast.error('Write some code before submitting.');
       return;
     }
+    setConfirmSubmitOpen(true);
+  }
+
+  function confirmSubmit() {
+    setConfirmSubmitOpen(false);
     submission.submit.mutate({ questionId: question.id, languageId, sourceCode });
   }
 
@@ -96,7 +104,7 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
             <EditorToolbar
               languageId={languageId}
               onLanguageChange={id => setLanguage(question.id, id, getLanguageById(id).boilerplate)}
-              onSubmit={handleSubmit}
+              onSubmit={requestSubmit}
               onReset={() => resetDraft(question.id, languageId, language.boilerplate)}
               isSubmitting={submission.submit.isPending}
               disabled={isSubmitDisabled}
@@ -153,6 +161,12 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
             isPolling={submission.result.isFetching}
           />
         }
+      />
+      <ConfirmSubmitDialog
+        open={confirmSubmitOpen}
+        onOpenChange={setConfirmSubmitOpen}
+        onConfirm={confirmSubmit}
+        isSubmitting={submission.submit.isPending}
       />
       {verdict && (
         <ResultModal
