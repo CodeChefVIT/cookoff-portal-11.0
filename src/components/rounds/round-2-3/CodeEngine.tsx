@@ -12,6 +12,7 @@ import { ProblemPanel } from '../ProblemPanel';
 import { ResultModal } from '../ResultModal';
 import type { Question } from '../types';
 import { ConsoleOutput } from './code-editor/ConsoleOutput';
+import { EditorActions } from './code-editor/EditorActions';
 import { EditorToolbar } from './code-editor/EditorToolbar';
 import { MonacoWrapper } from './code-editor/MonacoWrapper';
 import { ConfirmSubmitDialog } from './ConfirmSubmitDialog';
@@ -104,12 +105,8 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
             <EditorToolbar
               languageId={languageId}
               onLanguageChange={id => setLanguage(question.id, id, getLanguageById(id).boilerplate)}
-              onSubmit={requestSubmit}
               onReset={() => resetDraft(question.id, languageId, language.boilerplate)}
-              isSubmitting={submission.submit.isPending}
               disabled={isSubmitDisabled}
-              customInputEnabled={customInputEnabled}
-              onToggleCustomInput={() => setCustomInputEnabled(value => !value)}
             />
             <div className="min-h-0 flex-1">
               <MonacoWrapper
@@ -119,6 +116,13 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
                 readOnly={isExpired}
               />
             </div>
+            <EditorActions
+              onSubmit={requestSubmit}
+              isSubmitting={submission.submit.isPending}
+              disabled={isSubmitDisabled}
+              customInputEnabled={customInputEnabled}
+              onToggleCustomInput={() => setCustomInputEnabled(value => !value)}
+            />
             {customInputEnabled && (
               <textarea
                 aria-label="Custom input"
