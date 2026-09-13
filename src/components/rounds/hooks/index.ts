@@ -5,3 +5,6 @@ export { useRoundQuestions } from './use-round-questions';
 export { useQuestion } from './use-question';
 export { useAttempt } from './use-attempt';
 export { useCodeSubmission } from './use-code-submission';
+export { useVisualBlocks } from './use-visual-blocks';
+export { useVisualSubmission, useVisualSubmissionState } from './use-visual-submission';
+export type { VisualSubmissionState } from './use-visual-submission';
