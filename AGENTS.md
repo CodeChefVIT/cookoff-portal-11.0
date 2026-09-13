@@ -349,6 +349,13 @@ so it has no testcase dependency.
   to new station", "Realm Name: Jotunheim", "Leave Team") with no code editor,
   testcases, or betting. They were rendered and inspected frame-by-frame and
   rejected; do not use them for R2/R3 work.
+- Figma file `Qc0hMJFVUSxi6jsnhx54Vk`, node `352:499` (background) composed
+  with `352:459` + `352:394` (card) is the **only** valid `(auth)/login`
+  design. The mock's "Sign in as xyz" account-chooser row and "LOGIN" button
+  are deliberately **not** implemented — there are no credential fields
+  anywhere in the design and the backend only supports one auth action
+  (`/auth/google` redirect), so both would have been dead UI. Only the
+  logo, title, divider, and "Sign in with Google" button are built.
 
 ### Server-authoritative state
 
