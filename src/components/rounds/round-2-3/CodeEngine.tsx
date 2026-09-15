@@ -10,23 +10,26 @@ import { useRoundStore } from '@/stores';
 
 import { ProblemPanel } from '../ProblemPanel';
 import { ResultModal } from '../ResultModal';
+import { getRoundConfig } from '../round-config';
 import type { Question } from '../types';
-import { ConsoleOutput } from './code-editor/ConsoleOutput';
 import { EditorToolbar } from './code-editor/EditorToolbar';
+import { LanguageSelector } from './code-editor/LanguageSelector';
 import { MonacoWrapper } from './code-editor/MonacoWrapper';
-import { JudgeStatus } from './JudgeStatus';
+import { CustomInputPanel } from './CustomInputPanel';
 import { DEFAULT_LANGUAGE, getLanguageById } from './languages';
+import { ResultsPlaceholder } from './ResultsPlaceholder';
+import { RoundStatusPill } from './RoundStatusPill';
 import { TestcasePanel } from './TestcasePanel';
 import { WorkspaceLayout } from './WorkspaceLayout';
 
 /**
  * ROUND 2/3 ENGINE - Entry point for the "Code" rounds.
  *
- * Orchestrates ProblemPanel + MonacoWrapper/EditorToolbar + TestcasePanel +
- * JudgeStatus, and owns the `POST /submit` -> `GET /result/:id` lifecycle
- * via `useCodeSubmission`. The parent `RoundShell`/`BuyInGate` handle
- * chrome and the buy-in gate respectively — this component assumes the
- * editor is already unlocked.
+ * Orchestrates ProblemPanel + the editor column (round pill, language,
+ * Monaco, action row) + the results slot, and owns the `POST /submit` ->
+ * `GET /result/:id` lifecycle via `useCodeSubmission`. The parent
+ * `RoundShell`/`BuyInGate` handle chrome and the buy-in gate respectively —
+ * this component assumes the editor is already unlocked.
  */
 export interface CodeEngineProps {
   question: Question;
@@ -87,71 +90,61 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
 
   const isSubmitDisabled = isExpired || !sourceCode.trim() || submission.submit.isPending;
 
+  const placeholder = submission.timedOut
+    ? 'Taking longer than expected.'
+    : submission.submit.isPending || submission.result.isFetching
+      ? 'Judging your submission…'
+      : submission.result.isError
+        ? "Couldn't fetch your submission result."
+        : submission.submit.isError && !submission.notPurchased
+          ? "Couldn't submit — your code is still here. Try again."
+          : 'You must run your code first';
+
   return (
     <>
       <WorkspaceLayout
-        problem={<ProblemPanel question={question} index={index} />}
+        problem={<ProblemPanel variant="code" question={question} index={index} />}
         editor={
-          <div className="flex h-full min-h-0 flex-col gap-2">
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-2 lg:relative lg:block lg:h-[29.766px]">
+              <RoundStatusPill label={getRoundConfig(roundId).label} />
+              <LanguageSelector
+                value={languageId}
+                onChange={id => setLanguage(question.id, id, getLanguageById(id).boilerplate)}
+                className="lg:absolute lg:top-[2.65px] lg:right-[2px]"
+              />
+            </div>
+            <MonacoWrapper
+              value={sourceCode}
+              onChange={code => setSourceCode(question.id, code)}
+              language={language.monacoId}
+              readOnly={isExpired}
+              className="mt-3 min-h-0 flex-1 lg:mt-[19.2px] lg:ml-[6px]"
+            />
             <EditorToolbar
-              languageId={languageId}
-              onLanguageChange={id => setLanguage(question.id, id, getLanguageById(id).boilerplate)}
               onSubmit={handleSubmit}
-              onReset={() => resetDraft(question.id, languageId, language.boilerplate)}
               isSubmitting={submission.submit.isPending}
               disabled={isSubmitDisabled}
               customInputEnabled={customInputEnabled}
               onToggleCustomInput={() => setCustomInputEnabled(value => !value)}
+              className="lg:ml-[6px]"
             />
-            <div className="min-h-0 flex-1">
-              <MonacoWrapper
-                value={sourceCode}
-                onChange={code => setSourceCode(question.id, code)}
-                language={language.monacoId}
-                readOnly={isExpired}
-              />
-            </div>
-            {customInputEnabled && (
-              <textarea
-                aria-label="Custom input"
-                value={draft?.customInput ?? ''}
-                onChange={event => setCustomInput(question.id, event.target.value)}
-                placeholder="Custom stdin for Run Code…"
-                className="h-24 rounded-lg border border-border bg-secondary p-2 font-mono text-xs text-secondary-foreground"
-              />
-            )}
-            <JudgeStatus
-              description={verdict?.description}
-              isPolling={submission.result.isFetching}
-              timedOut={submission.timedOut}
-              onRetry={submission.retryResult}
-            />
-            {submission.notPurchased && (
-              <p role="alert" className="text-sm text-destructive">
-                This question hasn&rsquo;t been purchased. Reload the page and place a bet again.
-              </p>
-            )}
-            {submission.submit.isError && !submission.notPurchased && (
-              <p role="alert" className="text-sm text-destructive">
-                Couldn&rsquo;t submit — your code is still here. Try again.
-              </p>
-            )}
-            <ConsoleOutput
-              output={
-                submission.result.isError && !submission.timedOut
-                  ? "Couldn't fetch your submission result. Try Check again."
-                  : ''
-              }
-              variant="stderr"
-            />
-          </div>
+          </>
         }
         results={
-          <TestcasePanel
-            testcases={testcases.data ?? []}
-            verdict={verdict}
-            isPolling={submission.result.isFetching}
-          />
+          customInputEnabled ? (
+            <CustomInputPanel
+              value={draft?.customInput ?? ''}
+              onChange={value => setCustomInput(question.id, value)}
+            />
+          ) : verdict ? (
+            <TestcasePanel testcases={testcases.data ?? []} verdict={verdict} />
+          ) : (
+            <ResultsPlaceholder
+              message={placeholder}
+              onRetry={submission.timedOut ? submission.retryResult : undefined}
+            />
+          )
         }
       />
       {verdict && allPassed && (
@@ -165,6 +158,7 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
           // dto.ResultResponse carries no payout or "already answered" flag.
           pointsAwarded={question.points}
           alreadyAnswered={wasAlreadySolved}
+          showReward={getRoundConfig(roundId).hasCurrency}
         />
       )}
     </>

@@ -22,6 +22,8 @@ export interface ResultModalProps {
   question: Question;
   pointsAwarded: number;
   alreadyAnswered: boolean;
+  /** Round 3 has no reward (`RoundConfig.hasCurrency` is false). */
+  showReward?: boolean;
 }
 
 export function ResultModal({
@@ -30,6 +32,7 @@ export function ResultModal({
   question,
   pointsAwarded,
   alreadyAnswered,
+  showReward = true,
 }: ResultModalProps) {
   return (
     <Dialog.Root open={open} onOpenChange={next => !next && onClose()}>
@@ -49,7 +52,7 @@ export function ResultModal({
           {!alreadyAnswered ? (
             <div className="mt-4 flex justify-center gap-6 text-sm">
               <span className="text-primary">+{pointsAwarded} score</span>
-              {Number(question.reward) > 0 && (
+              {showReward && Number(question.reward) > 0 && (
                 <span className="text-coin">+{question.reward} coins</span>
               )}
             </div>

@@ -1,5 +1,7 @@
 'use client';
 
+import Image from 'next/image';
+
 import { cn } from '@/lib/utils';
 
 import { useQuestionTabNav } from './hooks';
@@ -9,17 +11,23 @@ export interface QuestionTabsProps {
   roundId: number;
   questions: Question[];
   activeId?: string;
+  className?: string;
 }
 
-/** Numbered arch tabs (Desktop - 15.png). Real ARIA tablist — keyboard-navigable with arrows/Home/End. */
-export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps) {
+/**
+ * Half-ellipse question tabs from Figma `Desktop - 15/14` (312:1101,
+ * 312:1216): active 94.79×44, others 76.77×37 at 75%, Quicksand Bold 21px
+ * numerals, 12px apart (the frame's 7 tabs span exactly 32→661px). Real ARIA
+ * tablist — keyboard-navigable with arrows/Home/End.
+ */
+export function QuestionTabs({ roundId, questions, activeId, className }: QuestionTabsProps) {
   const { go, onKeyDown } = useQuestionTabNav(roundId, questions);
 
   return (
     <div
       role="tablist"
       aria-label="Questions"
-      className="flex [scrollbar-width:none] gap-1 overflow-x-auto px-4 pt-3 sm:px-6"
+      className={cn('flex [scrollbar-width:none] items-end gap-[12px] overflow-x-auto', className)}
     >
       {questions.map((question, index) => {
         const isActive = question.id === activeId;
@@ -33,18 +41,18 @@ export function QuestionTabs({ roundId, questions, activeId }: QuestionTabsProps
             onClick={() => go(index)}
             onKeyDown={event => onKeyDown(event, index)}
             className={cn(
-              'flex shrink-0 cursor-pointer items-center gap-1 rounded-t-full border border-b-0 border-hairline/50 px-4 py-2 text-sm font-medium transition-colors focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none',
-              isActive
-                ? 'bg-card text-card-foreground'
-                : 'bg-transparent text-muted-foreground hover:text-foreground'
+              'relative flex shrink-0 cursor-pointer justify-center font-tab text-[21px] leading-[30px] font-bold text-black focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none',
+              isActive ? 'h-[44px] w-[94.79px] pt-[7.42px]' : 'h-[37px] w-[76.77px] pt-[3.74px]'
             )}
           >
-            {index + 1}
-            {question.solved && (
-              <span aria-hidden="true" className="text-xs text-primary">
-                ✓
-              </span>
-            )}
+            <Image
+              src={isActive ? '/code-round/tab-active.svg' : '/code-round/tab-inactive.svg'}
+              alt=""
+              fill
+              unoptimized
+              className="pointer-events-none"
+            />
+            <span className="relative">{index + 1}</span>
           </div>
         );
       })}

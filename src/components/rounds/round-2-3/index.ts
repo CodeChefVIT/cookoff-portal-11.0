@@ -8,7 +8,6 @@ export * from './CodeEngine';
 export * from './QuestionWorkspace';
 export * from './TestcasePanel';
 export * from './TestcaseCase';
-export * from './JudgeStatus';
 export * from './WorkspaceLayout';
 export * from './languages';
 export * from './code-editor';

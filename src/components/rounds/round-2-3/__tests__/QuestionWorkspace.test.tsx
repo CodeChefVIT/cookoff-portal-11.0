@@ -42,6 +42,11 @@ vi.mock('@/api', async () => {
   };
 });
 
+// QuestionWorkspace renders the question tabs, whose navigation needs the App Router.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),
+}));
+
 const QUESTION_R2: Question = {
   id: 'q1',
   title: 'Two Sum',

@@ -16,7 +16,9 @@ import type { RoundId } from './types';
  *
  * The "Master Layout" for all three rounds. Renders the header and question
  * tab strip for the round's `chrome` (R1's Figma `scratch` look, or the
- * R2/R3 IDE look), then the round Engine as `children`.
+ * R2/R3 IDE look), then the round Engine as `children`. On an R2/R3 question
+ * page the tabs sit in the workspace's left column instead
+ * (`QuestionWorkspace`), per Figma `Desktop - 15/14`.
  */
 export interface RoundShellProps {
   children: ReactNode;
@@ -32,10 +34,17 @@ export function RoundShell({ children, roundId, activeQuestionId, headerAction }
   const session = useSession();
   const { data: questions } = useRoundQuestions(roundId);
   const isScratch = config.chrome === 'scratch';
-  const showTabs = !config.minimalHud && questions && questions.length > 0;
+  const showTabs = (isScratch || !activeQuestionId) && questions && questions.length > 0;
 
   return (
-    <div className={cn('flex min-h-dvh flex-col', isScratch ? 'bg-scratch-bg' : 'bg-background')}>
+    <div
+      className={cn(
+        'flex min-h-dvh flex-col',
+        isScratch
+          ? 'bg-scratch-bg'
+          : 'bg-code-page bg-[url(/code-round/page-bg.svg)] bg-[length:1440px_1024px]'
+      )}
+    >
       {isScratch ? (
         <ScratchHeader headerAction={config.headerSubmit ? headerAction : undefined} />
       ) : (
@@ -53,7 +62,12 @@ export function RoundShell({ children, roundId, activeQuestionId, headerAction }
             activeId={activeQuestionId}
           />
         ) : (
-          <QuestionTabs roundId={roundId} questions={questions} activeId={activeQuestionId} />
+          <QuestionTabs
+            roundId={roundId}
+            questions={questions}
+            activeId={activeQuestionId}
+            className="px-4 pt-4 lg:pl-[32px]"
+          />
         ))}
       <main className="flex-1">{children}</main>
     </div>

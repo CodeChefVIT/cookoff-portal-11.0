@@ -6,6 +6,7 @@ import { Dialog } from '@base-ui/react/dialog';
 
 import { isApiError } from '@/api';
 import { Button, buttonVariants } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 import { useAttempt, useSession } from './hooks';
 import { getRoundConfig } from './round-config';
@@ -27,6 +28,8 @@ export interface BuyInGateProps {
   question: Question;
   /** Re-locks the editor when `/submit` reports the attempt was never purchased (stale client cache). */
   forceLocked?: boolean;
+  /** Extra classes for the locked-state card. */
+  className?: string;
 }
 
 export function BuyInGate({
@@ -35,6 +38,7 @@ export function BuyInGate({
   roundId,
   question,
   forceLocked,
+  className,
 }: BuyInGateProps) {
   const config = getRoundConfig(roundId);
   const session = useSession();
@@ -81,7 +85,10 @@ export function BuyInGate({
 
   return (
     <div
-      className="relative flex min-h-[50dvh] flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card/60 p-8 text-center"
+      className={cn(
+        'relative flex min-h-[50dvh] flex-col items-center justify-center gap-4 rounded-2xl border border-border bg-card/60 p-8 text-center',
+        className
+      )}
       aria-label="Question locked"
     >
       <div aria-hidden="true" className="text-3xl">

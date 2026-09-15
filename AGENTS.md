@@ -302,7 +302,7 @@ All three rounds share one shell configured by
 `src/components/rounds/round-config.ts`. **A `roundId === <n>` conditional
 anywhere outside that file is a defect** — every behavioural difference
 between the rounds belongs in `RoundConfig` (`engine`, `hasBuyIn`,
-`hasCurrency`, `headerSubmit`, `minimalHud`, `isFinalRound`, …).
+`hasCurrency`, `headerSubmit`, `isFinalRound`, …).
 
 ```
 RoundGate (qualification + window)
@@ -318,12 +318,18 @@ RoundGate (qualification + window)
        │        `RoundConfig.headerSubmit`), not inside the engine.
        │
        └─ R2/R3 ("code" engine): QuestionList | QuestionWorkspace
+                ├─ QuestionTabs (overlaid into WorkspaceLayout's TABS_BAND)
                 └─ BuyInGate (pass-through on R3) → CodeEngine
                      └─ WorkspaceLayout
-                          ├─ ProblemPanel
+                          ├─ ProblemPanel (variant="code")
+                          ├─ RoundStatusPill + LanguageSelector
                           ├─ MonacoWrapper + EditorToolbar
-                          └─ TestcasePanel + JudgeStatus
+                          └─ CustomInputPanel | TestcasePanel | ResultsPlaceholder
 ```
+
+On an R2/R3 question page `RoundShell` does **not** render the question
+tabs — `QuestionWorkspace` owns them so they sit in the problem column above
+the panel, exactly as in the Figma frames, across loading/locked/unlocked.
 
 `ProblemPanel` and `ResultModal` are shared verbatim by both engines
 (`src/components/rounds/ProblemPanel.tsx` / `ResultModal.tsx`) — `ResultModal`
@@ -343,8 +349,13 @@ so it has no testcase dependency.
   a block is just `{id, content}` with no category column, so `BlockPalette`
   is one flat list and its well rises into the space the tabs occupied.
   This is a deliberate divergence from the mock, not a gap.
-- `src/figma/Desktop - 15.png` (dark, LeetCode-style IDE) is the **only**
-  valid R2/R3 design. **`design/R2.svg` and `design/R3.svg` are a different
+- Figma file `Qc0hMJFVUSxi6jsnhx54Vk`, nodes `312:1101` (`Desktop - 15`,
+  compile-failure state) and `312:1216` (`Desktop - 14`, passing state), is
+  the **only** valid R2/R3 design, implemented pixel-exact at 1440px from
+  `lg` (the `--code-*` tokens, `public/code-round/` assets, Bruno Ace / Inria
+  Sans / General Sans in `layout.tsx`). R3 is identical minus the currency
+  block (`hasCurrency`), the buy-in (`hasBuyIn`) and the reward
+  (`ResultModal` `showReward`). **`design/R2.svg` and `design/R3.svg` are a different
   product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go
   to new station", "Realm Name: Jotunheim", "Leave Team") with no code editor,
   testcases, or betting. They were rendered and inspected frame-by-frame and

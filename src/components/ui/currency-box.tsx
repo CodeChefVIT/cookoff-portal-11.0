@@ -1,34 +1,40 @@
+import Image from 'next/image';
+
+import { cn } from '@/lib/utils';
+
 /**
  * SHARED UI - Currency Box
  *
- * Displays the user's balance and, optionally, the current question's
- * buy-in/reward context. Only rendered when `RoundConfig.hasCurrency` is
- * true (never for Round 3 — see AGENTS.md "Rounds architecture").
+ * The balance block from Figma `Desktop - 15` (312:1101): a coin stack
+ * overhanging a 158×55.4 #363636 card, balance in DM Sans Black 32px. Only
+ * rendered when `RoundConfig.hasCurrency` is true (Round 2).
  */
 export interface CurrencyBoxProps {
   /** User's in-contest currency balance. */
   balance: number;
-  /** Cost to attempt the question (questions.buy_in); 0 hides the detail. */
-  buyIn?: number;
-  /** Payout on a correct solve (questions.reward); 0 hides the detail. */
-  reward?: number;
+  className?: string;
 }
 
-export function CurrencyBox({ balance, buyIn = 0, reward = 0 }: CurrencyBoxProps) {
+export function CurrencyBox({ balance, className }: CurrencyBoxProps) {
   return (
     <div
-      className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-coin"
       aria-label={`Balance: ${balance} coins`}
-    >
-      <span aria-hidden="true">🪙</span>
-      <span>{balance}</span>
-      {(buyIn > 0 || reward > 0) && (
-        <span className="text-xs text-muted-foreground">
-          {buyIn > 0 && <>bet {buyIn}</>}
-          {buyIn > 0 && reward > 0 && ' · '}
-          {reward > 0 && <>win {reward}</>}
-        </span>
+      className={cn(
+        'relative h-10 w-[114px] shrink-0 rounded-[10px] bg-code-coin-box shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] lg:h-[55.4px] lg:w-[158px]',
+        className
       )}
+    >
+      <Image
+        src="/code-round/coin.svg"
+        alt=""
+        width={79}
+        height={79}
+        unoptimized
+        className="absolute top-[-10px] left-[-3px] size-[57px] max-w-none lg:top-[-14px] lg:left-[-4px] lg:size-[79px]"
+      />
+      <span className="absolute top-[8px] left-[48px] font-scratch-sans text-[23px] leading-[24.688px] font-black text-code-coin-ink [font-variation-settings:'opsz'_14] lg:top-[15px] lg:left-[67px] lg:text-[32px]">
+        {balance}
+      </span>
     </div>
   );
 }
