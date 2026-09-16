@@ -128,7 +128,8 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
 
     expect(await screen.findByText(/1\/1 Test Cases Passed/)).toBeInTheDocument();
     expect(submitCodeMock).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText('Solved!')).toBeInTheDocument();
+    expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
+    expect(screen.getByText('You earned 10 points and 50 coins.')).toBeInTheDocument();
   });
 
   it('re-locks the question when /submit reports it was never purchased (stale cache)', async () => {

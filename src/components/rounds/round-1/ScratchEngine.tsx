@@ -16,7 +16,7 @@ import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
 import { useRoundTimer, useVisualBlocks, useVisualSubmissionState } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
-import { ResultModal } from '../ResultModal';
+import { SolvedBox } from '../SolvedBox';
 import type { Question, VisualSubmissionResult } from '../types';
 import { DraggableBlock, WorkspaceCanvas } from './block-workspace';
 import { BlockPalette } from './BlockPalette';
@@ -180,12 +180,13 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
         </DragOverlay>
       </DndContext>
       {result && (
-        <ResultModal
+        <SolvedBox
           open={resultOpen}
           onClose={() => setDismissedResult(result)}
           question={question}
           pointsAwarded={result.pointsAwarded}
           alreadyAnswered={result.alreadyAnswered}
+          showReward={false}
         />
       )}
     </>

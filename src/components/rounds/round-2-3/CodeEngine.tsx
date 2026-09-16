@@ -9,8 +9,8 @@ import { useCodeSubmission, useRoundTimer } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
 import { ProblemPanel } from '../ProblemPanel';
-import { ResultModal } from '../ResultModal';
 import { getRoundConfig } from '../round-config';
+import { SolvedBox } from '../SolvedBox';
 import type { Question } from '../types';
 import { EditorToolbar } from './code-editor/EditorToolbar';
 import { LanguageSelector } from './code-editor/LanguageSelector';
@@ -148,7 +148,7 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
         }
       />
       {verdict && allPassed && (
-        <ResultModal
+        <SolvedBox
           open={resultOpen}
           onClose={() => {
             setDismissedSubmissionId(verdict.submissionId);
