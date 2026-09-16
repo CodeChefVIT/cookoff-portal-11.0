@@ -122,8 +122,7 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     const user = userEvent.setup();
     renderWorkspace(2, 'q1');
 
-    await user.click(await screen.findByRole('button', { name: /place bet/i }));
-    await user.click(await screen.findByRole('button', { name: 'Confirm' }));
+    await user.click(await screen.findByRole('button', { name: 'Enter' }));
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
 
@@ -155,8 +154,8 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
 
-    expect(await screen.findByText(/didn.t recognize your bet/i)).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: /place bet/i })).toBeInTheDocument();
+    expect(await screen.findByText('CONFIRM PURCHASE')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enter' })).toBeInTheDocument();
   });
 });
 
@@ -183,6 +182,6 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /submit code/i })).toBeInTheDocument()
     );
-    expect(screen.queryByRole('button', { name: /place bet/i })).not.toBeInTheDocument();
+    expect(screen.queryByText('CONFIRM PURCHASE')).not.toBeInTheDocument();
   });
 });

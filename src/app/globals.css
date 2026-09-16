@@ -91,6 +91,7 @@
   --color-code-failed-dot: var(--code-failed-dot);
   --color-code-fail: var(--code-fail);
   --color-code-gold: var(--code-gold);
+  --color-code-enter: var(--code-enter);
   --font-round: var(--font-round);
   --font-inria: var(--font-inria);
   --font-general: var(--font-general);
@@ -190,6 +191,7 @@
   --code-failed-dot: #bb0b0a;
   --code-fail: #da3012;
   --code-gold: #ccb72f;
+  --code-enter: #c5614f;
 }
 
 /*
@@ -273,6 +275,7 @@
   --code-failed-dot: #bb0b0a;
   --code-fail: #da3012;
   --code-gold: #ccb72f;
+  --code-enter: #c5614f;
 }
 
 @layer base {

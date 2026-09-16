@@ -72,7 +72,6 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
           roundId={roundId}
           question={question}
           forceLocked={forceLocked}
-          className="m-3 lg:mx-[27px] lg:mt-[68px] lg:mb-0"
         >
           <CodeEngine
             question={question}
