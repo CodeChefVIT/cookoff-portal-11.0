@@ -15,7 +15,7 @@ export function ResultsPlaceholder({ message, onRetry }: ResultsPlaceholderProps
         aria-hidden="true"
         className="absolute inset-x-0 top-[26.9px] bottom-0 rounded-[10px] bg-code-panel blur-[2px]"
       />
-      <div className="absolute inset-x-0 top-[184.3px] flex flex-col items-center gap-2 px-4 text-center">
+      <div className="absolute inset-x-0 top-[51.92%] flex flex-col items-center gap-2 px-4 text-center">
         <p className="font-chip text-[17px] leading-[normal] font-normal text-white">{message}</p>
         {onRetry && (
           <button

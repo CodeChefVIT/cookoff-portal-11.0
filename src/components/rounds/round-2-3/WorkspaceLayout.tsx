@@ -1,9 +1,12 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import type { CSSProperties, ReactNode } from 'react';
 import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import { cn } from '@/lib/utils';
+
+import { RowResizer } from './RowResizer';
+import { useResultsResize } from './use-results-resize';
 
 export interface WorkspaceLayoutProps {
   problem: ReactNode;
@@ -24,8 +27,10 @@ export const TABS_BAND = 'lg:pt-[68px]';
 /**
  * Sole owner of the split-vs-tabbed responsive layout (AGENTS.md §15). From
  * `lg`, Figma `Desktop - 15/14` to the pixel: the problem panel under the
- * question-tab band on the left; on the right the editor column above a
- * 355px results panel, both 34px off the bottom. Below `lg`, a
+ * question-tab band on the left; on the right the editor column above the
+ * results panel, both 34px off the bottom. The results panel starts at
+ * Figma's 355px and is resizable against the editor via `RowResizer` in the
+ * frame's 15.2px gap (the editor slot always keeps its minimum). Below `lg`, a
  * `Problem | Code | Tests` tab strip, since a split editor is unusable on a
  * phone.
  */
@@ -34,6 +39,7 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
     'panel',
     parseAsStringEnum<Panel>([...PANELS]).withDefault('problem')
   );
+  const { resultsHeight, onPointerDown, onKeyDown } = useResultsResize();
 
   return (
     <div
@@ -81,9 +87,17 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
         >
           {editor}
         </div>
+        <RowResizer
+          label="Resize editor and results panels"
+          value={resultsHeight}
+          onPointerDown={onPointerDown}
+          onKeyDown={onKeyDown}
+        />
         <div
+          style={{ '--results-h': `${resultsHeight}px` } as CSSProperties}
           className={cn(
-            'h-[355px] shrink-0 lg:mt-[15.2px] lg:ml-[6px] lg:block',
+            // 275.2px = the editor slot's 260px minimum + the resizer's 15.2px gap.
+            'h-[355px] shrink-0 lg:ml-[6px] lg:block lg:h-(--results-h) lg:max-h-[calc(100%-275.2px)]',
             panel === 'tests' ? 'block' : 'hidden'
           )}
         >
