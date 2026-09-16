@@ -1,60 +1,59 @@
 'use client';
 
-import Link from 'next/link';
-
+import {
+  DashboardHeader,
+  DetailsPanel,
+  ProfilePanel,
+  StatisticsPanel,
+  Timeline,
+  useStageZoom,
+} from '@/components/dashboard';
 import { useSession } from '@/components/rounds/hooks';
+import { LoadingScreen } from '@/components/ui';
 
-const ROUNDS = [
-  { id: 1, name: 'Round 1', href: '/round/1' },
-  { id: 2, name: "Round 2 — Chef's Pantry", href: '/round/2' },
-  { id: 3, name: 'Round 3 — the Crucible', href: '/round/3' },
-] as const;
-
-// Landing page after login. Cards link to every round the user has qualified
-// for (users.round_qualified). Round unlock is still enforced server-side by
-// each round's RoundGate — this page is presentation only.
+// Figma `dashboard` (Qc0hMJFVUSxi6jsnhx54Vk, 323:1835). From `lg` every section
+// sits at its frame coordinates (minus the 99px header) on a 1440px stage
+// zoomed to fit the viewport; below `lg` the same sections stack. Round unlock is still enforced
+// server-side by each round's RoundGate — this page is presentation only.
 export default function DashboardPage() {
   const session = useSession();
+  const zoom = useStageZoom();
 
-  if (session.isLoading) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center" role="status">
-        <span className="text-sm text-muted-foreground">Loading…</span>
-      </div>
-    );
-  }
+  if (!session.data) return <LoadingScreen />;
 
-  const roundQualified = session.data?.roundQualified ?? 0;
+  const { name, userId, email, score, roundQualified, questions } = session.data;
 
   return (
-    <div className="mx-auto flex min-h-dvh max-w-2xl flex-col gap-6 px-6 py-10">
-      <div>
-        <h1 className="font-display text-3xl text-brand">COOK OFF 11.0</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Score: {session.data?.score ?? 0} · Balance: {session.data?.balance ?? 0} coins
-        </p>
-      </div>
-      <div className="grid gap-3">
-        {ROUNDS.map(round => {
-          const qualified = roundQualified >= round.id;
-          return qualified ? (
-            <Link
-              key={round.id}
-              href={round.href}
-              className="rounded-2xl border border-border bg-card p-4 text-card-foreground transition-colors hover:border-primary focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
-            >
-              {round.name}
-            </Link>
-          ) : (
-            <div
-              key={round.id}
-              aria-disabled="true"
-              className="rounded-2xl border border-border bg-card/40 p-4 text-muted-foreground"
-            >
-              {round.name} — not yet qualified
-            </div>
-          );
-        })}
+    <div className="relative min-h-dvh bg-dash-bg lg:h-dvh lg:overflow-hidden">
+      <div aria-hidden className="pointer-events-none absolute inset-0 bg-dash-veil opacity-15" />
+      <div className="relative">
+        <DashboardHeader zoom={zoom} />
+        <div
+          className="relative mx-auto flex flex-col items-center gap-10 px-4 pt-6 pb-10 lg:block lg:h-[925px] lg:w-[1440px] lg:p-0"
+          style={zoom === null ? undefined : { zoom }}
+        >
+          <div className="w-full lg:absolute lg:top-[116px] lg:left-[124px] lg:w-auto">
+            <Timeline roundQualified={roundQualified} />
+          </div>
+          <div className="mt-8 flex w-full flex-col items-center gap-6 lg:contents">
+            <ProfilePanel
+              name={name || email}
+              userId={userId}
+              email={email}
+              score={score}
+              className="lg:absolute lg:top-[246px] lg:left-[19px]"
+            />
+            <StatisticsPanel
+              roundQualified={roundQualified}
+              questions={questions}
+              className="lg:absolute lg:top-[246px] lg:left-[410px]"
+            />
+            <DetailsPanel
+              roundQualified={roundQualified}
+              className="lg:absolute lg:top-[246px] lg:left-[1084px]"
+            />
+          </div>
+        </div>
       </div>
     </div>
   );

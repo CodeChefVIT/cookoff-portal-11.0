@@ -24,6 +24,7 @@ describe('sessionSchema', () => {
 
     expect(parsed).toEqual({
       userId: 'u1',
+      name: 'Ada',
       email: 'ada@vitstudent.ac.in',
       balance: 120.5,
       score: 40,

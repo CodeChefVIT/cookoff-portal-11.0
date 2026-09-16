@@ -18,6 +18,17 @@
   --font-tab: var(--font-tab);
   --font-login-display: var(--font-login-display);
   --font-login-body: var(--font-login-body);
+  --font-timeline: var(--font-timeline);
+  --color-dash-bg: var(--dash-bg);
+  --color-dash-veil: var(--dash-veil);
+  --color-dash-ink: var(--dash-ink);
+  --color-dash-label: var(--dash-label);
+  --color-dash-value: var(--dash-value);
+  --color-dash-glow: var(--dash-glow);
+  --color-dash-card: var(--dash-card);
+  --color-dash-card-border: var(--dash-card-border);
+  --color-dash-track: var(--dash-track);
+  --color-dash-closed: var(--dash-closed);
   --color-brand-accent: var(--brand-accent);
   --color-scratch-bg: var(--scratch-bg);
   --color-scratch-panel-q: var(--scratch-panel-q);
@@ -196,6 +207,17 @@
   --code-enter: #c5614f;
   --code-error-bg: #7f1d1d;
   --code-error-border: #ef4444;
+  /* Dashboard — exact hex from Figma `Qc0hMJFVUSxi6jsnhx54Vk` node 323:1835 */
+  --dash-bg: #16181b;
+  --dash-veil: #0b0c0c;
+  --dash-ink: #d8d0c5;
+  --dash-label: #c4bdb3;
+  --dash-value: #e7e7e7;
+  --dash-glow: #c9b99f;
+  --dash-card: #161616;
+  --dash-card-border: #5c423d;
+  --dash-track: #222222;
+  --dash-closed: #ff0000;
 }
 
 /*
@@ -282,6 +304,16 @@
   --code-enter: #c5614f;
   --code-error-bg: #7f1d1d;
   --code-error-border: #ef4444;
+  --dash-bg: #16181b;
+  --dash-veil: #0b0c0c;
+  --dash-ink: #d8d0c5;
+  --dash-label: #c4bdb3;
+  --dash-value: #e7e7e7;
+  --dash-glow: #c9b99f;
+  --dash-card: #161616;
+  --dash-card-border: #5c423d;
+  --dash-track: #222222;
+  --dash-closed: #ff0000;
 }
 
 @layer base {
