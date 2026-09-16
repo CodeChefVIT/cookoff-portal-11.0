@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { getPublicTestcases, testcaseKeys } from '@/api';
+import { getPublicTestcases, isApiError, testcaseKeys } from '@/api';
 import { useCodeSubmission, useRoundTimer } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
@@ -20,6 +20,7 @@ import { CustomInputPanel } from './CustomInputPanel';
 import { DEFAULT_LANGUAGE, getLanguageById } from './languages';
 import { ResultsPlaceholder } from './ResultsPlaceholder';
 import { RoundStatusPill } from './RoundStatusPill';
+import { SubmissionErrorCard } from './SubmissionErrorCard';
 import { TestcasePanel } from './TestcasePanel';
 import { WorkspaceLayout } from './WorkspaceLayout';
 
@@ -91,9 +92,28 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
     setConfirmSubmitOpen(true);
   }
 
+  // A failed submit or result fetch shows Figma `Desktop - 18`'s card over whatever verdict is on screen.
+  const [submitFailed, setSubmitFailed] = useState(false);
+  const [dismissedResultErrorFor, setDismissedResultErrorFor] = useState<string | null>(null);
+  const resultFailed =
+    submission.result.isError &&
+    !submission.timedOut &&
+    submission.submissionId !== dismissedResultErrorFor;
+
   function confirmSubmit() {
     setConfirmSubmitOpen(false);
-    submission.submit.mutate({ questionId: question.id, languageId, sourceCode });
+    setSubmitFailed(false);
+    submission.submit.mutate(
+      { questionId: question.id, languageId, sourceCode },
+      {
+        onError: error => {
+          // 402/403 re-locks the question instead (BuyInGate).
+          if (!(isApiError(error) && (error.status === 402 || error.status === 403))) {
+            setSubmitFailed(true);
+          }
+        },
+      }
+    );
   }
 
   const isSubmitDisabled = isExpired || !sourceCode.trim() || submission.submit.isPending;
@@ -102,11 +122,7 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
     ? 'Taking longer than expected.'
     : submission.submit.isPending || submission.result.isFetching
       ? 'Judging your submission…'
-      : submission.result.isError
-        ? "Couldn't fetch your submission result."
-        : submission.submit.isError && !submission.notPurchased
-          ? "Couldn't submit — your code is still here. Try again."
-          : 'You must run your code first';
+      : 'You must run your code first';
 
   return (
     <>
@@ -154,6 +170,13 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
             />
           )
         }
+      />
+      <SubmissionErrorCard
+        open={submitFailed || resultFailed}
+        onClose={() => {
+          setSubmitFailed(false);
+          setDismissedResultErrorFor(submission.submissionId);
+        }}
       />
       <ConfirmSubmitDialog
         open={confirmSubmitOpen}

@@ -358,7 +358,8 @@ with `showReward` (`RoundConfig.hasCurrency`, so R2 only).
   `lg` (the `--code-*` tokens, `public/code-round/` assets, Bruno Ace / Inria
   Sans / General Sans in `layout.tsx`). R3 is identical minus the currency
   block (`hasCurrency`), the buy-in (`hasBuyIn`) and the reward
-  (`SolvedBox` `showReward`). While an R2 question is locked, the workspace
+  (`SolvedBox` `showReward`). A failed submit or result fetch shows
+  `SubmissionErrorCard` (Figma `Desktop - 18`, `323:1631`) over the current verdict. While an R2 question is locked, the workspace
   renders inert under `Desktop - 21`'s page blur (`352:646`) with the
   `BuyInConfirm` box (`352:744`) and its coin layer (`352:1059`) on top. **`design/R2.svg` and `design/R3.svg` are a different
   product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go

@@ -167,6 +167,42 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
 
     expect(await screen.findByText('CONFIRM PURCHASE')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enter' })).toBeInTheDocument();
+    expect(screen.queryByText('Submission Failed')).not.toBeInTheDocument();
+  });
+});
+
+describe('QuestionWorkspace — submit failure', () => {
+  it('shows the Submission Failed card when /submit errors, and dismisses it', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 100,
+      score: 0,
+      roundQualified: 3,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+    getQuestionsByRoundMock.mockResolvedValue([QUESTION_R3]);
+    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+    submitCodeMock.mockRejectedValue(new ApiError({ message: 'boom', status: 500 }));
+
+    const user = userEvent.setup();
+    renderWorkspace(3, 'q2');
+
+    await user.click(await screen.findByRole('button', { name: /submit code/i }));
+    const confirmDialog = await screen.findByRole('alertdialog', {
+      name: /confirm final submission/i,
+    });
+    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
+
+    expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByText('Submission Failed')).not.toBeInTheDocument();
   });
 });
 
