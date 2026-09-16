@@ -15,6 +15,7 @@ import type { Question } from '../types';
 import { EditorToolbar } from './code-editor/EditorToolbar';
 import { LanguageSelector } from './code-editor/LanguageSelector';
 import { MonacoWrapper } from './code-editor/MonacoWrapper';
+import { ConfirmSubmitDialog } from './ConfirmSubmitDialog';
 import { CustomInputPanel } from './CustomInputPanel';
 import { DEFAULT_LANGUAGE, getLanguageById } from './languages';
 import { ResultsPlaceholder } from './ResultsPlaceholder';
@@ -80,11 +81,18 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
   const allPassed = verdict !== undefined && verdict.failed === 0 && verdict.passed > 0;
   const resultOpen = allPassed && verdict.submissionId !== dismissedSubmissionId;
 
-  function handleSubmit() {
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+
+  function requestSubmit() {
     if (!sourceCode.trim()) {
       toast.error('Write some code before submitting.');
       return;
     }
+    setConfirmSubmitOpen(true);
+  }
+
+  function confirmSubmit() {
+    setConfirmSubmitOpen(false);
     submission.submit.mutate({ questionId: question.id, languageId, sourceCode });
   }
 
@@ -122,7 +130,7 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
               className="mt-3 min-h-0 flex-1 lg:mt-[19.2px] lg:ml-[6px]"
             />
             <EditorToolbar
-              onSubmit={handleSubmit}
+              onSubmit={requestSubmit}
               isSubmitting={submission.submit.isPending}
               disabled={isSubmitDisabled}
               customInputEnabled={customInputEnabled}
@@ -146,6 +154,12 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
             />
           )
         }
+      />
+      <ConfirmSubmitDialog
+        open={confirmSubmitOpen}
+        onOpenChange={setConfirmSubmitOpen}
+        onConfirm={confirmSubmit}
+        isSubmitting={submission.submit.isPending}
       />
       {verdict && allPassed && (
         <SolvedBox

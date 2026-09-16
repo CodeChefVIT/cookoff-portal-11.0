@@ -32,6 +32,8 @@ export interface BuyInGateProps {
   question: Question;
   /** Re-locks the editor when `/submit` reports the attempt was never purchased (stale client cache). */
   forceLocked?: boolean;
+  /** Holds back the `BuyInConfirm` box (workspace stays blurred) while another modal — the bounty prompt — is open. */
+  deferPrompt?: boolean;
 }
 
 const BET_FAILED = 'Couldn’t place your bet. Try again.';
@@ -42,6 +44,7 @@ export function BuyInGate({
   roundId,
   question,
   forceLocked,
+  deferPrompt,
 }: BuyInGateProps) {
   const config = getRoundConfig(roundId);
   const session = useSession();
@@ -108,7 +111,10 @@ export function BuyInGate({
       <div className="contents" inert={!unlocked} aria-hidden={unlocked ? undefined : true}>
         {children}
       </div>
-      {!unlocked && (
+      {!unlocked && deferPrompt && (
+        <div aria-hidden="true" className="fixed inset-0 z-40 backdrop-blur-[5px]" />
+      )}
+      {!unlocked && !deferPrompt && (
         <BuyInConfirm
           onEnter={handleEnter}
           backHref={`/round/${roundId}`}

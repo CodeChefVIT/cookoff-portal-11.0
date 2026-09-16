@@ -49,7 +49,14 @@ export function QuestionHeader({ question, index, variant }: QuestionHeaderProps
         {index !== undefined && `Problem ${index}: `}
         <span className="text-problem-title">{question.title}</span>
       </h2>
-      <span className={chipVariants({ variant })}>{question.points} Points</span>
+      <div className="flex shrink-0 items-center gap-2">
+        {question.bountyActive && (
+          <span className="rounded-full bg-coin/20 px-2.5 py-1 text-xs font-medium text-coin">
+            <span aria-hidden="true">🎯</span> Bounty
+          </span>
+        )}
+        <span className={chipVariants({ variant })}>{question.points} Points</span>
+      </div>
     </div>
   );
 }

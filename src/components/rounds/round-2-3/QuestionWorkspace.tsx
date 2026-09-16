@@ -1,13 +1,18 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 import { cn } from '@/lib/utils';
+import { isBountyResolvedNow, useRoundStore } from '@/stores';
 
 import { BuyInGate } from '../BuyInGate';
 import { useQuestion, useRoundQuestions } from '../hooks';
 import { QuestionTabs } from '../QuestionTabs';
+import type { Question } from '../types';
+import { BountyUnlockDialog } from './BountyUnlockDialog';
 import { CodeEngine } from './CodeEngine';
+import { DEFAULT_LANGUAGE } from './languages';
 import { TABS_BAND, WORKSPACE_GRID } from './WorkspaceLayout';
 
 export interface QuestionWorkspaceProps {
@@ -16,17 +21,20 @@ export interface QuestionWorkspaceProps {
 }
 
 /**
- * Resolves a single question from the round list (`GET /question/:id` is
- * admin-only — L-noted in AGENTS.md) and composes `BuyInGate` + `CodeEngine`.
- * A `402/403` from `/submit` (stale unlock cache) forces the gate closed
- * again, per AGENTS.md rule 6: the server always wins. Owns the question
- * tabs so they stay put across loading/locked/unlocked; from `lg` they're
- * overlaid into the workspace's `TABS_BAND`, as in Figma `Desktop - 15/14`.
+ * Resolves a single question (`GET /question/:id`, confirmed
+ * participant-facing) and hands off to `QuestionReady` once it's loaded.
+ * Kept as a thin loading/error shell — see `QuestionReady` for why the rest
+ * of the hooks live in a separate component: mounting them only once
+ * `question` exists keeps this component's own hook count identical across
+ * every one of its renders (loading -> loaded is a mount of a *different*
+ * component, not a mid-lifecycle branch of this one). It also owns the
+ * question tabs so they stay put across loading/locked/unlocked; from `lg`
+ * they're overlaid into the workspace's `TABS_BAND`, as in Figma
+ * `Desktop - 15/14`.
  */
 export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProps) {
   const { question, index, isLoading, isError, refetch } = useQuestion(roundId, questionId);
   const { data: questions } = useRoundQuestions(roundId);
-  const [forceLocked, setForceLocked] = useState(false);
 
   return (
     <div className="relative">
@@ -67,20 +75,93 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
           </button>
         </div>
       ) : (
-        <BuyInGate
-          questionId={questionId}
+        <QuestionReady
           roundId={roundId}
+          questionId={questionId}
           question={question}
-          forceLocked={forceLocked}
-        >
-          <CodeEngine
-            question={question}
-            roundId={roundId}
-            index={index}
-            onNotPurchased={() => setForceLocked(true)}
-          />
-        </BuyInGate>
+          index={index}
+        />
       )}
     </div>
+  );
+}
+
+interface QuestionReadyProps {
+  roundId: 2 | 3;
+  questionId: string;
+  question: Question;
+  index?: number;
+}
+
+/**
+ * Composes `BuyInGate` + `CodeEngine` and the bounty-unlock dialog for an
+ * already-loaded question. A `402/403` from `/submit` (stale unlock cache)
+ * forces the gate closed again, per AGENTS.md rule 6: the server always
+ * wins.
+ *
+ * The bounty dialog's open/closed state is plain local `useState`, seeded
+ * once from a non-reactive store snapshot (`isBountyResolvedNow`) and
+ * closed explicitly by the dialog's own handlers — it does not stay
+ * subscribed to the store for its visibility. `resolveBounty` still writes
+ * through to the store so a future mount of this question remembers the
+ * dialog was already seen.
+ *
+ * `'use no memo'` opts this component out of the React Compiler: with it
+ * compiled, clicking the bounty dialog's actions triggered "React has
+ * detected a change in the order of Hooks" on this exact function (verified
+ * via browser reproduction — the compiler-inserted memo cache slot shifted
+ * hook order between the mount render and the click-triggered re-render).
+ * None of this component's own hooks are conditional; this is a compiler
+ * bug workaround, not a signal to touch hook order here. Safe to remove
+ * once upgrading past the current React Compiler / Next 16.2 pairing fixes
+ * the underlying issue — re-verify the bounty flow in a browser first.
+ */
+function QuestionReady({ roundId, questionId, question, index }: QuestionReadyProps) {
+  'use no memo';
+  const router = useRouter();
+  const [forceLocked, setForceLocked] = useState(false);
+
+  const resolveBounty = useRoundStore.use.resolveBounty();
+  const resetDraft = useRoundStore.use.resetDraft();
+
+  const [bountyDialogOpen, setBountyDialogOpen] = useState(
+    () => question.bountyActive === true && !isBountyResolvedNow(question.id)
+  );
+
+  return (
+    <>
+      <BuyInGate
+        questionId={questionId}
+        roundId={roundId}
+        question={question}
+        forceLocked={forceLocked}
+        // Bounty prompt first, so a contestant who picks Stay Here is never asked to pay.
+        deferPrompt={bountyDialogOpen}
+      >
+        <CodeEngine
+          question={question}
+          roundId={roundId}
+          index={index}
+          onNotPurchased={() => setForceLocked(true)}
+        />
+      </BuyInGate>
+      <BountyUnlockDialog
+        open={bountyDialogOpen}
+        onOpenChange={open => {
+          setBountyDialogOpen(open);
+          if (!open) resolveBounty(question.id);
+        }}
+        onEnter={() => {
+          resetDraft(question.id, DEFAULT_LANGUAGE.id, DEFAULT_LANGUAGE.boilerplate);
+          resolveBounty(question.id);
+          setBountyDialogOpen(false);
+        }}
+        onStayHere={() => {
+          resolveBounty(question.id);
+          setBountyDialogOpen(false);
+          router.push(`/round/${roundId}`);
+        }}
+      />
+    </>
   );
 }

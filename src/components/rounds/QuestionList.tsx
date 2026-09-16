@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Lock } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 
@@ -11,8 +12,15 @@ import type { RoundId } from './types';
 /**
  * SHARED QUESTION LIST
  *
- * Round menu grid. `GET /question/round` may not carry per-user solved/bought
- * flags (L4) — badges render only when those flags are present, never guessed.
+ * Round menu grid, matching `design/Desktop - 22.svg`: a centred title, a
+ * coin-styled buy-in pill, a description snippet, and a `Start` CTA that
+ * always navigates into the question — `BuyInGate` on that page (not this
+ * list) owns the actual pay-to-unlock flow, matching the product doc
+ * ("click a button to place a bet ... the code editor window unlocks").
+ * A question only renders the blurred/padlock "locked" treatment once the
+ * API actually says so (`bought === false`); `GET /question/round` may not
+ * carry per-user solved/bought flags at all (L4) — badges and the lock
+ * overlay render only when those flags are present, never guessed.
  */
 export interface QuestionListProps {
   roundId: RoundId;
@@ -21,17 +29,16 @@ export interface QuestionListProps {
 export function QuestionList({ roundId }: QuestionListProps) {
   const { data: questions, isLoading, isError, refetch } = useRoundQuestions(roundId);
   const hasBuyIn = getRoundConfig(roundId).hasBuyIn;
-  const boughtLabel = hasBuyIn ? 'Bet placed' : 'Unlocked';
 
   if (isLoading) {
     return (
       <div
-        className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3"
+        className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3 xl:grid-cols-4"
         aria-busy="true"
         aria-label="Loading questions"
       >
-        {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className="h-32 animate-pulse rounded-2xl bg-card" />
+        {Array.from({ length: 8 }, (_, index) => (
+          <div key={index} className="h-64 animate-pulse rounded-2xl bg-card" />
         ))}
       </div>
     );
@@ -59,36 +66,50 @@ export function QuestionList({ roundId }: QuestionListProps) {
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3">
-      {questions.map((question, index) => (
-        <Link
-          key={question.id}
-          href={`/round/${roundId}/${question.id}`}
-          className="flex flex-col gap-2 rounded-2xl border border-border bg-card p-4 text-card-foreground transition-colors hover:border-primary focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
-        >
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs text-muted-foreground">Problem {index + 1}</span>
-            <span className="rounded-full bg-chip px-2 py-0.5 text-xs font-medium">
-              {question.points} pts
-            </span>
-          </div>
-          <h3 className="font-display text-lg text-brand">{question.title}</h3>
-          {question.solved !== undefined || question.bought !== undefined ? (
-            <span
-              className={cn(
-                'w-fit rounded-full px-2 py-0.5 text-xs font-medium',
-                question.solved
-                  ? 'bg-primary/20 text-primary'
-                  : question.bought
-                    ? 'bg-coin/20 text-coin'
-                    : 'bg-muted text-muted-foreground'
+    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 sm:p-6 lg:grid-cols-3 xl:grid-cols-4">
+      {questions.map(question => {
+        // Only known-false renders the lock treatment — `undefined` means the
+        // API omitted per-user flags (L4), and we never guess a state. R1/R3
+        // have no buy-in at all (RoundConfig.hasBuyIn), so they never lock.
+        const isLocked = hasBuyIn && question.bought === false;
+
+        return (
+          <Link
+            key={question.id}
+            href={`/round/${roundId}/${question.id}`}
+            className="relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-border bg-card p-5 text-center text-card-foreground transition-colors hover:border-primary focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
+          >
+            {question.bountyActive && (
+              <span className="absolute top-3 left-3 z-10 w-fit rounded-full bg-coin/20 px-2 py-0.5 text-xs font-medium text-coin">
+                <span aria-hidden="true">🎯</span> Bounty
+              </span>
+            )}
+            {question.solved && (
+              <span className="absolute top-3 right-3 z-10 w-fit rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
+                Solved
+              </span>
+            )}
+            <div className={cn('flex flex-1 flex-col items-center gap-3', isLocked && 'blur-sm')}>
+              <h3 className="font-display text-xl text-brand">{question.title}</h3>
+              {hasBuyIn && (
+                <span className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm font-semibold text-coin">
+                  <span aria-hidden="true">🪙</span> {question.buyIn}
+                </span>
               )}
-            >
-              {question.solved ? 'Solved' : question.bought ? boughtLabel : 'Locked'}
+              <p className="line-clamp-4 text-sm text-muted-foreground">{question.description}</p>
+            </div>
+            {isLocked && (
+              <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center">
+                <Lock className="size-12 text-primary drop-shadow-lg" strokeWidth={1.5} />
+              </div>
+            )}
+            <span className="w-full shrink-0 rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+              Start
+              {isLocked && <span className="sr-only"> (locked — place a bet to unlock)</span>}
             </span>
-          ) : null}
-        </Link>
-      ))}
+          </Link>
+        );
+      })}
     </div>
   );
 }
