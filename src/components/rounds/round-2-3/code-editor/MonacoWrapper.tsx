@@ -31,7 +31,11 @@ const defineTheme: BeforeMount = monaco => {
     base: 'vs-dark',
     inherit: true,
     rules: [],
-    colors: { 'editor.background': '#131414', 'editorGutter.background': '#131414' },
+    colors: {
+      'editor.background': '#131414',
+      'editorGutter.background': '#131414',
+      'editor.lineHighlightBorder': '#00000000',
+    },
   });
 };
 

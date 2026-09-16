@@ -7,27 +7,18 @@ export interface RoundStatusPillProps {
 
 /**
  * Round badge + timer capsule from Figma `Desktop - 15/14` (312:1101,
- * 312:1216): a 252×29.77 pill with a #b7ab98 border over a brand-accent fill
- * on its left 124px. Sits above the editor — the header has no timer here.
+ * 312:1216): a #b7ab98-bordered 29.77px pill, brand-accent label segment on
+ * the left. Sized by padding (the frame's 11px/8.5px label and 13px/10px timer
+ * insets, the timer's right one net of its 2px tracking) rather than fixed widths, so wider labels/digits never touch the
+ * segment edge. Sits above the editor — the header has no timer here.
  */
 export function RoundStatusPill({ label }: RoundStatusPillProps) {
   return (
-    <div className="relative h-[29.766px] w-[252px] shrink-0">
-      <div
-        aria-hidden="true"
-        className="absolute inset-y-0 left-0 w-[124px] rounded-l-[10px] bg-brand-accent"
-      />
-      <span className="absolute top-[1.95px] left-[11px] font-round text-[22px] leading-[25.075px] whitespace-nowrap text-black capitalize">
+    <div className="flex h-[29.766px] w-fit shrink-0 items-center overflow-hidden rounded-[10px] border border-code-sand">
+      <span className="flex h-full items-center bg-brand-accent pr-[8.5px] pl-[11px] font-round text-[22px] leading-[25.075px] whitespace-nowrap text-black capitalize">
         {label}
       </span>
-      <RoundTimer
-        variant="inline"
-        className="absolute top-[14.55px] left-[188.5px] -translate-x-1/2 -translate-y-1/2 whitespace-nowrap"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 rounded-[10px] border border-code-sand"
-      />
+      <RoundTimer variant="inline" className="pr-[8px] pl-[13px] whitespace-nowrap" />
     </div>
   );
 }

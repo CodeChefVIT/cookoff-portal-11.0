@@ -40,9 +40,7 @@ export function RoundShell({ children, roundId, activeQuestionId, headerAction }
     <div
       className={cn(
         'flex min-h-dvh flex-col',
-        isScratch
-          ? 'bg-scratch-bg'
-          : 'bg-code-page bg-[url(/code-round/page-bg.svg)] bg-[length:1440px_1024px]'
+        isScratch ? 'bg-scratch-bg' : 'bg-code-page bg-[url(/code-round/page-bg.png)]'
       )}
     >
       {isScratch ? (
