@@ -38,7 +38,7 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
   return (
     <div
       className={cn(
-        'flex h-[calc(100dvh-8rem)] min-h-0 flex-col gap-3 p-3 lg:h-[calc(100dvh-123px)] lg:min-h-[720px] lg:gap-0 lg:p-0',
+        'flex h-[calc(100dvh-146px)] min-h-0 flex-col gap-3 p-3 lg:h-[calc(100dvh-95px)] lg:min-h-[720px] lg:gap-0 lg:p-0',
         WORKSPACE_GRID
       )}
     >

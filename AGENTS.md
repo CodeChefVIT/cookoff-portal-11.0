@@ -351,7 +351,8 @@ so it has no testcase dependency.
   This is a deliberate divergence from the mock, not a gap.
 - Figma file `Qc0hMJFVUSxi6jsnhx54Vk`, nodes `312:1101` (`Desktop - 15`,
   compile-failure state) and `312:1216` (`Desktop - 14`, passing state), is
-  the **only** valid R2/R3 design, implemented pixel-exact at 1440px from
+  the **only** valid R2/R3 design, implemented pixel-exact at 1440px (except the header, which reuses R1's
+  `ScratchHeader` box, logo and wordmark dimensions so every round's header is identical) from
   `lg` (the `--code-*` tokens, `public/code-round/` assets, Bruno Ace / Inria
   Sans / General Sans in `layout.tsx`). R3 is identical minus the currency
   block (`hasCurrency`), the buy-in (`hasBuyIn`) and the reward
