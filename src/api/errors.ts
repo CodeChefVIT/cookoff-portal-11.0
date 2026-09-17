@@ -38,6 +38,18 @@ export function isNotQualifiedError(error: unknown): boolean {
   return isApiError(error) && error.status === 403 && /not qualified/i.test(error.message);
 }
 
+/**
+ * `423 Locked` — the contest timer is stopped, or it is running a round other
+ * than the one this question belongs to. Returned by `POST /submit`,
+ * `POST /attempts/:id` and `POST /submit/visual` via `ensureRoundRunning`
+ * (`internal/controllers/timer.go`). Deliberately distinct from the
+ * 402/403/409 buy-in statuses: nothing about the question or the balance
+ * changed, so the gate must not re-lock or blame the player's coins.
+ */
+export function isRoundNotRunningError(error: unknown): boolean {
+  return isApiError(error) && error.status === 423;
+}
+
 export function toApiError(error: unknown): ApiError {
   if (isApiError(error)) return error;
 

@@ -305,7 +305,11 @@ function buildFixture<K extends keyof FixtureMap>(
     return (puzzle ? [...puzzle.blocks].reverse() : []) as FixtureMap[K][1];
   }
   if (key === 'attempt') {
-    const outcome: AttemptOutcome = { unlocked: true, insufficientBalance: false };
+    const outcome: AttemptOutcome = {
+      unlocked: true,
+      insufficientBalance: false,
+      roundNotRunning: false,
+    };
     return outcome as FixtureMap[K][1];
   }
   if (key === 'submit') {

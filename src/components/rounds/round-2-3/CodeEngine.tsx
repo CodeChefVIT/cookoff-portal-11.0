@@ -4,7 +4,13 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { getPublicTestcases, isNotPurchasedError, isNotQualifiedError, testcaseKeys } from '@/api';
+import {
+  getPublicTestcases,
+  isNotPurchasedError,
+  isNotQualifiedError,
+  isRoundNotRunningError,
+  testcaseKeys,
+} from '@/api';
 import { useCodeSubmission, useRoundExpired } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
@@ -113,6 +119,13 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
           // In R2 a "not purchased" 402/403 re-locks the question instead
           // (BuyInGate). Every other round has no gate to fall back on, so the
           // card is the only thing that tells the player anything.
+          // A 423 must not re-lock the question — the buy-in is still valid,
+          // the round just isn't open.
+          if (isRoundNotRunningError(error)) {
+            setSubmitFailed(true);
+            setSubmitError('This round isn’t running right now — your submission wasn’t judged.');
+            return;
+          }
           if (isNotPurchasedError(error) && getRoundConfig(roundId).hasBuyIn) return;
           setSubmitFailed(true);
           if (isNotQualifiedError(error)) {
