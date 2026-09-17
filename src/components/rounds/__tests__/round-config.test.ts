@@ -52,7 +52,8 @@ describe('getRoundConfig', () => {
     expect(config.hasCurrency).toBe(false);
     expect(config.headerSubmit).toBe(false);
     expect(config.chrome).toBe('code');
-    expect(config.autoAttempt).toBe(false);
+    // Free, but still unlocked on open: `/submit` needs an attempt row in every round.
+    expect(config.autoAttempt).toBe(true);
     expect(config.expectedQuestionCount).toBe(4);
     expect(config.isFinalRound).toBe(true);
   });

@@ -3,6 +3,8 @@ import Image from 'next/image';
 export interface SubmissionErrorCardProps {
   open: boolean;
   onClose: () => void;
+  /** Replaces the generic copy when the server said something specific. */
+  message?: string;
 }
 
 /**
@@ -12,7 +14,7 @@ export interface SubmissionErrorCardProps {
  * Offsets are the frame's, less the 1px border; the message is in normal
  * flow so the card can grow on narrow phones, and matches the frame from `sm`.
  */
-export function SubmissionErrorCard({ open, onClose }: SubmissionErrorCardProps) {
+export function SubmissionErrorCard({ open, onClose, message }: SubmissionErrorCardProps) {
   if (!open) return null;
 
   return (
@@ -32,8 +34,12 @@ export function SubmissionErrorCard({ open, onClose }: SubmissionErrorCardProps)
         Submission Failed
       </p>
       <p className="mr-3 ml-[110px] pt-[46.42px] pb-3 font-sans text-[16px] leading-[25.075px] font-normal sm:mr-0 sm:w-[337px] sm:pb-0">
-        An unexpected error occurred while running <br className="hidden sm:inline" />
-        your code. Please try again later.
+        {message ?? (
+          <>
+            An unexpected error occurred while running <br className="hidden sm:inline" />
+            your code. Please try again later.
+          </>
+        )}
       </p>
       <button
         type="button"
