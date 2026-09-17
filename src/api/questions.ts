@@ -12,6 +12,24 @@ import { envelope, normalizeWire } from './wire';
 const stringArray = () =>
   z.union([z.array(z.string()), z.null(), z.undefined()]).transform(value => value ?? []);
 
+/**
+ * `questions.buy_in`/`reward` are nullable `numeric` columns, and `.default()`
+ * only fires for `undefined` — `z.coerce.string()` would turn a SQL NULL into
+ * the *string* `"null"`, which `Number()` then reads as `NaN`. That NaN
+ * silently disables the buy-in gate's affordability check and renders
+ * "you need NaN more to enter", with no way out of the question.
+ */
+const numericString = (fallback: string) =>
+  z
+    .union([z.string(), z.number(), z.null(), z.undefined()])
+    .transform(value => (value === null || value === undefined ? fallback : String(value)));
+
+/** Nullable in principle (`text` columns are NOT NULL today) — tolerate it anyway. */
+const nullableString = (fallback: string) =>
+  z
+    .union([z.string(), z.null(), z.undefined()])
+    .transform(value => (value === null || value === undefined ? fallback : value));
+
 const QUESTION_FIELDS = [
   'id',
   'description',
@@ -31,12 +49,12 @@ const QUESTION_FIELDS = [
 
 const questionShape = z.object({
   id: z.string(),
-  description: z.string().default(''),
+  description: nullableString(''),
   title: z.string(),
   type: z.union([z.literal('visual'), z.literal('code')]).default('code'),
   inputFormat: stringArray(),
-  buyIn: z.coerce.string().default('0'),
-  reward: z.coerce.string().default('0'),
+  buyIn: numericString('0'),
+  reward: numericString('0'),
   points: z.coerce.number().default(0),
   round: z.coerce.number(),
   constraints: stringArray(),
