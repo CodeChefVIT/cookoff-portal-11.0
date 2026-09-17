@@ -5,15 +5,12 @@ import styles from './not-found.module.css';
 
 export default function NotFound() {
   return (
-    <main
-      className="flex min-h-screen w-full items-center justify-center overflow-hidden bg-[#141515]"
-      aria-labelledby="not-found-title"
-    >
+    <main className={styles.page} aria-labelledby="not-found-title">
       <h1 id="not-found-title" className="sr-only">
         404 - Page not found
       </h1>
 
-      <div className="relative aspect-[1440/1024] w-[min(100vw,140.625vh)]">
+      <div className={styles.stage}>
         <Image
           src="/404-background.svg"
           alt=""
@@ -32,7 +29,7 @@ export default function NotFound() {
           href="/dashboard"
           prefetch={false}
           aria-label="Return to dashboard"
-          className="absolute top-[72.95%] left-[46.25%] h-[5.18%] w-[10.27%] rounded-md transition-[background-color,box-shadow] duration-200 hover:bg-white/10 focus:bg-white/10 focus:ring-2 focus:ring-white focus:outline-none"
+          className={styles.homeLink}
         />
       </div>
     </main>
