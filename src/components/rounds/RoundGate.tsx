@@ -73,13 +73,29 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
     return <LoadingScreen message="Checking round schedule…" />;
   }
 
+  const endedVariant = getRoundConfig(roundId).isFinalRound ? 'finished' : 'ended';
+  const timerRound = time.data.round;
+
+  // The contest timer runs one round at a time: an earlier timer round means
+  // this one hasn't opened yet, a later one means it's over.
+  if (timerRound !== undefined && timerRound < roundId) {
+    return <RoundIntermission roundId={roundId} variant="pending" />;
+  }
+  if (timerRound !== undefined && timerRound > roundId) {
+    return <RoundIntermission roundId={roundId} variant={endedVariant} />;
+  }
+
+  // No end time: the admin hasn't started this round yet.
+  if (!time.data.roundEndTime) {
+    return <RoundIntermission roundId={roundId} variant="pending" />;
+  }
+
   const start = time.data.roundStartTime?.getTime() ?? now;
-  const end = time.data.roundEndTime?.getTime() ?? now;
+  const end = time.data.roundEndTime.getTime();
 
   if (now < start) return <RoundIntermission roundId={roundId} variant="pending" />;
   if (now >= end) {
-    const variant = getRoundConfig(roundId).isFinalRound ? 'finished' : 'ended';
-    return <RoundIntermission roundId={roundId} variant={variant} />;
+    return <RoundIntermission roundId={roundId} variant={endedVariant} />;
   }
 
   return <>{children}</>;

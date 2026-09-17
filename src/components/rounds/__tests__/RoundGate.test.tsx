@@ -78,6 +78,32 @@ describe('RoundGate', () => {
     expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
   });
 
+  it('shows the pending intermission while the admin has not started the round', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 0,
+      score: 0,
+      roundQualified: 1,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: null,
+      roundEndTime: null,
+      round: 1,
+    });
+
+    renderWithProviders(
+      <RoundGate roundId={1}>
+        <div>gameplay</div>
+      </RoundGate>
+    );
+
+    expect(await screen.findByText('Scratch')).toBeInTheDocument();
+    expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
+  });
+
   it('renders the pending intermission before the round window opens', async () => {
     getSessionMock.mockResolvedValue({
       userId: 'u1',
