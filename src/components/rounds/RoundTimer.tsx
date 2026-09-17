@@ -12,11 +12,10 @@ const roundTimerVariants = cva('flex items-center tabular-nums', {
   variants: {
     variant: {
       pill: 'gap-2 rounded-full bg-round-badge px-3 py-1 font-mono text-sm text-foreground',
-      // Right-hand segment of a joined `Round N | 00:11:52` pill (RoundHeader)
-      // — same field colour as `pill`, but only the trailing corners round.
-      joined: 'gap-2 rounded-r-full bg-round-badge px-3 py-1 font-mono text-sm text-foreground',
       // Figma `scratch` timer at 80% scale: 2px border, gradient fill, clock + "TIME LEFT".
       box: "h-[52px] gap-2 rounded-[8px] border-2 border-scratch-border bg-linear-to-b from-scratch-timer-from to-scratch-panel-end px-3 font-scratch-sans text-white shadow-(--scratch-timer-shadow) [font-variation-settings:'opsz'_14] lg:h-[56px] lg:w-[160px] lg:items-end lg:justify-between lg:px-[12px] lg:pt-[7px] lg:pb-[5px]",
+      // Bare digits for the R2/R3 round badge pill (`RoundStatusPill`) — no icon, no background.
+      inline: 'font-round text-[20px] leading-[33.964px] tracking-[2px] text-code-brand',
     },
   },
   defaultVariants: { variant: 'pill' },
@@ -79,9 +78,11 @@ export function RoundTimer({ onExpire, className, variant }: RoundTimerProps) {
             </span>
           </span>
         </>
+      ) : variant === 'inline' ? (
+        time
       ) : (
         <>
-          {variant !== 'joined' && <span aria-hidden="true">⏱</span>}
+          <span aria-hidden="true">⏱</span>
           {time}
           {isError && <span className="text-xs text-muted-foreground">clock unavailable</span>}
         </>

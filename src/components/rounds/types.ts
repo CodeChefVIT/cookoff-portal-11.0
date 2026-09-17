@@ -23,12 +23,6 @@ export interface Question {
   sampleTestInput: string[];
   sampleTestOutput: string[];
   explanation: string[];
-  /**
-   * No `bounty_active` column exists on `questions` (see AGENTS.md conflict
-   * C4) — optional so a future column addition is a non-breaking change.
-   * Never render bounty UI for R2/R3 from this field.
-   */
-  bountyActive?: boolean;
   /** Present only when `GET /question/round` includes per-user flags (L4). */
   solved?: boolean;
   bought?: boolean;

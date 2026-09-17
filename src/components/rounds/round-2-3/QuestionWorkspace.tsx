@@ -1,16 +1,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 
-import { isBountyResolvedNow, useRoundStore } from '@/stores';
+import { cn } from '@/lib/utils';
 
 import { BuyInGate } from '../BuyInGate';
-import { useQuestion } from '../hooks';
+import { useQuestion, useRoundQuestions } from '../hooks';
+import { QuestionTabs } from '../QuestionTabs';
 import type { Question } from '../types';
-import { BountyUnlockDialog } from './BountyUnlockDialog';
 import { CodeEngine } from './CodeEngine';
-import { DEFAULT_LANGUAGE } from './languages';
+import { TABS_BAND, WORKSPACE_GRID } from './WorkspaceLayout';
 
 export interface QuestionWorkspaceProps {
   roundId: 2 | 3;
@@ -24,36 +23,62 @@ export interface QuestionWorkspaceProps {
  * of the hooks live in a separate component: mounting them only once
  * `question` exists keeps this component's own hook count identical across
  * every one of its renders (loading -> loaded is a mount of a *different*
- * component, not a mid-lifecycle branch of this one).
+ * component, not a mid-lifecycle branch of this one). It also owns the
+ * question tabs so they stay put across loading/locked/unlocked; from `lg`
+ * they're overlaid into the workspace's `TABS_BAND`, as in Figma
+ * `Desktop - 15/14`.
  */
 export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProps) {
   const { question, index, isLoading, isError, refetch } = useQuestion(roundId, questionId);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50dvh] items-center justify-center" role="status">
-        <span className="text-sm text-muted-foreground">Loading problem…</span>
-      </div>
-    );
-  }
-
-  if (isError || !question) {
-    return (
-      <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">Couldn&rsquo;t load this problem.</p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          className="rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const { data: questions } = useRoundQuestions(roundId);
 
   return (
-    <QuestionReady roundId={roundId} questionId={questionId} question={question} index={index} />
+    <div className="relative">
+      {questions && questions.length > 0 && (
+        <div
+          className={cn(
+            'pointer-events-none px-3 pt-3 lg:absolute lg:inset-x-0 lg:top-0 lg:z-10 lg:pt-[16px]',
+            WORKSPACE_GRID
+          )}
+        >
+          <QuestionTabs
+            roundId={roundId}
+            questions={questions}
+            activeId={questionId}
+            className="pointer-events-auto min-w-0 lg:pl-[5px]"
+          />
+        </div>
+      )}
+
+      {isLoading ? (
+        <div
+          role="status"
+          className={cn('flex min-h-[50dvh] items-center justify-center', TABS_BAND)}
+        >
+          <span className="text-sm text-muted-foreground">Loading problem…</span>
+        </div>
+      ) : isError || !question ? (
+        <div
+          className={cn('flex min-h-[50dvh] flex-col items-center justify-center gap-3', TABS_BAND)}
+        >
+          <p className="text-sm text-muted-foreground">Couldn&rsquo;t load this problem.</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <QuestionReady
+          roundId={roundId}
+          questionId={questionId}
+          question={question}
+          index={index}
+        />
+      )}
+    </div>
   );
 }
 
@@ -65,72 +90,26 @@ interface QuestionReadyProps {
 }
 
 /**
- * Composes `BuyInGate` + `CodeEngine` and the bounty-unlock dialog for an
- * already-loaded question. A `402/403` from `/submit` (stale unlock cache)
- * forces the gate closed again, per AGENTS.md rule 6: the server always
- * wins.
- *
- * The bounty dialog's open/closed state is plain local `useState`, seeded
- * once from a non-reactive store snapshot (`isBountyResolvedNow`) and
- * closed explicitly by the dialog's own handlers — it does not stay
- * subscribed to the store for its visibility. `resolveBounty` still writes
- * through to the store so a future mount of this question remembers the
- * dialog was already seen.
- *
- * `'use no memo'` opts this component out of the React Compiler: with it
- * compiled, clicking the bounty dialog's actions triggered "React has
- * detected a change in the order of Hooks" on this exact function (verified
- * via browser reproduction — the compiler-inserted memo cache slot shifted
- * hook order between the mount render and the click-triggered re-render).
- * None of this component's own hooks are conditional; this is a compiler
- * bug workaround, not a signal to touch hook order here. Safe to remove
- * once upgrading past the current React Compiler / Next 16.2 pairing fixes
- * the underlying issue — re-verify the bounty flow in a browser first.
+ * Composes `BuyInGate` + `CodeEngine` for an already-loaded question. A
+ * `402/403` from `/submit` (stale unlock cache) forces the gate closed again,
+ * per AGENTS.md rule 6: the server always wins.
  */
 function QuestionReady({ roundId, questionId, question, index }: QuestionReadyProps) {
-  'use no memo';
-  const router = useRouter();
   const [forceLocked, setForceLocked] = useState(false);
 
-  const resolveBounty = useRoundStore.use.resolveBounty();
-  const resetDraft = useRoundStore.use.resetDraft();
-
-  const [bountyDialogOpen, setBountyDialogOpen] = useState(
-    () => question.bountyActive === true && !isBountyResolvedNow(question.id)
-  );
-
   return (
-    <>
-      <BuyInGate
-        questionId={questionId}
-        roundId={roundId}
+    <BuyInGate
+      questionId={questionId}
+      roundId={roundId}
+      question={question}
+      forceLocked={forceLocked}
+    >
+      <CodeEngine
         question={question}
-        forceLocked={forceLocked}
-      >
-        <CodeEngine
-          question={question}
-          roundId={roundId}
-          index={index}
-          onNotPurchased={() => setForceLocked(true)}
-        />
-      </BuyInGate>
-      <BountyUnlockDialog
-        open={bountyDialogOpen}
-        onOpenChange={open => {
-          setBountyDialogOpen(open);
-          if (!open) resolveBounty(question.id);
-        }}
-        onEnter={() => {
-          resetDraft(question.id, DEFAULT_LANGUAGE.id, DEFAULT_LANGUAGE.boilerplate);
-          resolveBounty(question.id);
-          setBountyDialogOpen(false);
-        }}
-        onStayHere={() => {
-          resolveBounty(question.id);
-          setBountyDialogOpen(false);
-          router.push(`/round/${roundId}`);
-        }}
+        roundId={roundId}
+        index={index}
+        onNotPurchased={() => setForceLocked(true)}
       />
-    </>
+    </BuyInGate>
   );
 }

@@ -1,18 +1,22 @@
 import type { Metadata } from 'next';
 import {
   Bebas_Neue,
+  Bruno_Ace,
   Cinzel,
   DM_Sans,
   DM_Serif_Display,
   DM_Serif_Text,
   Geist,
   Geist_Mono,
+  Inria_Sans,
   Instrument_Serif,
   Inter,
+  Nova_Square,
   Quicksand,
   Roboto,
   Space_Grotesk,
 } from 'next/font/google';
+import localFont from 'next/font/local';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import './globals.css';
@@ -64,7 +68,18 @@ const spaceGrotesk = Space_Grotesk({
   subsets: ['latin'],
   weight: '700',
 });
-const roboto = Roboto({ variable: '--font-chip', subsets: ['latin'], weight: '700' });
+const roboto = Roboto({ variable: '--font-chip', subsets: ['latin'], weight: ['400', '700'] });
+
+// R2/R3 round badge + timer digits ("ROUND 2  00:11:52"), from Figma
+// `Desktop - 15/14` (312:1101, 312:1216).
+const brunoAce = Bruno_Ace({ variable: '--font-round', subsets: ['latin'], weight: '400' });
+const inriaSans = Inria_Sans({ variable: '--font-inria', subsets: ['latin'], weight: '700' });
+// General Sans isn't on Google Fonts — self-hosted from Fontshare (free commercial licence).
+const generalSans = localFont({
+  src: './fonts/GeneralSans-Medium.woff2',
+  variable: '--font-general',
+  weight: '500',
+});
 
 // Login screen wordmark, from Figma `Qc0hMJFVUSxi6jsnhx54Vk` (352:459/352:499).
 const bebasNeue = Bebas_Neue({
@@ -79,6 +94,9 @@ const robotoLogin = Roboto({
   subsets: ['latin'],
   weight: ['400', '500'],
 });
+
+// Dashboard "Timeline:" heading, from Figma `Qc0hMJFVUSxi6jsnhx54Vk` (323:1984).
+const novaSquare = Nova_Square({ variable: '--font-timeline', subsets: ['latin'], weight: '400' });
 
 export const metadata: Metadata = {
   title: 'CookOff 11.0',
@@ -107,8 +125,12 @@ export default function RootLayout({
         quicksand.variable,
         spaceGrotesk.variable,
         roboto.variable,
+        brunoAce.variable,
+        inriaSans.variable,
+        generalSans.variable,
         bebasNeue.variable,
         robotoLogin.variable,
+        novaSquare.variable,
         'font-sans',
         inter.variable
       )}

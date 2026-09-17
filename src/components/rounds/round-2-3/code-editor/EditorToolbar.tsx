@@ -1,33 +1,96 @@
-import { Button } from '@/components/ui/button';
+import type { CSSProperties } from 'react';
 
-import { LanguageSelector } from './LanguageSelector';
+import { CAPABILITIES } from '@/api';
+import { cn } from '@/lib/utils';
 
 /**
  * Code Editor - EditorToolbar
  *
- * Language selector + Reset, sitting above the editor surface. The
- * custom-input toggle and Run/Submit live in `EditorActions`, directly
- * below the editor — matching `design/Desktop - 14.svg`'s action row.
+ * The action row under the editor in Figma `Desktop - 15/14`, at the frame's
+ * pixels from `lg`: custom-input toggle + label, Run Code (feature-flagged,
+ * L8 — disabled but drawn exactly as designed) and Submit Code. Below `lg`
+ * the two groups wrap so it never scrolls horizontally (AGENTS.md §15).
  */
 export interface EditorToolbarProps {
-  languageId: number;
-  onLanguageChange: (languageId: number) => void;
-  onReset: () => void;
+  onSubmit: () => void;
+  isSubmitting: boolean;
   disabled?: boolean;
+  customInputEnabled: boolean;
+  onToggleCustomInput: () => void;
+  className?: string;
 }
 
+const TOGGLE_MASK: CSSProperties = {
+  maskImage: 'url(/code-round/toggle.png)',
+  WebkitMaskImage: 'url(/code-round/toggle.png)',
+  maskSize: '100% 100%',
+  WebkitMaskSize: '100% 100%',
+};
+
+const BUTTON_SHADOW = 'shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]';
+
 export function EditorToolbar({
-  languageId,
-  onLanguageChange,
-  onReset,
+  onSubmit,
+  isSubmitting,
   disabled,
+  customInputEnabled,
+  onToggleCustomInput,
+  className,
 }: EditorToolbarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-2 border-b border-border bg-card px-3 py-2">
-      <LanguageSelector value={languageId} onChange={onLanguageChange} />
-      <Button variant="ghost" size="sm" onClick={onReset} disabled={disabled}>
-        Reset
-      </Button>
+    <div
+      className={cn(
+        'relative flex flex-wrap items-center justify-between gap-3 py-2 lg:block lg:h-[31.8px] lg:py-0',
+        className
+      )}
+    >
+      <button
+        type="button"
+        role="switch"
+        aria-checked={customInputEnabled}
+        onClick={onToggleCustomInput}
+        className="flex cursor-pointer items-center gap-[10px] rounded-[6px] focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:absolute lg:top-0 lg:left-0 lg:h-full lg:w-[235px]"
+      >
+        <span
+          aria-hidden="true"
+          style={TOGGLE_MASK}
+          className={cn(
+            'size-[31.72px] shrink-0 lg:absolute lg:top-[0.11px] lg:left-[9.64px]',
+            customInputEnabled ? '-scale-x-100 bg-brand-accent' : 'bg-code-toggle'
+          )}
+        />
+        <span className="font-sans text-[16px] leading-[25.075px] font-semibold whitespace-nowrap text-white lg:absolute lg:top-[7.04px] lg:left-[52px]">
+          Provide Custom Input
+        </span>
+      </button>
+      <div className="flex items-center gap-[17px]">
+        <button
+          type="button"
+          disabled={!CAPABILITIES.runCode}
+          title={
+            CAPABILITIES.runCode
+              ? undefined
+              : 'Run Code is not available yet — the /runcode contract is undefined (see AGENTS.md L8).'
+          }
+          className={cn(
+            'h-[26.4px] w-[161.2px] rounded-[10px] bg-code-run font-sans text-[16px] leading-[25.075px] font-semibold text-white enabled:cursor-pointer disabled:cursor-not-allowed lg:absolute lg:top-[5.41px] lg:right-[174.9px]',
+            BUTTON_SHADOW
+          )}
+        >
+          Run Code
+        </button>
+        <button
+          type="button"
+          onClick={onSubmit}
+          disabled={disabled || isSubmitting}
+          className={cn(
+            'h-[26.4px] w-[161px] rounded-[10px] bg-brand-accent pb-[2.2px] font-inria text-[20px] leading-[25.075px] font-bold text-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 lg:absolute lg:top-[2.44px] lg:-right-[3px]',
+            BUTTON_SHADOW
+          )}
+        >
+          {isSubmitting ? 'Submitting…' : 'Submit Code'}
+        </button>
+      </div>
     </div>
   );
 }

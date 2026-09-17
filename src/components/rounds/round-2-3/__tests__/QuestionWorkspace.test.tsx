@@ -44,8 +44,9 @@ vi.mock('@/api', async () => {
   };
 });
 
+// Question tabs and BuyInConfirm navigate via the App Router.
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push: routerPushMock, replace: vi.fn() }),
+  useRouter: () => ({ push: routerPushMock, replace: vi.fn(), prefetch: vi.fn() }),
 }));
 
 const QUESTION_R2: Question = {
@@ -123,8 +124,7 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     const user = userEvent.setup();
     renderWorkspace(2, 'q1');
 
-    await user.click(await screen.findByRole('button', { name: /place bet/i }));
-    await user.click(await screen.findByRole('button', { name: 'Confirm' }));
+    await user.click(await screen.findByRole('button', { name: 'Enter' }));
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
     const confirmDialog = await screen.findByRole('alertdialog', {
@@ -134,7 +134,8 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
 
     expect(await screen.findByText(/1\/1 Test Cases Passed/)).toBeInTheDocument();
     expect(submitCodeMock).toHaveBeenCalledTimes(1);
-    expect(await screen.findByText('Solved!')).toBeInTheDocument();
+    expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
+    expect(screen.getByText('You earned 10 points and 50 coins.')).toBeInTheDocument();
   });
 
   it('re-locks the question when /submit reports it was never purchased (stale cache)', async () => {
@@ -164,8 +165,44 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     });
     await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
-    expect(await screen.findByText(/didn.t recognize your bet/i)).toBeInTheDocument();
-    expect(await screen.findByRole('button', { name: /place bet/i })).toBeInTheDocument();
+    expect(await screen.findByText('CONFIRM PURCHASE')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enter' })).toBeInTheDocument();
+    expect(screen.queryByText('Submission Failed')).not.toBeInTheDocument();
+  });
+});
+
+describe('QuestionWorkspace — submit failure', () => {
+  it('shows the Submission Failed card when /submit errors, and dismisses it', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 100,
+      score: 0,
+      roundQualified: 3,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+    getQuestionsByRoundMock.mockResolvedValue([QUESTION_R3]);
+    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+    submitCodeMock.mockRejectedValue(new ApiError({ message: 'boom', status: 500 }));
+
+    const user = userEvent.setup();
+    renderWorkspace(3, 'q2');
+
+    await user.click(await screen.findByRole('button', { name: /submit code/i }));
+    const confirmDialog = await screen.findByRole('alertdialog', {
+      name: /confirm final submission/i,
+    });
+    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
+
+    expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Dismiss' }));
+    expect(screen.queryByText('Submission Failed')).not.toBeInTheDocument();
   });
 });
 
@@ -192,71 +229,6 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     await waitFor(() =>
       expect(screen.getByRole('button', { name: /submit code/i })).toBeInTheDocument()
     );
-    expect(screen.queryByRole('button', { name: /place bet/i })).not.toBeInTheDocument();
-  });
-});
-
-describe('QuestionWorkspace — bounty-active question', () => {
-  const BOUNTY_QUESTION: Question = { ...QUESTION_R3, bountyActive: true };
-
-  function mockCommon() {
-    getSessionMock.mockResolvedValue({
-      userId: 'u1',
-      email: 'a@b.com',
-      balance: 100,
-      score: 0,
-      roundQualified: 3,
-      isBanned: false,
-    });
-    getRoundTimeMock.mockResolvedValue({
-      serverTime: new Date(),
-      roundStartTime: new Date(Date.now() - 1000),
-      roundEndTime: new Date(Date.now() + 60_000),
-    });
-    getQuestionsByRoundMock.mockResolvedValue([BOUNTY_QUESTION]);
-    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
-  }
-
-  it('shows the unlock dialog and clears the draft on Enter Bounty', async () => {
-    mockCommon();
-    const user = userEvent.setup();
-    renderWorkspace(3, 'q2');
-
-    expect(await screen.findByText('Unlock this question?')).toBeInTheDocument();
-
-    await user.click(screen.getByRole('button', { name: 'Enter Bounty' }));
-
-    await waitFor(() =>
-      expect(screen.queryByText('Unlock this question?')).not.toBeInTheDocument()
-    );
-    expect(screen.getByRole('button', { name: /submit code/i })).toBeInTheDocument();
-  });
-
-  it('navigates back to the round menu on Stay Here', async () => {
-    mockCommon();
-    const user = userEvent.setup();
-    renderWorkspace(3, 'q2');
-
-    await screen.findByText('Unlock this question?');
-    await user.click(screen.getByRole('button', { name: 'Stay Here' }));
-
-    expect(routerPushMock).toHaveBeenCalledWith('/round/3');
-  });
-
-  it('never shows the unlock dialog again after it has been resolved', async () => {
-    mockCommon();
-    const user = userEvent.setup();
-    renderWorkspace(3, 'q2');
-
-    await user.click(await screen.findByRole('button', { name: 'Enter Bounty' }));
-    await waitFor(() =>
-      expect(screen.queryByText('Unlock this question?')).not.toBeInTheDocument()
-    );
-
-    renderWorkspace(3, 'q2');
-    await waitFor(() =>
-      expect(screen.getAllByRole('button', { name: /submit code/i }).length).toBeGreaterThan(0)
-    );
-    expect(screen.queryByText('Unlock this question?')).not.toBeInTheDocument();
+    expect(screen.queryByText('CONFIRM PURCHASE')).not.toBeInTheDocument();
   });
 });

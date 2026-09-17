@@ -40,7 +40,8 @@ export function useRoundTimer(onExpire?: () => void): UseRoundTimerResult {
   }, []);
 
   const offset = query.data ? computeClockOffset(query.data.serverTime) : 0;
-  const remaining = query.data ? remainingMs(query.data.roundEndTime, offset) : null;
+  // No end time means the round isn't running — show no countdown rather than 0:00.
+  const remaining = query.data?.roundEndTime ? remainingMs(query.data.roundEndTime, offset) : null;
   const isExpired = remaining !== null && remaining <= 0;
 
   useEffect(() => {

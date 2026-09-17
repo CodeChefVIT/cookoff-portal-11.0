@@ -27,7 +27,6 @@ const QUESTION_FIELDS = [
   'sampleTestInput',
   'sampleTestOutput',
   'explanation',
-  'bountyActive',
 ] as const;
 
 const questionShape = z.object({
@@ -45,7 +44,6 @@ const questionShape = z.object({
   sampleTestInput: stringArray(),
   sampleTestOutput: stringArray(),
   explanation: stringArray(),
-  bountyActive: z.boolean().optional(),
   solved: z.boolean().optional(),
   bought: z.boolean().optional(),
 });

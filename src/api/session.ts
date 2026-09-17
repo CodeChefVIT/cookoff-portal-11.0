@@ -32,6 +32,7 @@ function parseDashboardQuestions(raw: unknown): DashboardQuestionSummary[] {
 
 const DASHBOARD_FIELDS = [
   'id',
+  'name',
   'email',
   'balance',
   'score',
@@ -41,6 +42,8 @@ const DASHBOARD_FIELDS = [
 
 const sessionShape = z.object({
   userId: z.string(),
+  /** Google display name — optional so a DTO without it still parses. */
+  name: z.string().optional(),
   email: z.string(),
   balance: z.coerce.number(),
   score: z.coerce.number(),
@@ -60,6 +63,7 @@ export const sessionSchema = envelope(
     const wire = normalizeWire(raw, DASHBOARD_FIELDS);
     return sessionShape.parse({
       userId: wire.id,
+      name: wire.name ?? undefined,
       email: wire.email,
       balance: wire.balance,
       score: wire.score,

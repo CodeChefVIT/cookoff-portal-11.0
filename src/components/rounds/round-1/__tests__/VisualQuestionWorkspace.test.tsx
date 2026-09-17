@@ -121,8 +121,9 @@ describe('VisualQuestionWorkspace — Round 1 happy path', () => {
 
     expect(createAttemptMock).toHaveBeenCalledWith('q1');
     expect(submitVisualMock).toHaveBeenCalledWith({ questionId: 'q1', blocks: ['b1', 'b2'] });
-    expect(await screen.findByText(/Correct! \+10 points/)).toBeInTheDocument();
-    expect(await screen.findByText('Solved!')).toBeInTheDocument();
+    expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
+    expect(screen.getByText('You earned 10 points.')).toBeInTheDocument();
+    expect(screen.queryByText(/Correct! \+10 points/)).not.toBeInTheDocument();
   });
 
   it('reorders the chain with the move buttons', async () => {
@@ -161,7 +162,7 @@ describe('VisualQuestionWorkspace — Round 1 happy path', () => {
     await user.click(screen.getByRole('button', { name: 'Submit' }));
 
     expect(await screen.findByText(/Not quite — rearrange your chain/)).toBeInTheDocument();
-    expect(screen.queryByText('Solved!')).not.toBeInTheDocument();
+    expect(screen.queryByText('CORRECT ANSWER')).not.toBeInTheDocument();
 
     const chain = screen.getByRole('region', { name: 'Your chain' });
     expect(within(chain).getByText('Print "Hello"')).toBeInTheDocument();
