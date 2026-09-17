@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
-import { useRoundTimer, useVisualBlocks, useVisualSubmissionState } from '../hooks';
+import { useRoundExpired, useVisualBlocks, useVisualSubmissionState } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
 import { SolvedBox } from '../SolvedBox';
 import type { Question, VisualSubmissionResult } from '../types';
@@ -52,7 +52,7 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
   const moveBlock = useChainStore.use.moveBlock();
   const clearChain = useChainStore.use.clearChain();
 
-  const { isExpired } = useRoundTimer();
+  const isExpired = useRoundExpired();
   const { result, isPending } = useVisualSubmissionState(question.id);
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);

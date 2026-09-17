@@ -13,7 +13,7 @@ import { LoadingScreen } from '@/components/ui';
  * `/refreshToken` before this renders an error.
  */
 export function SessionGuard({ children }: { children: ReactNode }) {
-  const session = useSession();
+  const session = useSession({ sync: true });
   const router = useRouter();
 
   useEffect(() => {

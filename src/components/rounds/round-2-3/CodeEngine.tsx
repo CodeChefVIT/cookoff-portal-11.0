@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { getPublicTestcases, isApiError, testcaseKeys } from '@/api';
-import { useCodeSubmission, useRoundTimer } from '@/components/rounds/hooks';
+import { useCodeSubmission, useRoundExpired } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
 import { ProblemPanel } from '../ProblemPanel';
@@ -71,7 +71,7 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
   const [wasAlreadySolved, setWasAlreadySolved] = useState(question.solved === true);
 
   const submission = useCodeSubmission(roundId);
-  const { isExpired } = useRoundTimer();
+  const isExpired = useRoundExpired();
 
   useEffect(() => {
     if (submission.notPurchased) onNotPurchased?.();

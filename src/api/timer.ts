@@ -25,8 +25,13 @@ const timerWire = z.object({
   time_left: z.coerce.number().nonnegative(),
 });
 
+// `time_left` is whole seconds and ages by the request latency, so an end
+// anchored on it drifts by up to ~1s per fetch. When the device clock agrees
+// with the server's `end_time` to within this, `end_time` is used as-is.
+const CLOCK_AGREEMENT_MS = 3_000;
+
 export interface RoundTime {
-  /** Local receive time: the server sends `time_left` instead of its clock, so no offset is needed. */
+  /** Local receive time — countdowns never read a clock older than this. */
   serverTime: Date;
   roundStartTime: Date | null;
   /** `null` until the admin starts the round (`POST /admin/startRound`). */
@@ -36,9 +41,10 @@ export interface RoundTime {
 }
 
 /**
- * `GET /getTime` (`dto.TimerResponse`, envelope-wrapped). While running,
- * the end is anchored on the server's `time_left` rather than `end_time` so a
- * skewed client clock can't shift the countdown. Once stopped the backend
+ * `GET /getTime` (`dto.TimerResponse`, envelope-wrapped). While running, the
+ * end is the server's exact `end_time` when the device clock agrees with it,
+ * so every refresh lands on the same countdown; a skewed device clock falls
+ * back to anchoring on `time_left` instead. Once stopped the backend
  * drops `start_time`/`end_time`, so a round that hasn't started and one that
  * already ended both arrive with no times.
  */
@@ -48,13 +54,21 @@ export const roundTimeSchema = envelope(
     return {
       serverTime: receivedAt,
       roundStartTime: wire.start_time,
-      roundEndTime: wire.is_running
-        ? new Date(receivedAt.getTime() + wire.time_left * 1000)
-        : wire.end_time,
+      roundEndTime: wire.is_running ? runningEndTime(wire, receivedAt) : wire.end_time,
       round: wire.round,
     };
   })
 );
+
+function runningEndTime(
+  wire: Pick<z.infer<typeof timerWire>, 'end_time' | 'time_left'>,
+  receivedAt: Date
+): Date {
+  const anchored = new Date(receivedAt.getTime() + wire.time_left * 1000);
+  if (!wire.end_time) return anchored;
+  const clocksAgree = Math.abs(wire.end_time.getTime() - anchored.getTime()) <= CLOCK_AGREEMENT_MS;
+  return clocksAgree ? wire.end_time : anchored;
+}
 
 export const timerKeys = createQueryKeys('round-time');
 
@@ -63,14 +77,8 @@ export async function getRoundTime(): Promise<RoundTime> {
   return request({ url: '/getTime', method: 'GET', schema: roundTimeSchema });
 }
 
-/** `offset = server_time - Date.now()`, applied once and re-synced periodically (D-timer). */
-export function computeClockOffset(serverTime: Date | null): number {
-  if (!serverTime) return 0;
-  return serverTime.getTime() - Date.now();
-}
-
-export function remainingMs(endTime: Date | null, offsetMs: number): number {
+/** Milliseconds from `nowMs` until `endTime`, clamped at 0. */
+export function remainingMs(endTime: Date | null, nowMs: number): number {
   if (!endTime) return 0;
-  const now = Date.now() + offsetMs;
-  return Math.max(0, endTime.getTime() - now);
+  return Math.max(0, endTime.getTime() - nowMs);
 }

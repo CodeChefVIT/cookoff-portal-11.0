@@ -7,7 +7,7 @@ import { attemptKeys, isApiError } from '@/api';
 import { Button } from '@/components/ui/button';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
-import { useRoundTimer, useVisualSubmission } from '../hooks';
+import { useRoundExpired, useVisualSubmission } from '../hooks';
 
 export interface ChainSubmitButtonProps {
   questionId: string;
@@ -23,7 +23,7 @@ export interface ChainSubmitButtonProps {
 export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
   const chain = useChainStore(state => state.chains[questionId] ?? EMPTY_CHAIN);
   const submission = useVisualSubmission(questionId);
-  const { isExpired } = useRoundTimer();
+  const isExpired = useRoundExpired();
 
   function handleSubmit() {
     if (chain.length === 0) {
