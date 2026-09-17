@@ -2,11 +2,8 @@
 
 import type { ReactNode } from 'react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useMutation } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import Link from 'next/link';
 
-import { logout } from '@/api';
 import { CurrencyBox } from '@/components/ui/currency-box';
 
 import { getRoundConfig } from './round-config';
@@ -22,25 +19,13 @@ export interface RoundHeaderProps {
 
 /**
  * R2/R3 header: logo, Cinzel wordmark, R1's timer box, currency block
- * (`hasCurrency` — Round 2 only) and the avatar, which doubles as log out. Box, logo, wordmark,
+ * (`hasCurrency` — Round 2 only) and the avatar, which links to the dashboard. Box, logo, wordmark,
  * padding and gaps are Round 1's `ScratchHeader` verbatim so every round's
  * header has identical dimensions; the right-side items take the height of
  * R1's timer/Submit (52px, 56px from `lg`). Wraps below `lg` like R1.
  */
 export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps) {
   const config = getRoundConfig(roundId);
-  const router = useRouter();
-
-  const logoutMutation = useMutation({
-    mutationFn: logout,
-    onSuccess: () => {
-      router.push('/login');
-    },
-    onError: () => {
-      toast.error('Could not log out — please try again.');
-      router.push('/login');
-    },
-  });
 
   return (
     <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 border-b-2 border-scratch-rule px-4 pt-4 pb-3 lg:flex-nowrap lg:pt-[24px] lg:pr-[47px] lg:pb-[8px] lg:pl-[31px]">
@@ -62,13 +47,11 @@ export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps
         <RoundTimer variant="box" />
         {config.hasCurrency && balance !== undefined && <CurrencyBox balance={balance} />}
         {config.headerSubmit && headerAction}
-        <button
-          type="button"
-          aria-label="Log out"
-          title="Log out"
-          onClick={() => logoutMutation.mutate()}
-          disabled={logoutMutation.isPending}
-          className="size-[52px] shrink-0 cursor-pointer rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-wait lg:size-[56px]"
+        <Link
+          href="/dashboard"
+          aria-label="Go to dashboard"
+          title="Dashboard"
+          className="size-[52px] shrink-0 cursor-pointer rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none lg:size-[56px]"
         >
           <Image
             src="/code-round/avatar.svg"
@@ -78,7 +61,7 @@ export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps
             unoptimized
             className="size-full"
           />
-        </button>
+        </Link>
       </div>
     </header>
   );
