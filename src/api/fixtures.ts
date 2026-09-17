@@ -30,8 +30,7 @@ function makeQuestion(
   overrides: Partial<Question> & Pick<Question, 'id' | 'title' | 'round' | 'points'>
 ): Question {
   // R1 and R3 have no buy-in (RoundConfig.hasBuyIn === false) — `bought: true`
-  // simulates the "already open, nothing to purchase" state so QuestionList
-  // renders its "Unlocked" badge instead of a spurious "Locked" one.
+  // simulates the "already open, nothing to purchase" state.
   const isFreeRound = overrides.round === 1 || overrides.round === 3;
   return {
     description: `Read the input and produce the expected output for "${overrides.title}".`,

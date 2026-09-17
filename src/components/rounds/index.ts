@@ -13,7 +13,7 @@ export * from './RoundIntermission';
 export * from './QuestionTabs';
 export * from './BuyInGate';
 export * from './BuyInLock';
-export * from './QuestionList';
+export * from './RoundEntry';
 export * from './ProblemPanel';
 export * from './SolvedBox';
 export * from './hooks';

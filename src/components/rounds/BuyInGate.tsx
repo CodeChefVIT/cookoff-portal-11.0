@@ -109,11 +109,7 @@ export function BuyInGate({
       value={{
         locked: !unlocked,
         prompt: (
-          <BuyInConfirm
-            onEnter={handleEnter}
-            backHref={`/round/${roundId}`}
-            isPending={attempt.isPending}
-          />
+          <BuyInConfirm onEnter={handleEnter} backHref="/dashboard" isPending={attempt.isPending} />
         ),
       }}
     >

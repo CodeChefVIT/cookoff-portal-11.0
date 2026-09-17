@@ -308,7 +308,7 @@ between the rounds belongs in `RoundConfig` (`engine`, `hasBuyIn`,
 RoundGate (qualification + window)
   └─ RoundShell (header — currency/headerAction config-gated — question tabs)
        │
-       ├─ R1 ("visual" engine): QuestionList | VisualQuestionWorkspace
+       ├─ R1 ("visual" engine): RoundEntry → first question | VisualQuestionWorkspace
        │        └─ BuyInGate (pass-through, R1 has no buy-in) → ScratchEngine
        │             └─ ScratchLayout
        │                  ├─ ProblemPanel
@@ -317,7 +317,7 @@ RoundGate (qualification + window)
        │        Submit lives in the header (`ChainSubmitButton`,
        │        `RoundConfig.headerSubmit`), not inside the engine.
        │
-       └─ R2/R3 ("code" engine): QuestionList | QuestionWorkspace
+       └─ R2/R3 ("code" engine): RoundEntry → first question | QuestionWorkspace
                 ├─ QuestionTabs (overlaid into WorkspaceLayout's TABS_BAND)
                 └─ BuyInGate (pass-through on R3) → CodeEngine
                      └─ WorkspaceLayout
@@ -326,6 +326,9 @@ RoundGate (qualification + window)
                           ├─ MonacoWrapper + EditorToolbar
                           └─ CustomInputPanel | TestcasePanel | ResultsPlaceholder
 ```
+
+There is no question-list page: `/round/:id` renders `RoundEntry`, which
+`replace`s to the round's first question (tabs switch between questions).
 
 On an R2/R3 question page `RoundShell` does **not** render the question
 tabs — `QuestionWorkspace` owns them so they sit in the problem column above

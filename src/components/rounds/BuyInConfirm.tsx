@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 export interface BuyInConfirmProps {
   onEnter: () => void;
-  /** Where Go Back / ✕ navigate — the round's question list. */
+  /** Where Go Back / ✕ navigate — the dashboard (rounds have no question list). */
   backHref: string;
   isPending: boolean;
 }

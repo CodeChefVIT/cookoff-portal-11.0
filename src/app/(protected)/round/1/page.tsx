@@ -1,12 +1,10 @@
-import { QuestionList, RoundGate, RoundShell } from '@/components/rounds';
+import { RoundEntry, RoundGate } from '@/components/rounds';
 
-// ROUND 1 - Question list ("Scratch").
+// ROUND 1 - No question list: redirects to the round's first question.
 export default function RoundOnePage() {
   return (
     <RoundGate roundId={1}>
-      <RoundShell roundId={1}>
-        <QuestionList roundId={1} />
-      </RoundShell>
+      <RoundEntry roundId={1} />
     </RoundGate>
   );
 }
