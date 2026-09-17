@@ -84,7 +84,10 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     hasCurrency: false,
     headerSubmit: false,
     chrome: 'code',
-    autoAttempt: false,
+    // `/submit` requires a `bought`/`answered` attempt in every round
+    // (`submission.go:85-97`), so R3 unlocks silently on open. Its questions
+    // are free (`buy_in = 0`), so this costs the finalist nothing.
+    autoAttempt: true,
     expectedQuestionCount: 4,
     nominalDurationLabel: '02:00',
     isFinalRound: true,

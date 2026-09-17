@@ -21,6 +21,23 @@ export function isApiError(error: unknown): error is ApiError {
   return error instanceof ApiError;
 }
 
+/**
+ * `/submit` answers 403 both for "Question not purchased" and for "User not
+ * qualified for this round" (`submission.go:71,93`); only the first one means
+ * the buy-in gate should re-lock. The status alone can't tell them apart, so
+ * match the server's message.
+ */
+export function isNotPurchasedError(error: unknown): boolean {
+  if (!isApiError(error)) return false;
+  if (error.status !== 402 && error.status !== 403) return false;
+  return !/not qualified/i.test(error.message);
+}
+
+/** A 403 that means the round itself is closed to this account. */
+export function isNotQualifiedError(error: unknown): boolean {
+  return isApiError(error) && error.status === 403 && /not qualified/i.test(error.message);
+}
+
 export function toApiError(error: unknown): ApiError {
   if (isApiError(error)) return error;
 

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { getPublicTestcases, isApiError, testcaseKeys } from '@/api';
+import { getPublicTestcases, isNotPurchasedError, isNotQualifiedError, testcaseKeys } from '@/api';
 import { useCodeSubmission, useRoundExpired } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
@@ -95,6 +95,7 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
 
   // A failed submit or result fetch shows Figma `Desktop - 18`'s card over whatever verdict is on screen.
   const [submitFailed, setSubmitFailed] = useState(false);
+  const [submitError, setSubmitError] = useState<string | undefined>(undefined);
   const [dismissedResultErrorFor, setDismissedResultErrorFor] = useState<string | null>(null);
   const resultFailed =
     submission.result.isError &&
@@ -104,13 +105,20 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
   function confirmSubmit() {
     setConfirmSubmitOpen(false);
     setSubmitFailed(false);
+    setSubmitError(undefined);
     submission.submit.mutate(
       { questionId: question.id, languageId, sourceCode },
       {
         onError: error => {
-          // 402/403 re-locks the question instead (BuyInGate).
-          if (!(isApiError(error) && (error.status === 402 || error.status === 403))) {
-            setSubmitFailed(true);
+          // In R2 a "not purchased" 402/403 re-locks the question instead
+          // (BuyInGate). Every other round has no gate to fall back on, so the
+          // card is the only thing that tells the player anything.
+          if (isNotPurchasedError(error) && getRoundConfig(roundId).hasBuyIn) return;
+          setSubmitFailed(true);
+          if (isNotQualifiedError(error)) {
+            setSubmitError('This round is no longer open for your account.');
+          } else if (isNotPurchasedError(error)) {
+            setSubmitError('This question isn’t unlocked yet — reopen it and try again.');
           }
         },
       }
@@ -179,9 +187,11 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
         }
       />
       <SubmissionErrorCard
+        message={submitFailed ? submitError : undefined}
         open={submitFailed || resultFailed}
         onClose={() => {
           setSubmitFailed(false);
+          setSubmitError(undefined);
           setDismissedResultErrorFor(submission.submissionId);
         }}
       />

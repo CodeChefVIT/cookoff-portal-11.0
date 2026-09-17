@@ -257,6 +257,8 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     getQuestionsByRoundMock.mockResolvedValue([QUESTION_R3]);
     getPublicTestcasesMock.mockResolvedValue(TESTCASES);
 
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+
     renderWorkspace(3, 'q2');
 
     await waitFor(() =>
@@ -264,4 +266,78 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     );
     expect(screen.queryByText('CONFIRM PURCHASE')).not.toBeInTheDocument();
   });
+
+  it('unlocks the free attempt on open, because /submit requires one in every round', async () => {
+    mockRoundThree();
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+
+    renderWorkspace(3, 'q2');
+
+    await waitFor(() => expect(createAttemptMock).toHaveBeenCalledTimes(1));
+    expect(createAttemptMock).toHaveBeenCalledWith('q2');
+    expect(screen.queryByText('CONFIRM PURCHASE')).not.toBeInTheDocument();
+  });
+
+  it('shows the failure card when /submit reports the question is not unlocked', async () => {
+    mockRoundThree();
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+    submitCodeMock.mockRejectedValue(
+      new ApiError({
+        message: 'Question not purchased — buy this question before submitting',
+        status: 403,
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWorkspace(3, 'q2');
+
+    await user.click(await screen.findByRole('button', { name: /submit code/i }));
+    const confirmDialog = await screen.findByRole('alertdialog', {
+      name: /confirm final submission/i,
+    });
+    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
+
+    // Round 3 has no buy-in gate to fall back on, so swallowing this left the player with nothing.
+    expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
+    expect(screen.getByText(/isn.t unlocked yet — reopen it and try again/i)).toBeInTheDocument();
+  });
+
+  it('names the reason when the round is no longer open for the account', async () => {
+    mockRoundThree();
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+    submitCodeMock.mockRejectedValue(
+      new ApiError({ message: 'User not qualified for this round', status: 403 })
+    );
+
+    const user = userEvent.setup();
+    renderWorkspace(3, 'q2');
+
+    await user.click(await screen.findByRole('button', { name: /submit code/i }));
+    const confirmDialog = await screen.findByRole('alertdialog', {
+      name: /confirm final submission/i,
+    });
+    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
+
+    expect(
+      await screen.findByText(/round is no longer open for your account/i)
+    ).toBeInTheDocument();
+  });
 });
+
+function mockRoundThree() {
+  getSessionMock.mockResolvedValue({
+    userId: 'u1',
+    email: 'a@b.com',
+    balance: 100,
+    score: 0,
+    roundQualified: 3,
+    isBanned: false,
+  });
+  getRoundTimeMock.mockResolvedValue({
+    serverTime: new Date(),
+    roundStartTime: new Date(Date.now() - 1000),
+    roundEndTime: new Date(Date.now() + 60_000),
+  });
+  getQuestionsByRoundMock.mockResolvedValue([QUESTION_R3]);
+  getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+}

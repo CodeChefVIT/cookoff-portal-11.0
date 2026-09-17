@@ -9,6 +9,8 @@ import { useQuestion, useRoundQuestions } from '../hooks';
 import { QuestionTabs } from '../QuestionTabs';
 import type { Question } from '../types';
 import { CodeEngine } from './CodeEngine';
+import { workspaceGridTemplate } from './column-resize';
+import { useWorkspaceColumns } from './use-column-resize';
 import { TABS_BAND, WORKSPACE_GRID } from './WorkspaceLayout';
 
 export interface QuestionWorkspaceProps {
@@ -31,11 +33,13 @@ export interface QuestionWorkspaceProps {
 export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProps) {
   const { question, isLoading, isError, refetch } = useQuestion(roundId, questionId);
   const { data: questions } = useRoundQuestions(roundId);
+  const columns = useWorkspaceColumns();
 
   return (
     <div className="relative">
       {questions && questions.length > 0 && (
         <div
+          style={{ gridTemplateColumns: workspaceGridTemplate(columns) }}
           className={cn(
             'pointer-events-none px-3 pt-3 lg:absolute lg:inset-x-0 lg:top-0 lg:z-10 lg:pt-[16px]',
             WORKSPACE_GRID

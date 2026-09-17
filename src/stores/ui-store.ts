@@ -10,6 +10,9 @@ export const SCRATCH_COLUMNS_DEFAULT: readonly number[] = [314, 559, 465];
 /** R2/R3 results panel height — Figma `Desktop - 14`'s 355px. */
 export const CODE_RESULTS_HEIGHT_DEFAULT = 355;
 
+/** R2/R3 problem | editor column fractions — the Figma `Desktop - 15/14` widths 643 : 715. */
+export const CODE_COLUMNS_DEFAULT: readonly number[] = [643, 715];
+
 interface UiState {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -18,6 +21,8 @@ interface UiState {
   setScratchColumns: (columns: readonly number[]) => void;
   codeResultsHeight: number;
   setCodeResultsHeight: (height: number) => void;
+  codeColumns: readonly number[];
+  setCodeColumns: (columns: readonly number[]) => void;
 }
 
 const useUiStoreBase = create<UiState>()(
@@ -30,6 +35,8 @@ const useUiStoreBase = create<UiState>()(
       setScratchColumns: columns => set({ scratchColumns: columns }),
       codeResultsHeight: CODE_RESULTS_HEIGHT_DEFAULT,
       setCodeResultsHeight: height => set({ codeResultsHeight: height }),
+      codeColumns: CODE_COLUMNS_DEFAULT,
+      setCodeColumns: columns => set({ codeColumns: columns }),
     }),
     { name: 'ui-store' }
   )

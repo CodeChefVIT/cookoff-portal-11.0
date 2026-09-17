@@ -6,6 +6,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   getSubmissionResult,
   isApiError,
+  isNotPurchasedError,
   questionKeys,
   sessionKeys,
   submissionKeys,
@@ -34,9 +35,7 @@ export function useCodeSubmission(roundId: number) {
     onMutate: () => setNotPurchased(false),
     onSuccess: response => setSubmissionId(response.submissionId),
     onError: error => {
-      if (isApiError(error) && (error.status === 402 || error.status === 403)) {
-        setNotPurchased(true);
-      }
+      if (isNotPurchasedError(error)) setNotPurchased(true);
     },
   });
 
