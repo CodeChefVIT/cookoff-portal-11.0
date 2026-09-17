@@ -39,10 +39,9 @@ import { VisualVerdict } from './VisualVerdict';
  */
 export interface ScratchEngineProps {
   question: Question;
-  index?: number;
 }
 
-export function ScratchEngine({ question, index }: ScratchEngineProps) {
+export function ScratchEngine({ question }: ScratchEngineProps) {
   const blocksQuery = useVisualBlocks(question.id);
   const blocks = blocksQuery.data ?? [];
 
@@ -147,7 +146,6 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
           question={
             <ProblemPanel
               question={question}
-              index={index}
               heading={<ScratchPanelTitle>Question</ScratchPanelTitle>}
               className={cn(
                 scratchPanelVariants({ tone: 'question' }),

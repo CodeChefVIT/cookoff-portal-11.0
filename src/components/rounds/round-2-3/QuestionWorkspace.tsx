@@ -29,7 +29,7 @@ export interface QuestionWorkspaceProps {
  * `Desktop - 15/14`.
  */
 export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProps) {
-  const { question, index, isLoading, isError, refetch } = useQuestion(roundId, questionId);
+  const { question, isLoading, isError, refetch } = useQuestion(roundId, questionId);
   const { data: questions } = useRoundQuestions(roundId);
 
   return (
@@ -71,12 +71,7 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
           </button>
         </div>
       ) : (
-        <QuestionReady
-          roundId={roundId}
-          questionId={questionId}
-          question={question}
-          index={index}
-        />
+        <QuestionReady roundId={roundId} questionId={questionId} question={question} />
       )}
     </div>
   );
@@ -86,7 +81,6 @@ interface QuestionReadyProps {
   roundId: 2 | 3;
   questionId: string;
   question: Question;
-  index?: number;
 }
 
 /**
@@ -94,7 +88,7 @@ interface QuestionReadyProps {
  * `402/403` from `/submit` (stale unlock cache) forces the gate closed again,
  * per AGENTS.md rule 6: the server always wins.
  */
-function QuestionReady({ roundId, questionId, question, index }: QuestionReadyProps) {
+function QuestionReady({ roundId, questionId, question }: QuestionReadyProps) {
   const [forceLocked, setForceLocked] = useState(false);
 
   return (
@@ -107,7 +101,6 @@ function QuestionReady({ roundId, questionId, question, index }: QuestionReadyPr
       <CodeEngine
         question={question}
         roundId={roundId}
-        index={index}
         onNotPurchased={() => setForceLocked(true)}
       />
     </BuyInGate>

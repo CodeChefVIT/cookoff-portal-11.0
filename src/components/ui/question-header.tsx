@@ -8,14 +8,12 @@ import type { Question } from '../rounds/types';
 /**
  * SHARED UI - Question Header
  *
- * Two-tone `Problem {n}: {title}` in Space Grotesk Bold with the points chip
+ * The question title in Space Grotesk Bold with the points chip
  * beneath it. `code` is Figma `Desktop - 15` (312:1101) to the pixel: 36px
  * title, 103×19.5 #484848 chip. `reward` adds a matching coin chip beside it (R2).
  */
 export interface QuestionHeaderProps {
   question: Question;
-  /** 1-based position within the round's question list, for the "Problem N:" prefix. */
-  index?: number;
   variant?: 'default' | 'code';
   /** Coins paid out on solving the question; renders a coin chip when set. */
   reward?: number;
@@ -47,11 +45,10 @@ const chipVariants = cva('rounded-[4px] font-chip text-sm font-bold text-chip-fo
   defaultVariants: { variant: 'default' },
 });
 
-export function QuestionHeader({ question, index, variant, reward }: QuestionHeaderProps) {
+export function QuestionHeader({ question, variant, reward }: QuestionHeaderProps) {
   return (
     <div className={containerVariants({ variant })}>
       <h2 className={titleVariants({ variant })}>
-        {index !== undefined && `Problem ${index}: `}
         <span className="text-problem-title">{question.title}</span>
       </h2>
       <div className="flex flex-wrap items-center gap-2">

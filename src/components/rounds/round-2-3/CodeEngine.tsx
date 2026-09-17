@@ -36,11 +36,10 @@ import { WorkspaceLayout } from './WorkspaceLayout';
 export interface CodeEngineProps {
   question: Question;
   roundId: 2 | 3;
-  index?: number;
   onNotPurchased?: () => void;
 }
 
-export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEngineProps) {
+export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProps) {
   const testcases = useQuery({
     queryKey: testcaseKeys.detail(question.id),
     queryFn: () => getPublicTestcases(question.id),
@@ -131,7 +130,6 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
           <ProblemPanel
             variant="code"
             question={question}
-            index={index}
             showReward={getRoundConfig(roundId).hasCurrency}
           />
         }
