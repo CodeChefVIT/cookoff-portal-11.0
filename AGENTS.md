@@ -308,7 +308,7 @@ between the rounds belongs in `RoundConfig` (`engine`, `hasBuyIn`,
 RoundGate (qualification + window)
   └─ RoundShell (header — currency/headerAction config-gated — question tabs)
        │
-       ├─ R1 ("visual" engine): QuestionList | VisualQuestionWorkspace
+       ├─ R1 ("visual" engine): RoundEntry → first question | VisualQuestionWorkspace
        │        └─ BuyInGate (pass-through, R1 has no buy-in) → ScratchEngine
        │             └─ ScratchLayout
        │                  ├─ ProblemPanel
@@ -317,7 +317,7 @@ RoundGate (qualification + window)
        │        Submit lives in the header (`ChainSubmitButton`,
        │        `RoundConfig.headerSubmit`), not inside the engine.
        │
-       └─ R2/R3 ("code" engine): QuestionList | QuestionWorkspace
+       └─ R2/R3 ("code" engine): RoundEntry → first question | QuestionWorkspace
                 ├─ QuestionTabs (overlaid into WorkspaceLayout's TABS_BAND)
                 └─ BuyInGate (pass-through on R3) → CodeEngine
                      └─ WorkspaceLayout
@@ -326,6 +326,9 @@ RoundGate (qualification + window)
                           ├─ MonacoWrapper + EditorToolbar
                           └─ CustomInputPanel | TestcasePanel | ResultsPlaceholder
 ```
+
+There is no question-list page: `/round/:id` renders `RoundEntry`, which
+`replace`s to the round's first question (tabs switch between questions).
 
 On an R2/R3 question page `RoundShell` does **not** render the question
 tabs — `QuestionWorkspace` owns them so they sit in the problem column above
@@ -359,9 +362,11 @@ with `showReward` (`RoundConfig.hasCurrency`, so R2 only).
   Sans / General Sans in `layout.tsx`). R3 is identical minus the currency
   block (`hasCurrency`), the buy-in (`hasBuyIn`) and the reward
   (`SolvedBox` `showReward`). A failed submit or result fetch shows
-  `SubmissionErrorCard` (Figma `Desktop - 18`, `323:1631`) over the current verdict. While an R2 question is locked, the workspace
-  renders inert under `Desktop - 21`'s page blur (`352:646`) with the
-  `BuyInConfirm` box (`352:744`) and its coin layer (`352:1059`) on top. **`design/R2.svg` and `design/R3.svg` are a different
+  `SubmissionErrorCard` (Figma `Desktop - 18`, `323:1631`) over the current verdict. While an R2 question is locked, only the
+  editor + results column (`BuyInLockSurface`) renders inert under a 5px blur
+  with the `BuyInConfirm` box (`352:744`) and its coin layer (`352:1059`)
+  centred on it — a deliberate deviation from `Desktop - 21`'s full-page blur
+  (`352:646`) so the problem statement stays readable before buying. **`design/R2.svg` and `design/R3.svg` are a different
   product** — a mobile, team-based, QR-station treasure hunt ("Scan QR", "Go
   to new station", "Realm Name: Jotunheim", "Leave Team") with no code editor,
   testcases, or betting. They were rendered and inspected frame-by-frame and

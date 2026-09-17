@@ -54,9 +54,8 @@ describe('questionSchema', () => {
     expect(parsed.constraints).toEqual([]);
   });
 
-  it('leaves bountyActive, solved, and bought undefined when absent (L4)', () => {
+  it('leaves solved and bought undefined when absent (L4)', () => {
     const parsed = questionSchema.parse({ id: 'q5', title: 'No Flags', round: 2 });
-    expect(parsed.bountyActive).toBeUndefined();
     expect(parsed.solved).toBeUndefined();
     expect(parsed.bought).toBeUndefined();
   });

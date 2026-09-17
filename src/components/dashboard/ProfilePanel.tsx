@@ -25,15 +25,6 @@ export function ProfilePanel({ className, name, userId, email, score }: Props) {
       className={cn('h-[640px] w-[356px] max-w-full shrink-0', className)}
     >
       <PanelHeading className="absolute top-[27px] left-[28px] opacity-90">PROFILE</PanelHeading>
-      <Image
-        src="/dashboard/edit.svg"
-        alt=""
-        aria-hidden
-        width={25}
-        height={28}
-        unoptimized
-        className="absolute top-[26.8px] left-[303px] h-[28.06px] w-[25.04px] max-w-none opacity-90"
-      />
 
       <div
         aria-hidden

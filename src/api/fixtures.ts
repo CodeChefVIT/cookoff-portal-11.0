@@ -30,8 +30,7 @@ function makeQuestion(
   overrides: Partial<Question> & Pick<Question, 'id' | 'title' | 'round' | 'points'>
 ): Question {
   // R1 and R3 have no buy-in (RoundConfig.hasBuyIn === false) — `bought: true`
-  // simulates the "already open, nothing to purchase" state so QuestionList
-  // renders its "Unlocked" badge instead of a spurious "Locked" one.
+  // simulates the "already open, nothing to purchase" state.
   const isFreeRound = overrides.round === 1 || overrides.round === 3;
   return {
     description: `Read the input and produce the expected output for "${overrides.title}".`,
@@ -83,9 +82,6 @@ const R2_FIXTURE_QUESTIONS: Question[] = R2_QUESTION_IDS.map((id, index) =>
     title: `Chef's Pantry Problem ${index + 1}`,
     round: 2,
     points: 10 + index * 5,
-    // One bounty-active question in the mock data so BountyUnlockDialog is
-    // exercised in NEXT_PUBLIC_USE_MOCK_API demos, not just unit tests.
-    bountyActive: index === 1,
   })
 );
 
@@ -276,7 +272,7 @@ function buildFixture<K extends keyof FixtureMap>(
       email: 'fixture-user@vitstudent.ac.in',
       balance: 237,
       score: 40,
-      roundQualified: 1,
+      roundQualified: 2,
       questions: [],
     };
     return session as FixtureMap[K][1];

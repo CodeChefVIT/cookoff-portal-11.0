@@ -6,6 +6,7 @@ import type * as ApiModule from '@/api';
 import { renderWithProviders } from '@/test/utils';
 
 import { BuyInGate } from '../BuyInGate';
+import { BuyInLockSurface } from '../BuyInLock';
 import type { Question } from '../types';
 
 const { getSessionMock, createAttemptMock, pushMock } = vi.hoisted(() => ({
@@ -65,12 +66,14 @@ afterEach(() => {
 });
 
 describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
-  it('keeps children inert behind the confirm-purchase box while locked', () => {
+  it('keeps the lock surface inert behind the confirm-purchase box while locked', () => {
     mockSession(100);
 
     renderWithProviders(
       <BuyInGate questionId="q1" roundId={2} question={makeQuestion()}>
-        <div>editor</div>
+        <BuyInLockSurface>
+          <div>editor</div>
+        </BuyInLockSurface>
       </BuyInGate>
     );
 
@@ -86,7 +89,9 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <BuyInGate questionId="q1" roundId={2} question={makeQuestion()}>
-        <div>editor</div>
+        <BuyInLockSurface>
+          <div>editor</div>
+        </BuyInLockSurface>
       </BuyInGate>
     );
 
@@ -105,7 +110,9 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <BuyInGate questionId="q1" roundId={2} question={makeQuestion()}>
-        <div>editor</div>
+        <BuyInLockSurface>
+          <div>editor</div>
+        </BuyInLockSurface>
       </BuyInGate>
     );
 
@@ -122,7 +129,9 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <BuyInGate questionId="q1" roundId={2} question={makeQuestion()}>
-        <div>editor</div>
+        <BuyInLockSurface>
+          <div>editor</div>
+        </BuyInLockSurface>
       </BuyInGate>
     );
 
@@ -139,7 +148,9 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     const user = userEvent.setup();
     renderWithProviders(
       <BuyInGate questionId="q1" roundId={2} question={makeQuestion()}>
-        <div>editor</div>
+        <BuyInLockSurface>
+          <div>editor</div>
+        </BuyInLockSurface>
       </BuyInGate>
     );
 
@@ -150,19 +161,21 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     expect(screen.getByText('editor').closest('[inert]')).not.toBeNull();
   });
 
-  it('Go Back returns to the round question list', async () => {
+  it('✕ returns to the dashboard', async () => {
     mockSession(100);
 
     const user = userEvent.setup();
     renderWithProviders(
       <BuyInGate questionId="q1" roundId={2} question={makeQuestion()}>
-        <div>editor</div>
+        <BuyInLockSurface>
+          <div>editor</div>
+        </BuyInLockSurface>
       </BuyInGate>
     );
 
-    await user.click(screen.getByRole('button', { name: 'Go Back' }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
 
-    expect(pushMock).toHaveBeenCalledWith('/round/2');
+    expect(pushMock).toHaveBeenCalledWith('/dashboard');
   });
 });
 

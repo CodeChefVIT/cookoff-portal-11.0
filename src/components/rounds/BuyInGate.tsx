@@ -1,12 +1,15 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { attemptKeys } from '@/api';
 import { Button } from '@/components/ui/button';
 
 import { BuyInConfirm } from './BuyInConfirm';
+import { BuyInLockContext } from './BuyInLock';
 import { useAttempt, useSession } from './hooks';
 import { getRoundConfig } from './round-config';
 import type { Question, RoundId } from './types';
@@ -14,11 +17,11 @@ import type { Question, RoundId } from './types';
 /**
  * SHARED BUY-IN GATE
  *
- * R2: gates `children` behind `POST /attempts/:id`. While locked, the real
- * workspace still renders — inert and hidden from assistive tech — under
- * Figma `Desktop - 21`'s page blur with the `BuyInConfirm` box (352:744) on
- * top. The wrapper is identical locked or unlocked so the editor never
- * remounts on unlock. Only a response with `unlocked: true` opens it — an
+ * R2: gates the workspace behind `POST /attempts/:id`. The lock state and the
+ * `BuyInConfirm` box (352:744) go down through `BuyInLockContext`; only the
+ * `BuyInLockSurface` inside (the editor + results column) blurs and goes
+ * inert, so the problem statement stays readable before buying. Only a
+ * response with `unlocked: true` opens it — an
  * insufficient-balance response is still a successful call. R1/R3
  * (`RoundConfig.hasBuyIn === false`) are pass-throughs — never a bet prompt,
  * even on a spurious `402` from `/submit` (see AGENTS.md C2/L7). R1
@@ -32,8 +35,6 @@ export interface BuyInGateProps {
   question: Question;
   /** Re-locks the editor when `/submit` reports the attempt was never purchased (stale client cache). */
   forceLocked?: boolean;
-  /** Holds back the `BuyInConfirm` box (workspace stays blurred) while another modal — the bounty prompt — is open. */
-  deferPrompt?: boolean;
 }
 
 const BET_FAILED = 'Couldn’t place your bet. Try again.';
@@ -44,7 +45,6 @@ export function BuyInGate({
   roundId,
   question,
   forceLocked,
-  deferPrompt,
 }: BuyInGateProps) {
   const config = getRoundConfig(roundId);
   const session = useSession();
@@ -52,9 +52,17 @@ export function BuyInGate({
 
   const { mutate: unlock, isIdle, reset } = attempt;
   const autoUnlock = config.autoAttempt && question.bought !== true;
+  // Dev Strict Mode re-runs this effect before `isIdle` flips, and a remount can
+  // land while the first POST is in flight; a second POST races the first and
+  // its 500 shows the retry banner. Send at most one per question.
+  const queryClient = useQueryClient();
+  const autoUnlockSentFor = useRef<string | null>(null);
   useEffect(() => {
-    if (autoUnlock && isIdle) unlock();
-  }, [autoUnlock, isIdle, unlock]);
+    if (!autoUnlock || !isIdle || autoUnlockSentFor.current === questionId) return;
+    if (queryClient.isMutating({ mutationKey: attemptKeys.detail(questionId) }) > 0) return;
+    autoUnlockSentFor.current = questionId;
+    unlock();
+  }, [autoUnlock, isIdle, unlock, questionId, queryClient]);
 
   // A stale unlock (earlier bet in this mount) must not keep the editor open once the server re-locks.
   useEffect(() => {
@@ -107,20 +115,15 @@ export function BuyInGate({
   }
 
   return (
-    <>
-      <div className="contents" inert={!unlocked} aria-hidden={unlocked ? undefined : true}>
-        {children}
-      </div>
-      {!unlocked && deferPrompt && (
-        <div aria-hidden="true" className="fixed inset-0 z-40 backdrop-blur-[5px]" />
-      )}
-      {!unlocked && !deferPrompt && (
-        <BuyInConfirm
-          onEnter={handleEnter}
-          backHref={`/round/${roundId}`}
-          isPending={attempt.isPending}
-        />
-      )}
-    </>
+    <BuyInLockContext
+      value={{
+        locked: !unlocked,
+        prompt: (
+          <BuyInConfirm onEnter={handleEnter} backHref="/dashboard" isPending={attempt.isPending} />
+        ),
+      }}
+    >
+      {children}
+    </BuyInLockContext>
   );
 }

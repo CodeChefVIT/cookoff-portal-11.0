@@ -5,36 +5,56 @@ import { createQueryKeys } from '@/lib/query';
 
 import { readFixture } from './fixtures';
 import { request } from './request';
-import { envelope, normalizeWire } from './wire';
+import { envelope } from './wire';
 
-const isoOrEpoch = z.union([z.string(), z.number()]).transform(value => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date;
+const isoOrNull = z
+  .string()
+  .nullish()
+  .transform(value => {
+    if (!value) return null;
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  });
+
+/** `dto.TimerResponse` from `cookoff-11.0-be/internal/helpers/timer`. */
+const timerWire = z.object({
+  round: z.coerce.number().int(),
+  is_running: z.boolean(),
+  start_time: isoOrNull,
+  end_time: isoOrNull,
+  time_left: z.coerce.number().nonnegative(),
 });
 
-const roundTimeShape = z.object({
-  serverTime: isoOrEpoch,
-  roundStartTime: isoOrEpoch,
-  roundEndTime: isoOrEpoch,
-});
+export interface RoundTime {
+  /** Local receive time: the server sends `time_left` instead of its clock, so no offset is needed. */
+  serverTime: Date;
+  roundStartTime: Date | null;
+  /** `null` until the admin starts the round (`POST /admin/startRound`). */
+  roundEndTime: Date | null;
+  /** The round the contest timer belongs to; absent in fixtures. */
+  round?: number;
+}
 
 /**
- * `GET /getTime` does not exist on the backend at all (confirmed against
- * `cookoff-11.0-be/internal/router/router.go`, which now wires every other
- * R2/R3 route) — L2 stands. `RoundGate` fails open on this query's error
- * (qualification alone still gates access); only the timer display
- * degrades to "clock unavailable". Envelope-wrapped for the day this
- * lands, per `dto.SuccessResponse`.
+ * `GET /getTime` (`dto.TimerResponse`, envelope-wrapped). While running,
+ * the end is anchored on the server's `time_left` rather than `end_time` so a
+ * skewed client clock can't shift the countdown. Once stopped the backend
+ * drops `start_time`/`end_time`, so a round that hasn't started and one that
+ * already ended both arrive with no times.
  */
 export const roundTimeSchema = envelope(
-  z
-    .looseObject({})
-    .transform(raw =>
-      roundTimeShape.parse(normalizeWire(raw, ['serverTime', 'roundStartTime', 'roundEndTime']))
-    )
+  timerWire.transform((wire): RoundTime => {
+    const receivedAt = new Date();
+    return {
+      serverTime: receivedAt,
+      roundStartTime: wire.start_time,
+      roundEndTime: wire.is_running
+        ? new Date(receivedAt.getTime() + wire.time_left * 1000)
+        : wire.end_time,
+      round: wire.round,
+    };
+  })
 );
-
-export type RoundTime = z.infer<typeof roundTimeShape>;
 
 export const timerKeys = createQueryKeys('round-time');
 

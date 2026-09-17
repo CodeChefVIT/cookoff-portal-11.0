@@ -18,8 +18,9 @@ export interface RoundGateProps {
 }
 
 /**
- * Server-authoritative access gate (see AGENTS.md authority split). Round
- * unlock is `round_qualified >= roundId` from `GET /dashboard`; the round
+ * Server-authoritative access gate (see AGENTS.md authority split). A round
+ * is playable only while `round_qualified === roundId` from `GET /dashboard`
+ * (below: not qualified; above: an old, closed round); the round
  * window comes from `GET /getTime`. There is no endpoint that names the
  * "current round" (L2) — qualification plus the window is the only signal.
  * On `/getTime` failure, gameplay is NOT blocked (see AGENTS.md UX states);
@@ -56,6 +57,12 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
     return <RoundIntermission roundId={roundId} variant="notQualified" />;
   }
 
+  // Only the current round is playable — once qualified past it, an old round
+  // is closed for good, regardless of `/getTime` (which describes the current round).
+  if (session.data.roundQualified > roundId) {
+    return <RoundIntermission roundId={roundId} variant="ended" />;
+  }
+
   // `/getTime` unavailable: don't block a qualified contestant from playing —
   // fail open on the gate, fail closed only on the clock display itself.
   if (time.isError) {
@@ -66,13 +73,29 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
     return <LoadingScreen message="Checking round schedule…" />;
   }
 
+  const endedVariant = getRoundConfig(roundId).isFinalRound ? 'finished' : 'ended';
+  const timerRound = time.data.round;
+
+  // The contest timer runs one round at a time: an earlier timer round means
+  // this one hasn't opened yet, a later one means it's over.
+  if (timerRound !== undefined && timerRound < roundId) {
+    return <RoundIntermission roundId={roundId} variant="pending" />;
+  }
+  if (timerRound !== undefined && timerRound > roundId) {
+    return <RoundIntermission roundId={roundId} variant={endedVariant} />;
+  }
+
+  // No end time: the admin hasn't started this round yet.
+  if (!time.data.roundEndTime) {
+    return <RoundIntermission roundId={roundId} variant="pending" />;
+  }
+
   const start = time.data.roundStartTime?.getTime() ?? now;
-  const end = time.data.roundEndTime?.getTime() ?? now;
+  const end = time.data.roundEndTime.getTime();
 
   if (now < start) return <RoundIntermission roundId={roundId} variant="pending" />;
   if (now >= end) {
-    const variant = getRoundConfig(roundId).isFinalRound ? 'finished' : 'ended';
-    return <RoundIntermission roundId={roundId} variant={variant} />;
+    return <RoundIntermission roundId={roundId} variant={endedVariant} />;
   }
 
   return <>{children}</>;
