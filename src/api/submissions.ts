@@ -141,12 +141,16 @@ export async function submitCode(input: SubmissionRequestInput): Promise<{ submi
  * submission still hadn't finished after 2 minutes; the caller offers a
  * manual "Check again" instead of hammering the endpoint.
  */
-export async function getSubmissionResult(submissionId: string): Promise<SubmissionVerdict> {
+export async function getSubmissionResult(
+  submissionId: string,
+  signal?: AbortSignal
+): Promise<SubmissionVerdict> {
   if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('result', submissionId);
   return request({
     url: `/result/${submissionId}`,
     method: 'GET',
     schema: envelope(submissionResultSchema),
     timeout: 130_000,
+    signal,
   });
 }

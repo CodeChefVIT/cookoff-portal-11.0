@@ -78,7 +78,7 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
   // invalidates the round question list.
   const [wasAlreadySolved, setWasAlreadySolved] = useState(question.solved === true);
 
-  const submission = useCodeSubmission(roundId);
+  const submission = useCodeSubmission(roundId, question.id);
   const isExpired = useRoundExpired();
 
   useEffect(() => {
@@ -102,11 +102,13 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
   // A failed submit or result fetch shows Figma `Desktop - 18`'s card over whatever verdict is on screen.
   const [submitFailed, setSubmitFailed] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
-  const [dismissedResultErrorFor, setDismissedResultErrorFor] = useState<string | null>(null);
+  // Keyed on *when* the error happened, not on the submission: dismissing once
+  // must not silence a later failure of the same submission's "Check again".
+  const [dismissedErrorAt, setDismissedErrorAt] = useState<number | null>(null);
   const resultFailed =
     submission.result.isError &&
     !submission.timedOut &&
-    submission.submissionId !== dismissedResultErrorFor;
+    submission.result.errorUpdatedAt !== dismissedErrorAt;
 
   function confirmSubmit() {
     setConfirmSubmitOpen(false);
@@ -138,13 +140,19 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
     );
   }
 
-  const isSubmitDisabled = isExpired || !sourceCode.trim() || submission.submit.isPending;
+  // Also blocked while the verdict is still being fetched: each result request
+  // holds a 120s server-side long poll, so re-submitting would stack them and
+  // exhaust the browser's per-host connection budget.
+  const isSubmitDisabled =
+    isExpired || !sourceCode.trim() || submission.submit.isPending || submission.result.isFetching;
 
   const placeholder = submission.timedOut
     ? 'Taking longer than expected.'
     : submission.submit.isPending || submission.result.isFetching
       ? 'Judging your submission…'
-      : 'You must run your code first';
+      : submission.result.isError
+        ? 'Couldn’t fetch your verdict.'
+        : 'You must run your code first';
 
   return (
     <>
@@ -194,7 +202,10 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
           ) : (
             <ResultsPlaceholder
               message={placeholder}
-              onRetry={submission.timedOut ? submission.retryResult : undefined}
+              // Any result failure is recoverable by asking again — a 500 or a
+              // dropped connection stranded the player on "You must run your
+              // code first" with no way back to their verdict.
+              onRetry={submission.result.isError ? submission.retryResult : undefined}
             />
           )
         }
@@ -205,7 +216,7 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
         onClose={() => {
           setSubmitFailed(false);
           setSubmitError(undefined);
-          setDismissedResultErrorFor(submission.submissionId);
+          setDismissedErrorAt(submission.result.errorUpdatedAt);
         }}
       />
       <ConfirmSubmitDialog
