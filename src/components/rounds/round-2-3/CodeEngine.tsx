@@ -127,7 +127,14 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
   return (
     <>
       <WorkspaceLayout
-        problem={<ProblemPanel variant="code" question={question} index={index} />}
+        problem={
+          <ProblemPanel
+            variant="code"
+            question={question}
+            index={index}
+            showReward={getRoundConfig(roundId).hasCurrency}
+          />
+        }
         editor={
           <>
             <div className="flex flex-wrap items-center justify-between gap-2 lg:relative lg:block lg:h-[29.766px]">

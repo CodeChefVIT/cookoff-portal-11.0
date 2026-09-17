@@ -13,6 +13,8 @@ export interface ProblemPanelProps {
   heading?: ReactNode;
   /** `code`: R2/R3's Figma `Desktop - 15/14` panel — fixed title block, scrolling body. */
   variant?: 'default' | 'code';
+  /** Shows the question's coin reward beside its points (R2). */
+  showReward?: boolean;
   className?: string;
 }
 
@@ -82,7 +84,14 @@ const sampleLabelVariants = cva('text-xs font-bold tracking-wide uppercase', {
 });
 
 /** Left column: full problem statement, independently scrollable. */
-export function ProblemPanel({ question, index, heading, variant, className }: ProblemPanelProps) {
+export function ProblemPanel({
+  question,
+  index,
+  heading,
+  variant,
+  showReward,
+  className,
+}: ProblemPanelProps) {
   // Admin authors samples as parallel lists: `sample_test_input[i]`, `sample_test_output[i]` and `explanation[i]` are sample i.
   const samples = Array.from(
     {
@@ -106,7 +115,12 @@ export function ProblemPanel({ question, index, heading, variant, className }: P
     >
       {heading}
       <div id="problem-heading" className={headerVariants({ variant })}>
-        <QuestionHeader question={question} index={index} variant={variant} />
+        <QuestionHeader
+          question={question}
+          index={index}
+          variant={variant}
+          reward={showReward ? Number(question.reward) : undefined}
+        />
       </div>
 
       <div className={bodyVariants({ variant })}>

@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import { cva } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
@@ -9,13 +10,15 @@ import type { Question } from '../rounds/types';
  *
  * Two-tone `Problem {n}: {title}` in Space Grotesk Bold with the points chip
  * beneath it. `code` is Figma `Desktop - 15` (312:1101) to the pixel: 36px
- * title, 103×19.5 #484848 chip.
+ * title, 103×19.5 #484848 chip. `reward` adds a matching coin chip beside it (R2).
  */
 export interface QuestionHeaderProps {
   question: Question;
   /** 1-based position within the round's question list, for the "Problem N:" prefix. */
   index?: number;
   variant?: 'default' | 'code';
+  /** Coins paid out on solving the question; renders a coin chip when set. */
+  reward?: number;
 }
 
 const containerVariants = cva('flex flex-col items-start', {
@@ -44,14 +47,29 @@ const chipVariants = cva('rounded-[4px] font-chip text-sm font-bold text-chip-fo
   defaultVariants: { variant: 'default' },
 });
 
-export function QuestionHeader({ question, index, variant }: QuestionHeaderProps) {
+export function QuestionHeader({ question, index, variant, reward }: QuestionHeaderProps) {
   return (
     <div className={containerVariants({ variant })}>
       <h2 className={titleVariants({ variant })}>
         {index !== undefined && `Problem ${index}: `}
         <span className="text-problem-title">{question.title}</span>
       </h2>
-      <span className={cn('shrink-0', chipVariants({ variant }))}>{question.points} Points</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={cn('shrink-0', chipVariants({ variant }))}>{question.points} Points</span>
+        {reward !== undefined && (
+          <span className={cn('shrink-0 gap-1', chipVariants({ variant }), 'inline-flex')}>
+            <Image
+              src="/code-round/coin.svg"
+              alt=""
+              width={22}
+              height={22}
+              unoptimized
+              className="-my-1 -ml-1 size-[22px] max-w-none"
+            />
+            Reward: {reward} Coins
+          </span>
+        )}
+      </div>
     </div>
   );
 }
