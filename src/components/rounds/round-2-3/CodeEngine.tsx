@@ -46,7 +46,9 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
     staleTime: Infinity,
   });
 
-  const draft = useRoundStore.use.getDraft()(question.id);
+  // Subscribe to this question's draft: `use.getDraft` only subscribes to the
+  // (stable) accessor, so language swaps and seeding never re-rendered.
+  const draft = useRoundStore(state => state.drafts[question.id]);
   const setSourceCode = useRoundStore.use.setSourceCode();
   const setLanguage = useRoundStore.use.setLanguage();
   const setCustomInput = useRoundStore.use.setCustomInput();
