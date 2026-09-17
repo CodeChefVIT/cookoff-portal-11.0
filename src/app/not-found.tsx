@@ -10,28 +10,42 @@ export default function NotFound() {
         404 - Page not found
       </h1>
 
-      <div className={styles.stage}>
+      <div className={styles.hourglassRail} aria-hidden="true">
         <Image
           src="/404-background.svg"
           alt=""
           fill
           preload
           unoptimized
-          sizes="100vw"
-          className="object-contain"
-        />
-
-        <div className="absolute top-[21.875%] left-[34.861%] size-[29.444%]">
-          <Image src="/404-chef.png" alt="" fill preload sizes="29.444vw" className={styles.chef} />
-        </div>
-
-        <Link
-          href="/dashboard"
-          prefetch={false}
-          aria-label="Return to dashboard"
-          className={styles.homeLink}
+          sizes="35vw"
+          className={styles.hourglass}
         />
       </div>
+
+      <div className={styles.contentGlow} aria-hidden="true" />
+
+      <section className={styles.content}>
+        <p className={styles.eyebrow}>
+          <span aria-hidden="true" className={styles.eyebrowDot} />
+          Timeline error / 404
+        </p>
+
+        <div className={styles.heroMark}>
+          <span className={styles.number}>404</span>
+          <span className={styles.chefFrame}>
+            <Image src="/404-chef.png" alt="" fill preload sizes="16rem" className={styles.chef} />
+          </span>
+        </div>
+
+        <p className={styles.errorWord}>ERROR</p>
+        <p className={styles.message}>Hang tight while we rewind the timeline!!</p>
+
+        <Link href="/dashboard" prefetch={false} className={styles.homeLink}>
+          Return to dashboard <span aria-hidden="true">↗</span>
+        </Link>
+
+        <p className={styles.hint}>Your next stop is only one click away.</p>
+      </section>
     </main>
   );
 }
