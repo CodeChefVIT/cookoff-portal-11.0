@@ -1,10 +1,11 @@
 'use client';
 
-import { useMutationState } from '@tanstack/react-query';
+import { useIsMutating, useMutationState } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { attemptKeys, isApiError } from '@/api';
+import { attemptKeys, isApiError, visualSubmissionKeys } from '@/api';
 import { Button } from '@/components/ui/button';
+import { useMounted } from '@/hooks/use-mounted';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
 import { useRoundExpired, useVisualSubmission } from '../hooks';
@@ -50,7 +51,19 @@ export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
     select: mutation => mutation.state.status,
   });
   const unlocked = unlockStatuses.at(-1) === 'success';
-  const disabled = isExpired || chain.length === 0 || submission.isPending || !unlocked;
+
+  // `submission.isPending` only covers *this* mount's mutation instance, so a
+  // question-tab switch and back re-enabled Submit while the first request was
+  // still in flight — two submissions, two contradictory verdicts. The
+  // mutation cache is shared across mounts, so ask it instead.
+  const submitting = useIsMutating({ mutationKey: visualSubmissionKeys.detail(questionId) }) > 0;
+
+  // `chain-store` rehydrates from localStorage after the server render, so the
+  // button's disabled state would otherwise differ between the two passes.
+  const mounted = useMounted();
+
+  const disabled =
+    !mounted || isExpired || chain.length === 0 || submission.isPending || submitting || !unlocked;
 
   return (
     <Button

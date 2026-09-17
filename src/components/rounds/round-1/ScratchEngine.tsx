@@ -41,6 +41,13 @@ export interface ScratchEngineProps {
   question: Question;
 }
 
+/**
+ * Which verdict the player has already dismissed, per question. Module state
+ * rather than component state so it survives the remount a question-tab switch
+ * causes; not persisted, so a page reload shows the celebration once more.
+ */
+const dismissedResults = new Map<string, VisualSubmissionResult>();
+
 export function ScratchEngine({ question }: ScratchEngineProps) {
   const blocksQuery = useVisualBlocks(question.id);
   const blocks = blocksQuery.data ?? [];
@@ -56,7 +63,25 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
   const { result, isPending } = useVisualSubmissionState(question.id);
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
-  const [dismissedResult, setDismissedResult] = useState<VisualSubmissionResult | null>(null);
+  const [dismissedResult, setDismissedResultState] = useState<VisualSubmissionResult | null>(
+    () => dismissedResults.get(question.id) ?? null
+  );
+
+  // Dismissal has to outlive the component: `result` lives in the mutation
+  // cache for the 5min gcTime, but this state died on every unmount, so
+  // tabbing away from a solved question and back re-opened the celebration
+  // over the workspace.
+  const setDismissedResult = (value: VisualSubmissionResult | null) => {
+    if (value === null) dismissedResults.delete(question.id);
+    else dismissedResults.set(question.id, value);
+    setDismissedResultState(value);
+  };
+
+  const [trackedQuestionId, setTrackedQuestionId] = useState(question.id);
+  if (trackedQuestionId !== question.id) {
+    setTrackedQuestionId(question.id);
+    setDismissedResultState(dismissedResults.get(question.id) ?? null);
+  }
 
   // Drop any id the server no longer returns for this question — a stale
   // chain persisted from before the question's blocks changed.
@@ -73,7 +98,10 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
   const palette = paletteFor(blocks, chain);
   const chainBlocks = resolveChain(blocks, chain);
   const activeBlock = blocks.find(b => b.id === activeBlockId) ?? null;
-  const disabled = isExpired;
+  // Frozen while a verdict is in flight too: `mutate` snapshots the chain at
+  // call time, so editing during "Checking your chain…" produced a verdict
+  // describing the old chain while the screen showed the new one.
+  const disabled = isExpired || isPending;
 
   function onDragStart(event: DragStartEvent) {
     setActiveBlockId(String(event.active.id));
