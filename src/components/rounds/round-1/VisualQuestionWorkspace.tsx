@@ -39,6 +39,19 @@ export function VisualQuestionWorkspace({ questionId }: VisualQuestionWorkspaceP
     );
   }
 
+  // `GET /question/:id` is not round-scoped, and R1 auto-creates the attempt on
+  // open — so another round's question reached through a hand-typed URL would
+  // be unlocked (and charged, if it carries a buy-in) without any prompt.
+  if (question.round !== 1) {
+    return (
+      <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-3">
+        <p className="text-sm text-muted-foreground">
+          This problem belongs to Round {question.round}, not Round 1.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <BuyInGate questionId={questionId} roundId={1} question={question}>
       <ScratchEngine question={question} />

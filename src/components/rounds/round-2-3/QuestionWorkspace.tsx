@@ -74,6 +74,19 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
             Retry
           </button>
         </div>
+      ) : question.round !== roundId ? (
+        // `GET /question/:id` is not round-scoped, so a hand-typed or shared
+        // URL can address another round's question. Rendering it under this
+        // round's config would apply the wrong buy-in rules — on R3
+        // (`hasBuyIn: false`, `autoAttempt: true`) that silently debits an R2
+        // question's buy-in with no confirmation box.
+        <div
+          className={cn('flex min-h-[50dvh] flex-col items-center justify-center gap-3', TABS_BAND)}
+        >
+          <p className="text-sm text-muted-foreground">
+            This problem belongs to Round {question.round}, not Round {roundId}.
+          </p>
+        </div>
       ) : (
         <QuestionReady roundId={roundId} questionId={questionId} question={question} />
       )}
