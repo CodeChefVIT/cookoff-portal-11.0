@@ -1,5 +1,6 @@
 import * as z from 'zod';
 
+import { SESSION_TIMEOUT_MS } from '@/constants';
 import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 
@@ -79,7 +80,12 @@ export const sessionKeys = createQueryKeys('session');
 
 export async function getSession(): Promise<Session> {
   if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('session');
-  return request({ url: '/dashboard', method: 'GET', schema: sessionSchema });
+  return request({
+    url: '/dashboard',
+    method: 'GET',
+    schema: sessionSchema,
+    timeout: SESSION_TIMEOUT_MS,
+  });
 }
 
 export async function logout(): Promise<void> {
