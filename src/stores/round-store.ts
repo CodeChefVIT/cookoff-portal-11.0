@@ -14,8 +14,6 @@ interface QuestionDraft {
 
 interface RoundState {
   drafts: Record<string, QuestionDraft>;
-  /** Questions whose bounty-unlock modal has already been resolved (entered or dismissed) this session. */
-  bountyResolved: Record<string, boolean>;
   getDraft: (questionId: string) => QuestionDraft | undefined;
   setSourceCode: (questionId: string, sourceCode: string) => void;
   setCustomInput: (questionId: string, customInput: string) => void;
@@ -26,14 +24,12 @@ interface RoundState {
    */
   setLanguage: (questionId: string, languageId: number, boilerplateSourceCode: string) => void;
   resetDraft: (questionId: string, languageId: number, boilerplateSourceCode: string) => void;
-  resolveBounty: (questionId: string) => void;
 }
 
 const useRoundStoreBase = create<RoundState>()(
   persist(
     (set, get) => ({
       drafts: {},
-      bountyResolved: {},
       getDraft: questionId => get().drafts[questionId],
       setSourceCode: (questionId, sourceCode) =>
         set(state => ({
@@ -78,8 +74,6 @@ const useRoundStoreBase = create<RoundState>()(
             },
           },
         })),
-      resolveBounty: questionId =>
-        set(state => ({ bountyResolved: { ...state.bountyResolved, [questionId]: true } })),
     }),
     { name: 'round-store' }
   )
@@ -97,8 +91,3 @@ function requireDraft(state: RoundState, questionId: string): QuestionDraft {
 }
 
 export const useRoundStore = createSelectors(useRoundStoreBase);
-
-/** Non-reactive snapshot read, safe to call inside a `useState` lazy initializer. */
-export function isBountyResolvedNow(questionId: string): boolean {
-  return useRoundStoreBase.getState().bountyResolved[questionId] === true;
-}

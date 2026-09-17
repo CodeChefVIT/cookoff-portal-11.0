@@ -7,8 +7,7 @@ import { cn } from '@/lib/utils';
 
 /**
  * What `BuyInGate` hands down while an R2 question may be locked. `prompt` is
- * the `BuyInConfirm` box, or `null` while another modal (the bounty prompt)
- * holds it back.
+ * the `BuyInConfirm` box.
  */
 export interface BuyInLock {
   locked: boolean;

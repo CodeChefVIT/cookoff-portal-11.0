@@ -33,8 +33,6 @@ export interface BuyInGateProps {
   question: Question;
   /** Re-locks the editor when `/submit` reports the attempt was never purchased (stale client cache). */
   forceLocked?: boolean;
-  /** Holds back the `BuyInConfirm` box (the locked surface stays blurred) while another modal — the bounty prompt — is open. */
-  deferPrompt?: boolean;
 }
 
 const BET_FAILED = 'Couldn’t place your bet. Try again.';
@@ -45,7 +43,6 @@ export function BuyInGate({
   roundId,
   question,
   forceLocked,
-  deferPrompt,
 }: BuyInGateProps) {
   const config = getRoundConfig(roundId);
   const session = useSession();
@@ -111,7 +108,7 @@ export function BuyInGate({
     <BuyInLockContext
       value={{
         locked: !unlocked,
-        prompt: deferPrompt ? null : (
+        prompt: (
           <BuyInConfirm
             onEnter={handleEnter}
             backHref={`/round/${roundId}`}

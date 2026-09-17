@@ -79,11 +79,6 @@ export function QuestionList({ roundId }: QuestionListProps) {
             href={`/round/${roundId}/${question.id}`}
             className="relative flex flex-col gap-3 overflow-hidden rounded-2xl border border-border bg-card p-5 text-center text-card-foreground transition-colors hover:border-primary focus-visible:ring-3 focus-visible:ring-ring/30 focus-visible:outline-none"
           >
-            {question.bountyActive && (
-              <span className="absolute top-3 left-3 z-10 w-fit rounded-full bg-coin/20 px-2 py-0.5 text-xs font-medium text-coin">
-                <span aria-hidden="true">🎯</span> Bounty
-              </span>
-            )}
             {question.solved && (
               <span className="absolute top-3 right-3 z-10 w-fit rounded-full bg-primary/20 px-2 py-0.5 text-xs font-medium text-primary">
                 Solved

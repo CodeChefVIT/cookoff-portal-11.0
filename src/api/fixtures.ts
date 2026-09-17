@@ -83,9 +83,6 @@ const R2_FIXTURE_QUESTIONS: Question[] = R2_QUESTION_IDS.map((id, index) =>
     title: `Chef's Pantry Problem ${index + 1}`,
     round: 2,
     points: 10 + index * 5,
-    // One bounty-active question in the mock data so BountyUnlockDialog is
-    // exercised in NEXT_PUBLIC_USE_MOCK_API demos, not just unit tests.
-    bountyActive: index === 1,
   })
 );
 
