@@ -10,6 +10,7 @@ export * from './QuestionWorkspace';
 export * from './TestcasePanel';
 export * from './TestcaseCase';
 export * from './WorkspaceLayout';
+export * from './ColumnResizer';
 export * from './languages';
 export * from './code-editor';
 

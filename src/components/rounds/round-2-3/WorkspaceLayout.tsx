@@ -6,7 +6,10 @@ import { parseAsStringEnum, useQueryState } from 'nuqs';
 import { cn } from '@/lib/utils';
 
 import { BuyInLockSurface } from '../BuyInLock';
+import { dividerPosition, workspaceGridTemplate } from './column-resize';
+import { ColumnResizer } from './ColumnResizer';
 import { RowResizer } from './RowResizer';
+import { useColumnResize } from './use-column-resize';
 import { useResultsResize } from './use-results-resize';
 
 export interface WorkspaceLayoutProps {
@@ -18,9 +21,12 @@ export interface WorkspaceLayoutProps {
 const PANELS = ['problem', 'code', 'tests'] as const;
 type Panel = (typeof PANELS)[number];
 
-/** Figma `Desktop - 15/14` columns at 1440px: 27px | 643 | 23 | 715 | 32px. */
-export const WORKSPACE_GRID =
-  'lg:grid lg:grid-cols-[minmax(0,643fr)_minmax(0,715fr)] lg:gap-x-[23px] lg:pr-[32px] lg:pl-[27px]';
+/**
+ * Figma `Desktop - 15/14` columns at 1440px: 27px | 643 | 23 | 715 | 32px.
+ * The three tracks themselves come from `workspaceGridTemplate` inline, since
+ * the divider moves them; anything using this class must supply that style.
+ */
+export const WORKSPACE_GRID = 'lg:grid lg:pr-[32px] lg:pl-[27px]';
 
 /** The band above the problem panel that `QuestionWorkspace` overlays the question tabs into (16 + 44 + 8). */
 export const TABS_BAND = 'lg:pt-[68px]';
@@ -32,9 +38,10 @@ export const TABS_BAND = 'lg:pt-[68px]';
  * results panel, both 34px off the bottom. The results panel starts at
  * Figma's 355px and is resizable against the editor via `RowResizer` in the
  * frame's 15.2px gap (the editor slot always keeps its minimum). That right
- * column is the `BuyInLockSurface` an unpaid R2 question blurs. Below `lg`, a
- * `Problem | Code | Tests` tab strip, since a split editor is unusable on a
- * phone.
+ * column is the `BuyInLockSurface` an unpaid R2 question blurs. The two
+ * columns are resizable against each other the same way, via `ColumnResizer`
+ * in the frame's 23px gutter. Below `lg`, a `Problem | Code | Tests` tab
+ * strip, since a split editor is unusable on a phone.
  */
 export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutProps) {
   const [panel, setPanel] = useQueryState(
@@ -42,9 +49,15 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
     parseAsStringEnum<Panel>([...PANELS]).withDefault('problem')
   );
   const { resultsHeight, onPointerDown, onKeyDown } = useResultsResize();
+  const {
+    columns,
+    onPointerDown: onColumnPointerDown,
+    onKeyDown: onColumnKeyDown,
+  } = useColumnResize();
 
   return (
     <div
+      style={{ gridTemplateColumns: workspaceGridTemplate(columns) }}
       className={cn(
         'flex h-[calc(100dvh-146px)] min-h-0 flex-col gap-3 p-3 lg:h-[calc(100dvh-95px)] lg:min-h-[720px] lg:gap-0 lg:p-0',
         WORKSPACE_GRID
@@ -70,7 +83,7 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
 
       <div
         className={cn(
-          'min-h-0 flex-1 lg:block lg:pb-[34px]',
+          'min-h-0 flex-1 lg:col-start-1 lg:row-start-1 lg:block lg:pb-[34px]',
           TABS_BAND,
           panel === 'problem' ? 'block' : 'hidden'
         )}
@@ -78,9 +91,17 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
         {problem}
       </div>
 
+      <ColumnResizer
+        label="Resize problem and editor panels"
+        position={dividerPosition(columns)}
+        onPointerDown={onColumnPointerDown}
+        onKeyDown={onColumnKeyDown}
+        className="lg:col-start-2 lg:row-start-1"
+      />
+
       <BuyInLockSurface
         className={cn(
-          'min-h-0 flex-1 flex-col lg:flex lg:pt-[19px] lg:pb-[34px]',
+          'min-h-0 flex-1 flex-col lg:col-start-3 lg:row-start-1 lg:flex lg:pt-[19px] lg:pb-[34px]',
           panel === 'problem' ? 'hidden' : 'flex'
         )}
       >
