@@ -121,6 +121,7 @@ export function BuyInGate({
         prompt: (
           <BuyInConfirm
             buyIn={buyIn}
+            balance={balance}
             onEnter={handleEnter}
             backHref="/dashboard"
             isPending={attempt.isPending}

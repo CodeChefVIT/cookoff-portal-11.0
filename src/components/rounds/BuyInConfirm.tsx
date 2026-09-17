@@ -10,6 +10,8 @@ import { cn } from '@/lib/utils';
 export interface BuyInConfirmProps {
   /** Coins this question costs to enter. */
   buyIn: number;
+  /** The player's coins; below `buyIn` the box explains the shortfall and Enter is disabled. */
+  balance: number;
   onEnter: () => void;
   /** Where ✕ navigates — the dashboard (rounds have no question list). */
   backHref: string;
@@ -34,16 +36,19 @@ const BUTTON =
  * least 640px wide (title/close offsets are net of the header bar's 1.77px
  * border); stacks in narrower columns. Only Enter or ✕ act.
  */
-export function BuyInConfirm({ buyIn, onEnter, backHref, isPending }: BuyInConfirmProps) {
+export function BuyInConfirm({ buyIn, balance, onEnter, backHref, isPending }: BuyInConfirmProps) {
   const router = useRouter();
   const titleId = useId();
   const descriptionId = useId();
+  const promptId = useId();
+  const shortfall = buyIn - balance;
+  const canAfford = shortfall <= 0;
 
   return (
     <section
       role="dialog"
       aria-labelledby={titleId}
-      aria-describedby={descriptionId}
+      aria-describedby={`${descriptionId} ${promptId}`}
       className="absolute top-1/2 left-1/2 z-30 flex w-[calc(100%-2rem)] -translate-x-1/2 -translate-y-1/2 flex-col items-center rounded-[10px] bg-code-panel pb-6 text-center @min-[640px]:left-[calc(50%-311px)] @min-[640px]:block @min-[640px]:h-[392px] @min-[640px]:w-[621px] @min-[640px]:translate-x-0 @min-[640px]:pb-0"
     >
       <div className="relative h-[68px] w-full shrink-0 rounded-t-[10px] border-[1.77px] border-scratch-rule bg-black @min-[640px]:absolute @min-[640px]:top-0 @min-[640px]:left-0">
@@ -69,18 +74,31 @@ export function BuyInConfirm({ buyIn, onEnter, backHref, isPending }: BuyInConfi
         Once you use your coins to attempt this question, the coins deducted will not be refunded.
         You must complete the question to earn points.
       </p>
-      {/* Figma has only "Do you want to jump in?" here; the cost is added and the line centred. */}
-      <p className="mt-6 font-sans text-[18px] leading-[30px] font-medium whitespace-nowrap text-white @min-[640px]:absolute @min-[640px]:top-[248px] @min-[640px]:left-1/2 @min-[640px]:mt-0 @min-[640px]:-translate-x-1/2">
-        Spend <span className="font-bold text-brand-accent">{buyIn} coins</span> to jump in?
+      {/* Figma has only "Do you want to jump in?" here; the cost (or the shortfall) is added and the line centred. */}
+      <p
+        id={promptId}
+        className="mt-6 px-4 font-sans text-[18px] leading-[30px] font-medium text-white @min-[640px]:absolute @min-[640px]:top-[248px] @min-[640px]:left-1/2 @min-[640px]:mt-0 @min-[640px]:-translate-x-1/2 @min-[640px]:px-0 @min-[640px]:whitespace-nowrap"
+      >
+        {canAfford ? (
+          <>
+            Spend <span className="font-bold text-brand-accent">{buyIn} coins</span> to jump in?
+          </>
+        ) : (
+          <>
+            Not enough coins: you need{' '}
+            <span className="font-bold text-brand-accent">{shortfall} more</span> to enter.
+          </>
+        )}
       </p>
       {/* Go Back was dropped from Figma's pair; Enter is centred in the 621px box instead of at 111px. */}
       <button
         type="button"
         onClick={onEnter}
-        disabled={isPending}
+        disabled={isPending || !canAfford}
         className={cn(
           BUTTON,
-          'mt-6 bg-code-enter text-white @min-[640px]:absolute @min-[640px]:top-[304px] @min-[640px]:left-[220.5px] @min-[640px]:mt-0'
+          'mt-6 bg-code-enter text-white @min-[640px]:absolute @min-[640px]:top-[304px] @min-[640px]:left-[220.5px] @min-[640px]:mt-0',
+          !canAfford && 'cursor-not-allowed opacity-50 disabled:cursor-not-allowed'
         )}
       >
         Enter

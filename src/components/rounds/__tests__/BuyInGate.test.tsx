@@ -142,7 +142,7 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     expect(screen.getByText('editor').closest('[inert]')).not.toBeNull();
   });
 
-  it('never calls the attempt endpoint when the balance is short', async () => {
+  it('explains the shortfall and disables Enter when the balance is short', async () => {
     mockSession(5);
 
     const user = userEvent.setup();
@@ -155,7 +155,14 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     );
 
     await waitFor(() => expect(getSessionMock).toHaveBeenCalled());
-    await user.click(await screen.findByRole('button', { name: 'Enter' }));
+    expect(
+      await screen.findByText(
+        (_, el) => el?.tagName === 'P' && /^Not enough coins/.test(el.textContent ?? '')
+      )
+    ).toHaveTextContent('Not enough coins: you need 15 more to enter.');
+    const enter = screen.getByRole('button', { name: 'Enter' });
+    expect(enter).toBeDisabled();
+    await user.click(enter);
 
     expect(createAttemptMock).not.toHaveBeenCalled();
     expect(screen.getByText('editor').closest('[inert]')).not.toBeNull();
