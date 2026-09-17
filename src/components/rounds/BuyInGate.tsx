@@ -1,9 +1,11 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
+import { attemptKeys } from '@/api';
 import { Button } from '@/components/ui/button';
 
 import { BuyInConfirm } from './BuyInConfirm';
@@ -50,9 +52,17 @@ export function BuyInGate({
 
   const { mutate: unlock, isIdle, reset } = attempt;
   const autoUnlock = config.autoAttempt && question.bought !== true;
+  // Dev Strict Mode re-runs this effect before `isIdle` flips, and a remount can
+  // land while the first POST is in flight; a second POST races the first and
+  // its 500 shows the retry banner. Send at most one per question.
+  const queryClient = useQueryClient();
+  const autoUnlockSentFor = useRef<string | null>(null);
   useEffect(() => {
-    if (autoUnlock && isIdle) unlock();
-  }, [autoUnlock, isIdle, unlock]);
+    if (!autoUnlock || !isIdle || autoUnlockSentFor.current === questionId) return;
+    if (queryClient.isMutating({ mutationKey: attemptKeys.detail(questionId) }) > 0) return;
+    autoUnlockSentFor.current = questionId;
+    unlock();
+  }, [autoUnlock, isIdle, unlock, questionId, queryClient]);
 
   // A stale unlock (earlier bet in this mount) must not keep the editor open once the server re-locks.
   useEffect(() => {
