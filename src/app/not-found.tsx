@@ -10,18 +10,6 @@ export default function NotFound() {
         404 - Page not found
       </h1>
 
-      <div className={styles.hourglassRail} aria-hidden="true">
-        <Image
-          src="/404-background.svg"
-          alt=""
-          fill
-          preload
-          unoptimized
-          sizes="35vw"
-          className={styles.hourglass}
-        />
-      </div>
-
       <div className={styles.contentGlow} aria-hidden="true" />
 
       <section className={styles.content}>
