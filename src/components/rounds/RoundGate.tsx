@@ -1,13 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
 
-import { getRoundTime, timerKeys } from '@/api';
 import { LoadingScreen } from '@/components/ui';
 
-import { useSession } from './hooks';
+import { useRoundTimeQuery, useSession, useTimePassed } from './hooks';
 import { getRoundConfig } from './round-config';
 import { RoundIntermission } from './RoundIntermission';
 import type { RoundId } from './types';
@@ -28,22 +25,11 @@ export interface RoundGateProps {
  */
 export function RoundGate({ roundId, children }: RoundGateProps) {
   const session = useSession();
-  const time = useQuery({
-    queryKey: timerKeys.all(),
-    queryFn: getRoundTime,
-    staleTime: 0,
-    retry: 1,
-  });
-
-  // `Date.now()` is impure — read it only inside an effect/interval, never
-  // directly during render.
-  const [now, setNow] = useState<number | null>(null);
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setNow(Date.now());
-    const interval = setInterval(() => setNow(Date.now()), 1_000);
-    return () => clearInterval(interval);
-  }, []);
+  // The gate outlives every question view in a round, so it owns the timer resync.
+  const time = useRoundTimeQuery({ sync: true });
+  // One timeout per boundary instead of a per-second re-render of the whole page.
+  const started = useTimePassed(time.data?.roundStartTime?.getTime() ?? null);
+  const ended = useTimePassed(time.data?.roundEndTime?.getTime() ?? null);
 
   if (session.isLoading) {
     return <LoadingScreen message="Loading your session…" />;
@@ -69,7 +55,7 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
     return <>{children}</>;
   }
 
-  if (time.isLoading || !time.data || now === null) {
+  if (time.isLoading || !time.data) {
     return <LoadingScreen message="Checking round schedule…" />;
   }
 
@@ -90,11 +76,10 @@ export function RoundGate({ roundId, children }: RoundGateProps) {
     return <RoundIntermission roundId={roundId} variant="pending" />;
   }
 
-  const start = time.data.roundStartTime?.getTime() ?? now;
-  const end = time.data.roundEndTime.getTime();
-
-  if (now < start) return <RoundIntermission roundId={roundId} variant="pending" />;
-  if (now >= end) {
+  if (time.data.roundStartTime && !started) {
+    return <RoundIntermission roundId={roundId} variant="pending" />;
+  }
+  if (ended) {
     return <RoundIntermission roundId={roundId} variant={endedVariant} />;
   }
 

@@ -39,7 +39,7 @@ export {
 } from './submissions';
 export type { SubmissionRequestInput, SubmissionVerdict, TestcaseResult } from './submissions';
 
-export { computeClockOffset, getRoundTime, remainingMs, timerKeys } from './timer';
+export { getRoundTime, remainingMs, timerKeys } from './timer';
 export type { RoundTime } from './timer';
 
 export { readFixture } from './fixtures';

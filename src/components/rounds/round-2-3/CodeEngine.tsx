@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { getPublicTestcases, isApiError, testcaseKeys } from '@/api';
-import { useCodeSubmission, useRoundTimer } from '@/components/rounds/hooks';
+import { useCodeSubmission, useRoundExpired } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
 import { ProblemPanel } from '../ProblemPanel';
@@ -36,18 +36,19 @@ import { WorkspaceLayout } from './WorkspaceLayout';
 export interface CodeEngineProps {
   question: Question;
   roundId: 2 | 3;
-  index?: number;
   onNotPurchased?: () => void;
 }
 
-export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEngineProps) {
+export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProps) {
   const testcases = useQuery({
     queryKey: testcaseKeys.detail(question.id),
     queryFn: () => getPublicTestcases(question.id),
     staleTime: Infinity,
   });
 
-  const draft = useRoundStore.use.getDraft()(question.id);
+  // Subscribe to this question's draft: `use.getDraft` only subscribes to the
+  // (stable) accessor, so language swaps and seeding never re-rendered.
+  const draft = useRoundStore(state => state.drafts[question.id]);
   const setSourceCode = useRoundStore.use.setSourceCode();
   const setLanguage = useRoundStore.use.setLanguage();
   const setCustomInput = useRoundStore.use.setCustomInput();
@@ -72,7 +73,7 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
   const [wasAlreadySolved, setWasAlreadySolved] = useState(question.solved === true);
 
   const submission = useCodeSubmission(roundId);
-  const { isExpired } = useRoundTimer();
+  const isExpired = useRoundExpired();
 
   useEffect(() => {
     if (submission.notPurchased) onNotPurchased?.();
@@ -127,7 +128,13 @@ export function CodeEngine({ question, roundId, index, onNotPurchased }: CodeEng
   return (
     <>
       <WorkspaceLayout
-        problem={<ProblemPanel variant="code" question={question} index={index} />}
+        problem={
+          <ProblemPanel
+            variant="code"
+            question={question}
+            showReward={getRoundConfig(roundId).hasCurrency}
+          />
+        }
         editor={
           <>
             <div className="flex flex-wrap items-center justify-between gap-2 lg:relative lg:block lg:h-[29.766px]">

@@ -8,6 +8,7 @@ import type * as ApiModule from '@/api';
 import { renderWithProviders, resetRoundStore } from '@/test/utils';
 
 import type { Question, Testcase } from '../../types';
+import { getLanguageById } from '../languages';
 import { QuestionWorkspace } from '../QuestionWorkspace';
 
 const {
@@ -136,6 +137,38 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     expect(submitCodeMock).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
     expect(screen.getByText('You earned 10 points and 50 coins.')).toBeInTheDocument();
+  });
+
+  it('switches the language and swaps the pristine boilerplate', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 100,
+      score: 0,
+      roundQualified: 2,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+    getQuestionsByRoundMock.mockResolvedValue([QUESTION_R2]);
+    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+
+    const user = userEvent.setup();
+    renderWorkspace(2, 'q1');
+    await user.click(await screen.findByRole('button', { name: 'Enter' }));
+
+    const selector = await screen.findByLabelText('Language');
+    expect(selector).toHaveValue('54');
+    expect(screen.getByLabelText('Code editor')).toHaveValue(getLanguageById(54).boilerplate);
+
+    await user.selectOptions(selector, '62');
+
+    expect(selector).toHaveValue('62');
+    expect(screen.getByLabelText('Code editor')).toHaveValue(getLanguageById(62).boilerplate);
   });
 
   it('re-locks the question when /submit reports it was never purchased (stale cache)', async () => {

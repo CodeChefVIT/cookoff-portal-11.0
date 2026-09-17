@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
-import { computeClockOffset, getRoundTime, remainingMs, timerKeys } from '@/api';
+import { getRoundTime, remainingMs, timerKeys } from '@/api';
 
 const RESYNC_INTERVAL_MS = 120_000;
+// Readers mounted later in the same page load reuse the owner's response.
+const READER_STALE_TIME_MS = 30_000;
 const TICK_INTERVAL_MS = 1_000;
 
 export interface UseRoundTimerResult {
@@ -18,37 +20,96 @@ export interface UseRoundTimerResult {
 }
 
 /**
- * The client clock is never trusted (see AGENTS.md). `offset = server_time -
- * Date.now()` is computed once per fetch and re-synced every 120s, matching
- * `cookoff-admin-11.0`'s timer page. Local ticking only advances the display;
- * it never substitutes for a fresh `/getTime` read at expiry.
+ * One `GET /getTime` query shared by every timer consumer. Only the sync owner
+ * (`RoundGate`, mounted around every round page) fetches on mount, re-syncs
+ * every 120s and refetches on focus; every other reader just reads the cache,
+ * so a page load costs one request and the resync one per interval.
+ * `roundEndTime` is already in the local clock (`api/timer.ts`).
  */
-export function useRoundTimer(onExpire?: () => void): UseRoundTimerResult {
-  const query = useQuery({
+export function useRoundTimeQuery({ sync = false }: { sync?: boolean } = {}) {
+  return useQuery({
     queryKey: timerKeys.all(),
     queryFn: getRoundTime,
-    staleTime: 0,
-    refetchInterval: RESYNC_INTERVAL_MS,
-    refetchOnWindowFocus: true,
+    ...(sync
+      ? { staleTime: 0, refetchInterval: RESYNC_INTERVAL_MS, refetchOnWindowFocus: true }
+      : { staleTime: READER_STALE_TIME_MS }),
   });
+}
 
-  const [now, setNow] = useState(() => Date.now());
+// Timers can fire a few ms early; landing just past the boundary keeps the
+// displayed second from trailing the real one for a whole tick.
+const TICK_SLACK_MS = 10;
 
-  useEffect(() => {
-    const interval = setInterval(() => setNow(Date.now()), TICK_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, []);
+// A single 1s clock for every mounted countdown. Each tick is scheduled from
+// the wall clock to just after the next whole second (end times are whole
+// seconds), so displays flip exactly when the remaining second changes and
+// never accumulate `setInterval` drift. It only runs while something subscribes.
+let clockNow = Date.now();
+const clockListeners = new Set<() => void>();
+let tickTimeout: ReturnType<typeof setTimeout> | undefined;
 
-  const offset = query.data ? computeClockOffset(query.data.serverTime) : 0;
+function tick() {
+  clockNow = Date.now();
+  clockListeners.forEach(listener => listener());
+}
+
+function scheduleTick() {
+  const delay = TICK_INTERVAL_MS - (Date.now() % TICK_INTERVAL_MS) + TICK_SLACK_MS;
+  tickTimeout = setTimeout(() => {
+    tick();
+    scheduleTick();
+  }, delay);
+}
+
+// Background tabs throttle timers, so catch up the moment the tab is shown again.
+function onVisibilityChange() {
+  if (document.visibilityState !== 'visible') return;
+  clearTimeout(tickTimeout);
+  tick();
+  scheduleTick();
+}
+
+function subscribeClock(listener: () => void) {
+  clockListeners.add(listener);
+  if (clockListeners.size === 1) {
+    clockNow = Date.now();
+    scheduleTick();
+    document.addEventListener('visibilitychange', onVisibilityChange);
+  }
+  return () => {
+    clockListeners.delete(listener);
+    if (clockListeners.size > 0) return;
+    clearTimeout(tickTimeout);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
+  };
+}
+
+function getClockNow() {
+  return clockNow;
+}
+
+/**
+ * Live countdown for components that display the time. Re-renders once a
+ * second via the shared clock — components that only need to know when the
+ * round ends should use `useRoundExpired` instead.
+ */
+export function useRoundTimer(onExpire?: () => void): UseRoundTimerResult {
+  const query = useRoundTimeQuery();
+  const clock = useSyncExternalStore(subscribeClock, getClockNow, getClockNow);
+  // The shared clock only advances on its tick, so a fresh `/getTime` can land
+  // up to a second after its last reading; never count from before the response.
+  const now = Math.max(clock, query.data?.serverTime.getTime() ?? 0);
+
   // No end time means the round isn't running — show no countdown rather than 0:00.
-  const remaining = query.data?.roundEndTime ? remainingMs(query.data.roundEndTime, offset) : null;
+  const endTime = query.data?.roundEndTime ?? null;
+  const remaining = endTime ? remainingMs(endTime, now) : null;
   const isExpired = remaining !== null && remaining <= 0;
 
   useEffect(() => {
     if (isExpired) onExpire?.();
-    // `now` intentionally drives re-evaluation of `isExpired` on every tick.
+    // Fire once per expiry, not whenever the caller passes a new callback.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isExpired, now]);
+  }, [isExpired]);
 
   return {
     remaining,
@@ -57,4 +118,28 @@ export function useRoundTimer(onExpire?: () => void): UseRoundTimerResult {
     isLoading: query.isLoading,
     isError: query.isError,
   };
+}
+
+/**
+ * `true` once `atMs` has passed. Arms one timeout per timestamp instead of
+ * ticking, so the caller re-renders only when the moment arrives — and re-arms
+ * when a resync or admin extension moves it.
+ */
+export function useTimePassed(atMs: number | null): boolean {
+  // Mount time is the first reading, so an already-passed moment is correct on first render.
+  const [checkedAt, setCheckedAt] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (atMs === null) return;
+    const timeout = setTimeout(() => setCheckedAt(Date.now()), Math.max(0, atMs - Date.now()));
+    return () => clearTimeout(timeout);
+  }, [atMs]);
+
+  return atMs !== null && atMs <= checkedAt;
+}
+
+/** `true` once the running round's end time passes — see `useTimePassed`. */
+export function useRoundExpired(): boolean {
+  const query = useRoundTimeQuery();
+  return useTimePassed(query.data?.roundEndTime?.getTime() ?? null);
 }

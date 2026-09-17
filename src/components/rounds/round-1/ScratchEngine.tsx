@@ -14,7 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
-import { useRoundTimer, useVisualBlocks, useVisualSubmissionState } from '../hooks';
+import { useRoundExpired, useVisualBlocks, useVisualSubmissionState } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
 import { SolvedBox } from '../SolvedBox';
 import type { Question, VisualSubmissionResult } from '../types';
@@ -39,10 +39,9 @@ import { VisualVerdict } from './VisualVerdict';
  */
 export interface ScratchEngineProps {
   question: Question;
-  index?: number;
 }
 
-export function ScratchEngine({ question, index }: ScratchEngineProps) {
+export function ScratchEngine({ question }: ScratchEngineProps) {
   const blocksQuery = useVisualBlocks(question.id);
   const blocks = blocksQuery.data ?? [];
 
@@ -53,7 +52,7 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
   const moveBlock = useChainStore.use.moveBlock();
   const clearChain = useChainStore.use.clearChain();
 
-  const { isExpired } = useRoundTimer();
+  const isExpired = useRoundExpired();
   const { result, isPending } = useVisualSubmissionState(question.id);
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
@@ -147,7 +146,6 @@ export function ScratchEngine({ question, index }: ScratchEngineProps) {
           question={
             <ProblemPanel
               question={question}
-              index={index}
               heading={<ScratchPanelTitle>Question</ScratchPanelTitle>}
               className={cn(
                 scratchPanelVariants({ tone: 'question' }),

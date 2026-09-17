@@ -1,45 +1,46 @@
 import { describe, expect, it } from 'vitest';
 
-import { computeClockOffset, remainingMs, roundTimeSchema } from '../timer';
-
-describe('computeClockOffset', () => {
-  it('returns 0 when serverTime is null', () => {
-    expect(computeClockOffset(null)).toBe(0);
-  });
-
-  it('computes the difference between server and local time', () => {
-    const serverTime = new Date(Date.now() + 5_000);
-    expect(computeClockOffset(serverTime)).toBeGreaterThanOrEqual(4_900);
-  });
-});
+import { remainingMs, roundTimeSchema } from '../timer';
 
 describe('remainingMs', () => {
+  const now = Date.UTC(2026, 8, 17, 12, 0, 0);
+
   it('returns 0 when endTime is null', () => {
-    expect(remainingMs(null, 0)).toBe(0);
+    expect(remainingMs(null, now)).toBe(0);
   });
 
   it('clamps at 0 once the end time has passed', () => {
-    const endTime = new Date(Date.now() - 10_000);
-    expect(remainingMs(endTime, 0)).toBe(0);
+    expect(remainingMs(new Date(now - 10_000), now)).toBe(0);
   });
 
-  it('returns the remaining milliseconds before expiry', () => {
-    const endTime = new Date(Date.now() + 60_000);
-    const remaining = remainingMs(endTime, 0);
-    expect(remaining).toBeGreaterThan(58_000);
-    expect(remaining).toBeLessThanOrEqual(60_000);
+  it('returns the milliseconds from now until the end time', () => {
+    expect(remainingMs(new Date(now + 60_000), now)).toBe(60_000);
   });
 
-  it('applies the offset before computing remaining time', () => {
-    const endTime = new Date(Date.now() + 10_000);
-    // A large negative offset (server thinks it's much earlier) should
-    // increase the apparent remaining time.
-    const remaining = remainingMs(endTime, -50_000);
-    expect(remaining).toBeGreaterThan(50_000);
+  it('shrinks as now advances', () => {
+    const endTime = new Date(now + 60_000);
+    expect(remainingMs(endTime, now + 1_000)).toBe(59_000);
   });
 });
 
 describe('roundTimeSchema', () => {
+  it('uses the exact end_time when the device clock agrees with the server', () => {
+    const endTime = new Date(Date.now() + 600_500);
+    const parsed = roundTimeSchema.parse({
+      success: true,
+      message: 'Contest timer fetched successfully',
+      data: {
+        round: 2,
+        is_running: true,
+        duration: 3600,
+        start_time: '2026-09-17T10:00:00Z',
+        end_time: endTime.toISOString(),
+        time_left: 600,
+      },
+    });
+    expect(parsed.roundEndTime?.getTime()).toBe(endTime.getTime());
+  });
+
   it('anchors a running round on time_left', () => {
     const parsed = roundTimeSchema.parse({
       success: true,

@@ -14,8 +14,6 @@ const roundTimerVariants = cva('flex items-center tabular-nums', {
       pill: 'gap-2 rounded-full bg-round-badge px-3 py-1 font-mono text-sm text-foreground',
       // Figma `scratch` timer at 80% scale: 2px border, gradient fill, clock + "TIME LEFT".
       box: "h-[52px] gap-2 rounded-[8px] border-2 border-scratch-border bg-linear-to-b from-scratch-timer-from to-scratch-panel-end px-3 font-scratch-sans text-white shadow-(--scratch-timer-shadow) [font-variation-settings:'opsz'_14] lg:h-[56px] lg:w-[160px] lg:items-end lg:justify-between lg:px-[12px] lg:pt-[7px] lg:pb-[5px]",
-      // Bare digits for the R2/R3 round badge pill (`RoundStatusPill`) — no icon, no background.
-      inline: 'font-round text-[20px] leading-[33.964px] tracking-[2px] text-code-brand',
     },
   },
   defaultVariants: { variant: 'pill' },
@@ -26,7 +24,8 @@ export interface RoundTimerProps extends VariantProps<typeof roundTimerVariants>
   className?: string;
 }
 
-function formatRemaining(ms: number) {
+/** `HH:MM:SS` for a countdown, rounded down to the whole second. */
+export function formatRemaining(ms: number) {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -78,8 +77,6 @@ export function RoundTimer({ onExpire, className, variant }: RoundTimerProps) {
             </span>
           </span>
         </>
-      ) : variant === 'inline' ? (
-        time
       ) : (
         <>
           <span aria-hidden="true">⏱</span>

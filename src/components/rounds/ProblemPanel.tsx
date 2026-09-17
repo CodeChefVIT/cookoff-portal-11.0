@@ -8,11 +8,12 @@ import type { Question } from './types';
 
 export interface ProblemPanelProps {
   question: Question;
-  index?: number;
   /** Panel title above the problem (R1's "Question"); R2/R3 render none. */
   heading?: ReactNode;
-  /** `code`: R2/R3's Figma `Desktop - 15/14` panel — fixed title block, scrolling body. */
+  /** `code`: R2/R3's Figma `Desktop - 15/14` panel — title and body scroll together. */
   variant?: 'default' | 'code';
+  /** Shows the question's coin reward beside its points (R2). */
+  showReward?: boolean;
   className?: string;
 }
 
@@ -23,7 +24,7 @@ const panelVariants = cva('h-full min-h-0 text-card-foreground', {
   variants: {
     variant: {
       default: 'overflow-y-auto rounded-2xl border border-border bg-card p-5',
-      code: 'flex flex-col rounded-[10px] bg-code-panel',
+      code: 'overflow-y-auto rounded-[10px] bg-code-panel',
     },
   },
   defaultVariants: { variant: 'default' },
@@ -32,7 +33,7 @@ const panelVariants = cva('h-full min-h-0 text-card-foreground', {
 // 21.54px = Figma's 29px title offset minus half the 40px-vs-25.075px line-height difference.
 const headerVariants = cva('', {
   variants: {
-    variant: { default: '', code: 'shrink-0 pt-[21.54px] pr-[20px] pl-[33px]' },
+    variant: { default: '', code: 'pt-[21.54px] pr-[20px] pl-[33px]' },
   },
   defaultVariants: { variant: 'default' },
 });
@@ -41,7 +42,7 @@ const bodyVariants = cva('', {
   variants: {
     variant: {
       default: 'mt-4',
-      code: 'mt-[16.1px] min-h-0 flex-1 overflow-y-auto pr-[20px] pb-[16px] pl-[36px]',
+      code: 'mt-[16.1px] pr-[20px] pb-[16px] pl-[36px]',
     },
   },
   defaultVariants: { variant: 'default' },
@@ -82,7 +83,13 @@ const sampleLabelVariants = cva('text-xs font-bold tracking-wide uppercase', {
 });
 
 /** Left column: full problem statement, independently scrollable. */
-export function ProblemPanel({ question, index, heading, variant, className }: ProblemPanelProps) {
+export function ProblemPanel({
+  question,
+  heading,
+  variant,
+  showReward,
+  className,
+}: ProblemPanelProps) {
   // Admin authors samples as parallel lists: `sample_test_input[i]`, `sample_test_output[i]` and `explanation[i]` are sample i.
   const samples = Array.from(
     {
@@ -106,7 +113,11 @@ export function ProblemPanel({ question, index, heading, variant, className }: P
     >
       {heading}
       <div id="problem-heading" className={headerVariants({ variant })}>
-        <QuestionHeader question={question} index={index} variant={variant} />
+        <QuestionHeader
+          question={question}
+          variant={variant}
+          reward={showReward ? Number(question.reward) : undefined}
+        />
       </div>
 
       <div className={bodyVariants({ variant })}>

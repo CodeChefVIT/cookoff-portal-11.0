@@ -1,5 +1,10 @@
 export { useSession } from './use-session';
-export { useRoundTimer } from './use-round-timer';
+export {
+  useRoundExpired,
+  useRoundTimeQuery,
+  useRoundTimer,
+  useTimePassed,
+} from './use-round-timer';
 export type { UseRoundTimerResult } from './use-round-timer';
 export { useRoundQuestions } from './use-round-questions';
 export { useQuestion } from './use-question';
