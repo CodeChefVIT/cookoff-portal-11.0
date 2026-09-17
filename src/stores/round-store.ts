@@ -32,6 +32,8 @@ interface RoundState {
    */
   setLanguage: (questionId: string, languageId: number, boilerplateSourceCode: string) => void;
   resetDraft: (questionId: string, languageId: number, boilerplateSourceCode: string) => void;
+  /** Drops every question's draft — used when a different account signs in. */
+  resetAll: () => void;
 }
 
 const useRoundStoreBase = create<RoundState>()(
@@ -70,6 +72,7 @@ const useRoundStoreBase = create<RoundState>()(
             },
           };
         }),
+      resetAll: () => set({ drafts: {} }),
       resetDraft: (questionId, languageId, boilerplateSourceCode) =>
         set(state => ({
           drafts: {

@@ -7,6 +7,8 @@ import { isApiError } from '@/api';
 import { useSession } from '@/components/rounds/hooks';
 import { Button, LoadingScreen } from '@/components/ui';
 
+import { claimDraftsFor } from './draft-owner';
+
 /**
  * `GET /dashboard` doubles as the session probe (L12 — no dedicated
  * `/session` endpoint exists). A 401 here means an expired/absent session;
@@ -28,6 +30,14 @@ export function SessionGuard({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (unauthenticated) router.replace('/login');
   }, [unauthenticated, router]);
+
+  // Persisted drafts are keyed by question only, so a shared machine would hand
+  // the next contestant the previous one's code. Claim them for whoever is
+  // signed in now.
+  const userId = session.data?.userId;
+  useEffect(() => {
+    if (userId) claimDraftsFor(userId);
+  }, [userId]);
 
   if (session.isLoading) {
     return <LoadingScreen />;

@@ -29,8 +29,13 @@ export function isApiError(error: unknown): error is ApiError {
  */
 export function isNotPurchasedError(error: unknown): boolean {
   if (!isApiError(error)) return false;
-  if (error.status !== 402 && error.status !== 403) return false;
-  return !/not qualified/i.test(error.message);
+  if (error.status === 402) return true;
+  if (error.status !== 403) return false;
+  // Match the purchase message rather than treating every non-"not qualified"
+  // 403 as unpurchased: `AdminOnly` and the ban check answer 403 too, and
+  // classifying those as a stale buy-in re-locked a question the player had
+  // already paid for.
+  return /not purchased|not bought/i.test(error.message);
 }
 
 /** A 403 that means the round itself is closed to this account. */
