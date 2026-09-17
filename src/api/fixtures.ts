@@ -276,7 +276,7 @@ function buildFixture<K extends keyof FixtureMap>(
       email: 'fixture-user@vitstudent.ac.in',
       balance: 237,
       score: 40,
-      roundQualified: 1,
+      roundQualified: 2,
       questions: [],
     };
     return session as FixtureMap[K][1];

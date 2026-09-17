@@ -5,6 +5,7 @@ import { parseAsStringEnum, useQueryState } from 'nuqs';
 
 import { cn } from '@/lib/utils';
 
+import { BuyInLockSurface } from '../BuyInLock';
 import { RowResizer } from './RowResizer';
 import { useResultsResize } from './use-results-resize';
 
@@ -30,7 +31,8 @@ export const TABS_BAND = 'lg:pt-[68px]';
  * question-tab band on the left; on the right the editor column above the
  * results panel, both 34px off the bottom. The results panel starts at
  * Figma's 355px and is resizable against the editor via `RowResizer` in the
- * frame's 15.2px gap (the editor slot always keeps its minimum). Below `lg`, a
+ * frame's 15.2px gap (the editor slot always keeps its minimum). That right
+ * column is the `BuyInLockSurface` an unpaid R2 question blurs. Below `lg`, a
  * `Problem | Code | Tests` tab strip, since a split editor is unusable on a
  * phone.
  */
@@ -76,7 +78,7 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
         {problem}
       </div>
 
-      <div
+      <BuyInLockSurface
         className={cn(
           'min-h-0 flex-1 flex-col lg:flex lg:pt-[19px] lg:pb-[34px]',
           panel === 'problem' ? 'hidden' : 'flex'
@@ -103,7 +105,7 @@ export function WorkspaceLayout({ problem, editor, results }: WorkspaceLayoutPro
         >
           {results}
         </div>
-      </div>
+      </BuyInLockSurface>
     </div>
   );
 }
