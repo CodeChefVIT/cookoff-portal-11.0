@@ -35,8 +35,8 @@ const verdict: SubmissionVerdict = {
   ],
 };
 
-function renderPanel(testcases: Testcase[]) {
-  return render(<TestcasePanel testcases={testcases} verdict={verdict} isPolling={false} />, {
+function renderPanel(testcases: Testcase[], panelVerdict: SubmissionVerdict = verdict) {
+  return render(<TestcasePanel testcases={testcases} verdict={panelVerdict} />, {
     wrapper: ({ children }) => <NuqsTestingAdapter>{children}</NuqsTestingAdapter>,
   });
 }
@@ -53,7 +53,8 @@ describe('TestcasePanel — hidden testcase masking', () => {
   it('shows only the aggregate pass/fail count for hidden cases', () => {
     renderPanel([visibleCase]);
 
-    expect(screen.getByText(/Hidden Testcases 0\/1/)).toBeInTheDocument();
+    expect(screen.getByText('Hidden Testcases')).toBeInTheDocument();
+    expect(screen.getByText('0/1')).toBeInTheDocument();
   });
 
   it('still shows visible case content', () => {
@@ -66,5 +67,13 @@ describe('TestcasePanel — hidden testcase masking', () => {
     renderPanel([visibleCase]);
 
     expect(screen.getByText(/1\/2 Test Cases Passed/)).toBeInTheDocument();
+    expect(screen.getByText('Compilation Successful !!')).toBeInTheDocument();
+  });
+
+  it('shows the compile-failure state when no testcase ran', () => {
+    renderPanel([visibleCase], { ...verdict, passed: 0, failed: 0, testcases: [] });
+
+    expect(screen.getByText(/0\/1 Test Cases Passed !!/)).toBeInTheDocument();
+    expect(screen.getByText('Compilation Failed !!')).toBeInTheDocument();
   });
 });

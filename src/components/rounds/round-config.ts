@@ -16,8 +16,6 @@ export interface RoundConfig {
   hasBuyIn: boolean;
   /** R1/R3 hide the balance HUD entirely — R1 has no in-round currency, R3 wants it minimal. */
   hasCurrency: boolean;
-  /** R3 drops chrome beyond the timer and question tabs. */
-  minimalHud: boolean;
   /** R1's Submit lives in the header next to the timer, not inside the engine. */
   headerSubmit: boolean;
   /** Visual identity of the header, tabs and page: R1's Figma `scratch` frame vs the R2/R3 IDE look. */
@@ -46,7 +44,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     engine: 'visual',
     hasBuyIn: false,
     hasCurrency: false,
-    minimalHud: false,
     headerSubmit: true,
     chrome: 'scratch',
     autoAttempt: true,
@@ -66,7 +63,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     engine: 'code',
     hasBuyIn: true,
     hasCurrency: true,
-    minimalHud: false,
     headerSubmit: false,
     chrome: 'code',
     autoAttempt: false,
@@ -86,7 +82,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     engine: 'code',
     hasBuyIn: false,
     hasCurrency: false,
-    minimalHud: true,
     headerSubmit: false,
     chrome: 'code',
     autoAttempt: false,

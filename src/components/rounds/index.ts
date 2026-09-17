@@ -14,5 +14,5 @@ export * from './QuestionTabs';
 export * from './BuyInGate';
 export * from './QuestionList';
 export * from './ProblemPanel';
-export * from './ResultModal';
+export * from './SolvedBox';
 export * from './hooks';

@@ -74,6 +74,29 @@
   --color-round-badge: var(--round-badge);
   --color-hairline: var(--hairline);
   --color-login-bg: var(--login-bg);
+  --color-code-page: var(--code-page);
+  --color-code-panel: var(--code-panel);
+  --color-code-inset: var(--code-inset);
+  --color-code-brand: var(--code-brand);
+  --color-code-chip: var(--code-chip);
+  --color-code-sand: var(--code-sand);
+  --color-code-run: var(--code-run);
+  --color-code-coin-box: var(--code-coin-box);
+  --color-code-coin-ink: var(--code-coin-ink);
+  --color-code-toggle: var(--code-toggle);
+  --color-code-case-ink: var(--code-case-ink);
+  --color-code-passed-bg: var(--code-passed-bg);
+  --color-code-passed-text: var(--code-passed-text);
+  --color-code-failed-bg: var(--code-failed-bg);
+  --color-code-failed-dot: var(--code-failed-dot);
+  --color-code-fail: var(--code-fail);
+  --color-code-gold: var(--code-gold);
+  --color-code-enter: var(--code-enter);
+  --color-code-error-bg: var(--code-error-bg);
+  --color-code-error-border: var(--code-error-border);
+  --font-round: var(--font-round);
+  --font-inria: var(--font-inria);
+  --font-general: var(--font-general);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -152,6 +175,27 @@
   --scratch-timer-shadow: 0 0 10px rgb(201 185 159 / 0.08);
   /* Login screen background base — Figma `Qc0hMJFVUSxi6jsnhx54Vk` node 352:499 */
   --login-bg: #111216;
+  /* R2/R3 "code round" chrome — exact hex from Figma `Desktop - 15/14` (312:1101, 312:1216) */
+  --code-page: #242931;
+  --code-panel: #131414;
+  --code-inset: #16191d;
+  --code-brand: #9e321f;
+  --code-chip: #484848;
+  --code-sand: #b7ab98;
+  --code-run: #242424;
+  --code-coin-box: #363636;
+  --code-coin-ink: #d8cdbb;
+  --code-toggle: #cecac3;
+  --code-case-ink: #c1bbb3;
+  --code-passed-bg: #255f39;
+  --code-passed-text: #1ba94c;
+  --code-failed-bg: #43201c;
+  --code-failed-dot: #bb0b0a;
+  --code-fail: #da3012;
+  --code-gold: #ccb72f;
+  --code-enter: #c5614f;
+  --code-error-bg: #7f1d1d;
+  --code-error-border: #ef4444;
 }
 
 /*
@@ -218,6 +262,26 @@
   --scratch-panel-shadow: 0 0 10px rgb(189 133 123 / 0.08);
   --scratch-timer-shadow: 0 0 10px rgb(201 185 159 / 0.08);
   --login-bg: #111216;
+  --code-page: #242931;
+  --code-panel: #131414;
+  --code-inset: #16191d;
+  --code-brand: #9e321f;
+  --code-chip: #484848;
+  --code-sand: #b7ab98;
+  --code-run: #242424;
+  --code-coin-box: #363636;
+  --code-coin-ink: #d8cdbb;
+  --code-toggle: #cecac3;
+  --code-case-ink: #c1bbb3;
+  --code-passed-bg: #255f39;
+  --code-passed-text: #1ba94c;
+  --code-failed-bg: #43201c;
+  --code-failed-dot: #bb0b0a;
+  --code-fail: #da3012;
+  --code-gold: #ccb72f;
+  --code-enter: #c5614f;
+  --code-error-bg: #7f1d1d;
+  --code-error-border: #ef4444;
 }
 
 @layer base {

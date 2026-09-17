@@ -1,34 +1,41 @@
+import Image from 'next/image';
+
+import { cn } from '@/lib/utils';
+
 /**
  * SHARED UI - Currency Box
  *
- * Displays the user's balance and, optionally, the current question's
- * buy-in/reward context. Only rendered when `RoundConfig.hasCurrency` is
- * true (never for Round 3 — see AGENTS.md "Rounds architecture").
+ * The balance block from Figma `Desktop - 15` (312:1101) — a coin stack
+ * overhanging a #363636 card, balance in DM Sans Black — scaled to the height
+ * of R1's header timer (52px, 56px from `lg`) so it sits in the shared header
+ * box. Only rendered when `RoundConfig.hasCurrency` is true (Round 2).
  */
 export interface CurrencyBoxProps {
   /** User's in-contest currency balance. */
   balance: number;
-  /** Cost to attempt the question (questions.buy_in); 0 hides the detail. */
-  buyIn?: number;
-  /** Payout on a correct solve (questions.reward); 0 hides the detail. */
-  reward?: number;
+  className?: string;
 }
 
-export function CurrencyBox({ balance, buyIn = 0, reward = 0 }: CurrencyBoxProps) {
+export function CurrencyBox({ balance, className }: CurrencyBoxProps) {
   return (
     <div
-      className="flex items-center gap-1.5 rounded-full bg-secondary px-3 py-1 text-sm font-medium text-coin"
       aria-label={`Balance: ${balance} coins`}
-    >
-      <span aria-hidden="true">🪙</span>
-      <span>{balance}</span>
-      {(buyIn > 0 || reward > 0) && (
-        <span className="text-xs text-muted-foreground">
-          {buyIn > 0 && <>bet {buyIn}</>}
-          {buyIn > 0 && reward > 0 && ' · '}
-          {reward > 0 && <>win {reward}</>}
-        </span>
+      className={cn(
+        'relative h-[52px] w-[148px] shrink-0 rounded-[10px] bg-code-coin-box shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)] lg:h-[56px] lg:w-[160px]',
+        className
       )}
+    >
+      <Image
+        src="/code-round/coin.svg"
+        alt=""
+        width={80}
+        height={80}
+        unoptimized
+        className="absolute top-[-13px] left-[-4px] size-[74px] max-w-none lg:top-[-14px] lg:size-[80px]"
+      />
+      <span className="absolute top-[14px] left-[63px] font-scratch-sans text-[30px] leading-[24.688px] font-black text-code-coin-ink [font-variation-settings:'opsz'_14] lg:top-[15.8px] lg:left-[68px] lg:text-[32px]">
+        {balance}
+      </span>
     </div>
   );
 }

@@ -4,14 +4,12 @@ import type { ReactNode } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useMutation } from '@tanstack/react-query';
-import { UserRound } from 'lucide-react';
 import { toast } from 'sonner';
 
 import { logout } from '@/api';
 import { CurrencyBox } from '@/components/ui/currency-box';
 
 import { getRoundConfig } from './round-config';
-import { RoundTimer } from './RoundTimer';
 import type { RoundId } from './types';
 
 export interface RoundHeaderProps {
@@ -22,13 +20,11 @@ export interface RoundHeaderProps {
 }
 
 /**
- * Header chrome from `design/Desktop - 14.svg` through `- 22.svg`: hexagon
- * wordmark lockup, a joined `Round N | 00:11:52` pill, currency (config-
- * gated), and an avatar that doubles as the sign-out control (the design has
- * no separate logout affordance — an icon-only avatar button matches it
- * without dropping the feature). Every piece shrinks or hides its label
- * below 640px so the header never causes horizontal scroll at 320px
- * (AGENTS.md §15).
+ * R2/R3 header: logo, Cinzel wordmark, currency block (`hasCurrency` — Round 2
+ * only) and the avatar, which doubles as log out. Box, logo, wordmark,
+ * padding and gaps are Round 1's `ScratchHeader` verbatim so every round's
+ * header has identical dimensions; the right-side items take the height of
+ * R1's timer/Submit (52px, 56px from `lg`). Wraps below `lg` like R1.
  */
 export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps) {
   const config = getRoundConfig(roundId);
@@ -46,40 +42,40 @@ export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps
   });
 
   return (
-    <header className="flex items-center justify-between gap-1.5 overflow-hidden border-b border-hairline bg-background px-2 py-2 sm:gap-4 sm:px-6 sm:py-3">
-      <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+    <header className="flex flex-wrap items-start justify-between gap-x-6 gap-y-3 border-b-2 border-scratch-rule px-4 pt-4 pb-3 lg:flex-nowrap lg:pt-[24px] lg:pr-[47px] lg:pb-[8px] lg:pl-[31px]">
+      <div className="flex min-w-0 items-center gap-[11px] lg:mt-px">
         <Image
-          src="/cc%203.svg"
+          src="/code-round/logo.png"
           alt="CodeChef-VIT"
-          width={36}
-          height={36}
+          width={60}
+          height={60}
           unoptimized
-          className="size-7 shrink-0 sm:size-9"
+          priority
+          className="size-12 shrink-0 object-cover lg:size-[60px]"
         />
-        <span className="shrink-0 font-display text-lg tracking-wide text-brand sm:text-3xl">
-          <span className="sm:hidden">CO</span>
-          <span className="hidden sm:inline">COOK OFF 11.0</span>
+        <span className="font-wordmark text-[28px] leading-none font-black whitespace-nowrap text-code-brand sm:text-[40px] lg:text-[44px] lg:leading-[60px] xl:text-[min(72px,5vw)]">
+          COOK OFF <span className="text-brand-accent">11.0</span>
         </span>
       </div>
-      <div className="flex min-w-0 shrink-0 items-center gap-1.5 sm:gap-3">
-        <div className="flex items-center overflow-hidden rounded-full">
-          <span className="bg-primary px-2 py-1 text-xs font-bold text-primary-foreground sm:px-3 sm:text-sm">
-            {config.label}
-          </span>
-          <RoundTimer variant="joined" className="px-2 py-1 text-xs sm:px-3 sm:py-1 sm:text-sm" />
-        </div>
-        {config.hasCurrency && balance !== undefined && (
-          <CurrencyBox balance={balance} buyIn={0} reward={0} />
-        )}
+      <div className="flex items-center gap-4 lg:gap-[36px]">
+        {config.hasCurrency && balance !== undefined && <CurrencyBox balance={balance} />}
         {config.headerSubmit && headerAction}
         <button
           type="button"
           aria-label="Log out"
+          title="Log out"
           onClick={() => logoutMutation.mutate()}
           disabled={logoutMutation.isPending}
-          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-secondary transition-opacity hover:opacity-80 disabled:opacity-50 sm:size-10"
+          className="size-[52px] shrink-0 cursor-pointer rounded-full focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none disabled:cursor-wait lg:size-[56px]"
         >
-          <UserRound aria-hidden="true" className="size-4 sm:size-5" />
+          <Image
+            src="/code-round/avatar.svg"
+            alt=""
+            width={56}
+            height={56}
+            unoptimized
+            className="size-full"
+          />
         </button>
       </div>
     </header>

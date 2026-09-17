@@ -3,14 +3,17 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { cn } from '@/lib/utils';
 import { isBountyResolvedNow, useRoundStore } from '@/stores';
 
 import { BuyInGate } from '../BuyInGate';
-import { useQuestion } from '../hooks';
+import { useQuestion, useRoundQuestions } from '../hooks';
+import { QuestionTabs } from '../QuestionTabs';
 import type { Question } from '../types';
 import { BountyUnlockDialog } from './BountyUnlockDialog';
 import { CodeEngine } from './CodeEngine';
 import { DEFAULT_LANGUAGE } from './languages';
+import { TABS_BAND, WORKSPACE_GRID } from './WorkspaceLayout';
 
 export interface QuestionWorkspaceProps {
   roundId: 2 | 3;
@@ -24,36 +27,62 @@ export interface QuestionWorkspaceProps {
  * of the hooks live in a separate component: mounting them only once
  * `question` exists keeps this component's own hook count identical across
  * every one of its renders (loading -> loaded is a mount of a *different*
- * component, not a mid-lifecycle branch of this one).
+ * component, not a mid-lifecycle branch of this one). It also owns the
+ * question tabs so they stay put across loading/locked/unlocked; from `lg`
+ * they're overlaid into the workspace's `TABS_BAND`, as in Figma
+ * `Desktop - 15/14`.
  */
 export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProps) {
   const { question, index, isLoading, isError, refetch } = useQuestion(roundId, questionId);
-
-  if (isLoading) {
-    return (
-      <div className="flex min-h-[50dvh] items-center justify-center" role="status">
-        <span className="text-sm text-muted-foreground">Loading problem…</span>
-      </div>
-    );
-  }
-
-  if (isError || !question) {
-    return (
-      <div className="flex min-h-[50dvh] flex-col items-center justify-center gap-3">
-        <p className="text-sm text-muted-foreground">Couldn&rsquo;t load this problem.</p>
-        <button
-          type="button"
-          onClick={() => void refetch()}
-          className="rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground"
-        >
-          Retry
-        </button>
-      </div>
-    );
-  }
+  const { data: questions } = useRoundQuestions(roundId);
 
   return (
-    <QuestionReady roundId={roundId} questionId={questionId} question={question} index={index} />
+    <div className="relative">
+      {questions && questions.length > 0 && (
+        <div
+          className={cn(
+            'pointer-events-none px-3 pt-3 lg:absolute lg:inset-x-0 lg:top-0 lg:z-10 lg:pt-[16px]',
+            WORKSPACE_GRID
+          )}
+        >
+          <QuestionTabs
+            roundId={roundId}
+            questions={questions}
+            activeId={questionId}
+            className="pointer-events-auto min-w-0 lg:pl-[5px]"
+          />
+        </div>
+      )}
+
+      {isLoading ? (
+        <div
+          role="status"
+          className={cn('flex min-h-[50dvh] items-center justify-center', TABS_BAND)}
+        >
+          <span className="text-sm text-muted-foreground">Loading problem…</span>
+        </div>
+      ) : isError || !question ? (
+        <div
+          className={cn('flex min-h-[50dvh] flex-col items-center justify-center gap-3', TABS_BAND)}
+        >
+          <p className="text-sm text-muted-foreground">Couldn&rsquo;t load this problem.</p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground"
+          >
+            Retry
+          </button>
+        </div>
+      ) : (
+        <QuestionReady
+          roundId={roundId}
+          questionId={questionId}
+          question={question}
+          index={index}
+        />
+      )}
+    </div>
   );
 }
 
@@ -106,6 +135,8 @@ function QuestionReady({ roundId, questionId, question, index }: QuestionReadyPr
         roundId={roundId}
         question={question}
         forceLocked={forceLocked}
+        // Bounty prompt first, so a contestant who picks Stay Here is never asked to pay.
+        deferPrompt={bountyDialogOpen}
       >
         <CodeEngine
           question={question}
