@@ -1,0 +1,23 @@
+.chef {
+  animation: not-found-chef-float 6s ease-in-out infinite;
+  transform-origin: 50% 60%;
+  will-change: transform;
+}
+
+@keyframes not-found-chef-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(0, -6px, 0) rotate(-0.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chef {
+    animation: none;
+    will-change: auto;
+  }
+}
