@@ -10,6 +10,7 @@ import { logout } from '@/api';
 import { CurrencyBox } from '@/components/ui/currency-box';
 
 import { getRoundConfig } from './round-config';
+import { RoundTimer } from './RoundTimer';
 import type { RoundId } from './types';
 
 export interface RoundHeaderProps {
@@ -20,8 +21,8 @@ export interface RoundHeaderProps {
 }
 
 /**
- * R2/R3 header: logo, Cinzel wordmark, currency block (`hasCurrency` — Round 2
- * only) and the avatar, which doubles as log out. Box, logo, wordmark,
+ * R2/R3 header: logo, Cinzel wordmark, R1's timer box, currency block
+ * (`hasCurrency` — Round 2 only) and the avatar, which doubles as log out. Box, logo, wordmark,
  * padding and gaps are Round 1's `ScratchHeader` verbatim so every round's
  * header has identical dimensions; the right-side items take the height of
  * R1's timer/Submit (52px, 56px from `lg`). Wraps below `lg` like R1.
@@ -58,6 +59,7 @@ export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps
         </span>
       </div>
       <div className="flex items-center gap-4 lg:gap-[36px]">
+        <RoundTimer variant="box" />
         {config.hasCurrency && balance !== undefined && <CurrencyBox balance={balance} />}
         {config.headerSubmit && headerAction}
         <button
