@@ -161,7 +161,7 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
     expect(screen.getByText('editor').closest('[inert]')).not.toBeNull();
   });
 
-  it('Go Back returns to the dashboard', async () => {
+  it('✕ returns to the dashboard', async () => {
     mockSession(100);
 
     const user = userEvent.setup();
@@ -173,7 +173,7 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
       </BuyInGate>
     );
 
-    await user.click(screen.getByRole('button', { name: 'Go Back' }));
+    await user.click(screen.getByRole('button', { name: 'Close' }));
 
     expect(pushMock).toHaveBeenCalledWith('/dashboard');
   });

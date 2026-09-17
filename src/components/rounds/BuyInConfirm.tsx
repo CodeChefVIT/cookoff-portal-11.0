@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 
 export interface BuyInConfirmProps {
   onEnter: () => void;
-  /** Where Go Back / ✕ navigate — the dashboard (rounds have no question list). */
+  /** Where ✕ navigates — the dashboard (rounds have no question list). */
   backHref: string;
   isPending: boolean;
 }
@@ -30,11 +30,10 @@ const BUTTON =
  * question is locked — non-modal, so the problem statement beside it stays
  * readable and scrollable. Exact 621×392 geometry once its container is at
  * least 640px wide (title/close offsets are net of the header bar's 1.77px
- * border); stacks in narrower columns. Only Enter, Go Back or ✕ act.
+ * border); stacks in narrower columns. Only Enter or ✕ act.
  */
 export function BuyInConfirm({ onEnter, backHref, isPending }: BuyInConfirmProps) {
   const router = useRouter();
-  const onGoBack = () => router.push(backHref);
   const titleId = useId();
   const descriptionId = useId();
 
@@ -54,8 +53,8 @@ export function BuyInConfirm({ onEnter, backHref, isPending }: BuyInConfirmProps
         </h2>
         <button
           type="button"
-          aria-label="Go back"
-          onClick={onGoBack}
+          aria-label="Close"
+          onClick={() => router.push(backHref)}
           className="absolute top-[19.23px] right-[19.23px] size-[26px] cursor-pointer focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
         >
           <span aria-hidden="true" style={CLOSE_MASK} className="block size-full bg-white" />
@@ -71,29 +70,18 @@ export function BuyInConfirm({ onEnter, backHref, isPending }: BuyInConfirmProps
       <p className="mt-6 font-sans text-[18px] leading-[30px] font-medium whitespace-nowrap text-white @min-[640px]:absolute @min-[640px]:top-[248px] @min-[640px]:left-[208px] @min-[640px]:mt-0">
         Do you want to jump in?
       </p>
-      <div className="mt-6 flex gap-4 @min-[640px]:contents">
-        <button
-          type="button"
-          onClick={onEnter}
-          disabled={isPending}
-          className={cn(
-            BUTTON,
-            'bg-code-enter text-white @min-[640px]:absolute @min-[640px]:top-[304px] @min-[640px]:left-[111px]'
-          )}
-        >
-          Enter
-        </button>
-        <button
-          type="button"
-          onClick={onGoBack}
-          className={cn(
-            BUTTON,
-            'bg-code-sand text-black @min-[640px]:absolute @min-[640px]:top-[304px] @min-[640px]:left-[331px]'
-          )}
-        >
-          Go Back
-        </button>
-      </div>
+      {/* Go Back was dropped from Figma's pair; Enter is centred in the 621px box instead of at 111px. */}
+      <button
+        type="button"
+        onClick={onEnter}
+        disabled={isPending}
+        className={cn(
+          BUTTON,
+          'mt-6 bg-code-enter text-white @min-[640px]:absolute @min-[640px]:top-[304px] @min-[640px]:left-[220.5px] @min-[640px]:mt-0'
+        )}
+      >
+        Enter
+      </button>
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-0 rounded-[10px] border-[1.77px] border-scratch-rule"
