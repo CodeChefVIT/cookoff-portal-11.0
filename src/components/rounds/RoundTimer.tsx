@@ -24,7 +24,8 @@ export interface RoundTimerProps extends VariantProps<typeof roundTimerVariants>
   className?: string;
 }
 
-function formatRemaining(ms: number) {
+/** `HH:MM:SS` for a countdown, rounded down to the whole second. */
+export function formatRemaining(ms: number) {
   const totalSeconds = Math.floor(ms / 1000);
   const hours = Math.floor(totalSeconds / 3600);
   const minutes = Math.floor((totalSeconds % 3600) / 60);

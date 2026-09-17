@@ -1,5 +1,10 @@
+'use client';
+
 import Image from 'next/image';
 
+import { useRoundTimeQuery, useRoundTimer } from '@/components/rounds/hooks';
+import { formatRemaining } from '@/components/rounds/RoundTimer';
+import { useMounted } from '@/hooks/use-mounted';
 import { cn } from '@/lib/utils';
 
 import { DashboardPanel, PanelHeading } from './DashboardPanel';
@@ -9,11 +14,36 @@ interface Props {
   roundQualified: number;
 }
 
-// No /getTime endpoint exists yet (see src/api/timer.ts) — hardcoded to the frame's value until it does.
-const TIME_REMAINING = '00:50:45';
-
 const LABEL =
   "absolute font-scratch-sans leading-[24.688px] font-bold text-center [font-variation-settings:'opsz'_14]";
+
+/**
+ * Live countdown for the player's current round. The dashboard has no
+ * `RoundGate`, so this panel owns the `/getTime` resync here. Shows dashes
+ * while the clock is loading, the round isn't running, or the running timer
+ * belongs to a different round.
+ */
+function TimeRemaining({ roundQualified }: { roundQualified: number }) {
+  const time = useRoundTimeQuery({ sync: true });
+  const mounted = useMounted();
+  const { remaining, isUrgent, isExpired } = useRoundTimer();
+  const timerRound = time.data?.round;
+  const showsThisRound = timerRound === undefined || timerRound === roundQualified;
+  const label =
+    mounted && remaining !== null && showsThisRound ? formatRemaining(remaining) : '—:—:—';
+
+  return (
+    <span
+      aria-label={`Time remaining ${label}`}
+      className={cn(
+        "w-[128px] shrink-0 font-scratch-sans text-[25px] leading-normal font-bold tracking-[0.5px] text-white tabular-nums [font-variation-settings:'opsz'_14]",
+        showsThisRound && isUrgent && !isExpired && 'text-destructive'
+      )}
+    >
+      {label}
+    </span>
+  );
+}
 
 // Figma 323:1941 + 323:1956–323:1968. Coordinates are relative to the panel's
 // top-left (frame 1084, 345).
@@ -63,9 +93,7 @@ export function DetailsPanel({ className, roundQualified }: Props) {
             height={45}
             className="size-[45px] shrink-0 object-cover"
           />
-          <span className="w-[128px] shrink-0 font-scratch-sans text-[25px] leading-normal font-bold tracking-[0.5px] text-white tabular-nums [font-variation-settings:'opsz'_14]">
-            {TIME_REMAINING}
-          </span>
+          <TimeRemaining roundQualified={roundQualified} />
         </div>
       </div>
     </DashboardPanel>
