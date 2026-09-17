@@ -119,6 +119,10 @@ function QuestionReady({ roundId, questionId, question }: QuestionReadyProps) {
         question={question}
         roundId={roundId}
         onNotPurchased={() => setForceLocked(true)}
+        // Clears the forced re-lock once the server accepts a fresh unlock.
+        // Without this the flag was one-way: after a single stale-unlock 403,
+        // the `question.bought` path stayed ANDed with `!forceLocked` forever.
+        onPurchased={() => setForceLocked(false)}
       />
     </BuyInGate>
   );

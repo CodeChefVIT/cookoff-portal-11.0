@@ -43,13 +43,19 @@ export interface CodeEngineProps {
   question: Question;
   roundId: 2 | 3;
   onNotPurchased?: () => void;
+  /** A submission the server accepted — any forced re-lock can be cleared. */
+  onPurchased?: () => void;
 }
 
-export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProps) {
+export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: CodeEngineProps) {
   const testcases = useQuery({
     queryKey: testcaseKeys.detail(question.id),
     queryFn: () => getPublicTestcases(question.id),
     staleTime: Infinity,
+    // Without a retry, one failed fetch stuck for the whole session: an empty
+    // public set makes `TestcasePanel` classify every result as hidden, so the
+    // contestant loses the input/expected/output columns with nothing to click.
+    retry: 3,
   });
 
   // Subscribe to this question's draft: `use.getDraft` only subscribes to the
@@ -114,9 +120,16 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
     setConfirmSubmitOpen(false);
     setSubmitFailed(false);
     setSubmitError(undefined);
+    // The round can close while this dialog sits open, so re-check here rather
+    // than trusting the button's disabled state from when it was pressed.
+    if (isExpired) {
+      toast.error('The round has ended — this submission wasn’t sent.');
+      return;
+    }
     submission.submit.mutate(
       { questionId: question.id, languageId, sourceCode },
       {
+        onSuccess: () => onPurchased?.(),
         onError: error => {
           // In R2 a "not purchased" 402/403 re-locks the question instead
           // (BuyInGate). Every other round has no gate to fall back on, so the
@@ -198,7 +211,15 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
               onChange={value => setCustomInput(question.id, value)}
             />
           ) : verdict ? (
-            <TestcasePanel testcases={testcases.data ?? []} verdict={verdict} />
+            <TestcasePanel
+              testcases={testcases.data ?? []}
+              verdict={verdict}
+              // Distinguishes "this question has no public cases" from "we
+              // couldn't load them", which otherwise both render as a panel
+              // claiming every result is hidden.
+              testcasesUnavailable={testcases.isError}
+              onRetryTestcases={() => void testcases.refetch()}
+            />
           ) : (
             <ResultsPlaceholder
               message={placeholder}

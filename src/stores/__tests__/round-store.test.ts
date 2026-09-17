@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { useRoundStore } from '../round-store';
+import { DEFAULT_LANGUAGE } from '@/components/rounds/round-2-3/languages';
+
+import { DEFAULT_LANGUAGE_ID, useRoundStore } from '../round-store';
 
 function reset() {
   useRoundStore.setState({ drafts: {} });
@@ -44,5 +46,20 @@ describe('useRoundStore', () => {
       sourceCode: 'code',
       customInput: '5\n10',
     });
+  });
+});
+
+describe('DEFAULT_LANGUAGE_ID', () => {
+  // The store can't import from the component layer, so the constant is
+  // duplicated. `0` is not a Judge0 language and `??` doesn't catch it, which
+  // is how a draft could show C++ while submitting an invalid id.
+  it('matches the editor default and is a real Judge0 id', () => {
+    expect(DEFAULT_LANGUAGE_ID).toBe(DEFAULT_LANGUAGE.id);
+    expect(DEFAULT_LANGUAGE_ID).toBeGreaterThan(0);
+  });
+
+  it('seeds a draft created by an edit before resetDraft with a valid language', () => {
+    useRoundStore.getState().setSourceCode('q-unseeded', 'int main() {}');
+    expect(useRoundStore.getState().drafts['q-unseeded'].languageId).toBe(DEFAULT_LANGUAGE_ID);
   });
 });

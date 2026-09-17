@@ -15,6 +15,9 @@ export interface TestcasePanelProps {
   /** The set fetched from `GET /question/:id/testcases/public` — always visible-only. */
   testcases: Testcase[];
   verdict: SubmissionVerdict;
+  /** The public set failed to load, so an empty list means "unknown", not "none". */
+  testcasesUnavailable?: boolean;
+  onRetryTestcases?: () => void;
 }
 
 const EYE_OFF_MASK: CSSProperties = {
@@ -33,16 +36,29 @@ const EYE_OFF_MASK: CSSProperties = {
  * `Desktop - 15`'s red state. Hidden cases expose only pass/fail counts —
  * never their input/expected/actual (tested explicitly).
  */
-export function TestcasePanel({ testcases, verdict }: TestcasePanelProps) {
-  const [activeIndex, setActiveIndex] = useQueryState('case', parseAsInteger.withDefault(0));
-  const active = testcases[Math.min(activeIndex, Math.max(testcases.length - 1, 0))];
+export function TestcasePanel({
+  testcases,
+  verdict,
+  testcasesUnavailable = false,
+  onRetryTestcases,
+}: TestcasePanelProps) {
+  const [rawIndex, setActiveIndex] = useQueryState('case', parseAsInteger.withDefault(0));
+  // `?case` comes straight from the URL, so clamp it once and use the clamped
+  // value everywhere. Clamping only the lookup left `?case=-1` rendering no
+  // detail block and `?case=99` highlighting no tab while showing case 0.
+  const activeIndex = Math.min(Math.max(rawIndex, 0), Math.max(testcases.length - 1, 0));
+  const active = testcases[activeIndex];
 
   const resultById = new Map(verdict.testcases.map(result => [result.testcaseId, result]));
   const visibleIds = new Set(testcases.map(testcase => testcase.id));
   const hiddenResults = verdict.testcases.filter(result => !visibleIds.has(result.testcaseId));
   const hiddenPassed = hiddenResults.filter(isPassed).length;
   const compiledOk = verdict.testcases.length > 0;
-  const total = verdict.passed + verdict.failed || testcases.length;
+  // The judge counts every testcase, public and hidden, so its own totals win.
+  // Falling back to the public count alone under-reported a run as "3/3" when
+  // the server had said 3 of 5.
+  const total =
+    Math.max(verdict.passed + verdict.failed, verdict.testcases.length) || testcases.length;
 
   return (
     <section
@@ -100,6 +116,23 @@ export function TestcasePanel({ testcases, verdict }: TestcasePanelProps) {
             </button>
           );
         })}
+        {testcasesUnavailable && (
+          <div
+            role="alert"
+            className="flex h-[35px] items-center gap-3 rounded-[10px] bg-code-inset px-3 font-sans text-[13px] font-bold text-code-fail"
+          >
+            <span>Couldn&rsquo;t load the sample cases.</span>
+            {onRetryTestcases && (
+              <button
+                type="button"
+                onClick={onRetryTestcases}
+                className="cursor-pointer underline focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
+              >
+                Retry
+              </button>
+            )}
+          </div>
+        )}
         {hiddenResults.length > 0 && (
           <div className="relative ml-auto h-[35px] w-[263px] shrink-0 rounded-[10px] bg-code-inset font-sans leading-[normal] font-bold text-code-case-ink">
             <span
