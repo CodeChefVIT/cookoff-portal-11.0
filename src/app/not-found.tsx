@@ -26,7 +26,7 @@ export default function NotFound() {
           href="/dashboard"
           prefetch={false}
           aria-label="Return to dashboard"
-          className="absolute top-[71%] left-[46%] h-[6%] w-[11%] rounded-md focus:ring-2 focus:ring-white focus:outline-none"
+          className="absolute top-[72.95%] left-[46.25%] h-[5.18%] w-[10.27%] rounded-md focus:ring-2 focus:ring-white focus:outline-none"
         />
       </div>
     </main>
