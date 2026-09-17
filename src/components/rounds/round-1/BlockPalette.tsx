@@ -64,8 +64,14 @@ export function BlockPalette({ blocks, onAdd, disabled }: BlockPaletteProps) {
       {/* Figma's category tabs are dropped (L16), so the well rises to sit under the title. */}
       <div className="mx-3 mt-[14px] mb-3 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto rounded-[20px] border border-scratch-border/50 bg-scratch-well/50 p-3 lg:mx-[20px] lg:mb-[32px]">
         {blocks.length === 0 ? (
+          // Not every block belongs in the answer — questions ship with decoys,
+          // and the grader matches the solution exactly, length included. The
+          // old copy ("Every block is in your chain.") read as confirmation
+          // that an emptied tray meant a finished chain, which is the single
+          // most common way to submit a wrong answer here.
           <p className="p-4 text-center font-scratch-sans text-sm text-scratch-ink/70">
-            Every block is in your chain.
+            No blocks left to place. Not every block belongs in the answer — remove any you
+            don&rsquo;t need with its ✕.
           </p>
         ) : (
           blocks.map(block => (

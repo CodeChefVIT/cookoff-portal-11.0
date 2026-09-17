@@ -20,7 +20,7 @@ import { SolvedBox } from '../SolvedBox';
 import type { Question, VisualSubmissionResult } from '../types';
 import { DraggableBlock, WorkspaceCanvas } from './block-workspace';
 import { BlockPalette } from './BlockPalette';
-import { paletteFor, resolveChain } from './chain';
+import { insertIndexFor, paletteFor, resolveChain } from './chain';
 import { scratchPanelVariants } from './scratch-panel';
 import { ScratchLayout } from './ScratchLayout';
 import { ScratchPanelTitle } from './ScratchPanelTitle';
@@ -95,7 +95,13 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
 
     if (origin === 'palette') {
       const overIndex = chain.indexOf(String(over.id));
-      addBlock(question.id, activeId, overIndex === -1 ? undefined : overIndex);
+      addBlock(
+        question.id,
+        activeId,
+        overIndex === -1
+          ? undefined
+          : insertIndexFor(overIndex, active.rect.current.translated, over.rect)
+      );
       return;
     }
 
