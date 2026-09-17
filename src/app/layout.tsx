@@ -11,6 +11,7 @@ import {
   Inria_Sans,
   Instrument_Serif,
   Inter,
+  Nova_Square,
   Quicksand,
   Roboto,
   Space_Grotesk,
@@ -94,6 +95,9 @@ const robotoLogin = Roboto({
   weight: ['400', '500'],
 });
 
+// Dashboard "Timeline:" heading, from Figma `Qc0hMJFVUSxi6jsnhx54Vk` (323:1984).
+const novaSquare = Nova_Square({ variable: '--font-timeline', subsets: ['latin'], weight: '400' });
+
 export const metadata: Metadata = {
   title: 'CookOff 11.0',
   description: 'CodeChef-VIT CookOff 11.0 — competitive programming contest platform.',
@@ -126,6 +130,7 @@ export default function RootLayout({
         generalSans.variable,
         bebasNeue.variable,
         robotoLogin.variable,
+        novaSquare.variable,
         'font-sans',
         inter.variable
       )}

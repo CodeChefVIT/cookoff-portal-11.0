@@ -272,10 +272,11 @@ function buildFixture<K extends keyof FixtureMap>(
   if (key === 'session') {
     const session: Session = {
       userId: 'fixture-user',
+      name: 'Fixture User',
       email: 'fixture-user@vitstudent.ac.in',
       balance: 237,
       score: 40,
-      roundQualified: 3,
+      roundQualified: 1,
       questions: [],
     };
     return session as FixtureMap[K][1];

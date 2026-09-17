@@ -373,6 +373,17 @@ with `showReward` (`RoundConfig.hasCurrency`, so R2 only).
   anywhere in the design and the backend only supports one auth action
   (`/auth/google` redirect), so both would have been dead UI. Only the
   logo, title, divider, and "Sign in with Google" button are built.
+- Figma file `Qc0hMJFVUSxi6jsnhx54Vk`, node `323:1835` is the **only** valid
+  `(protected)/dashboard` design, implemented pixel-exact on a 1440px stage
+  (`src/components/dashboard/`, `--dash-*` tokens, Nova Square, assets in
+  `public/dashboard/`), zoomed from `lg` to fit the viewport in both axes
+  (`useStageZoom`) so it never scrolls. The wordmark is pinned to the
+  viewport's right edge; the timeline chef sits on the flag where the
+  qualified round starts (Round 3, which has no flag, sits on END). Deliberate divergences: three round cards instead of the
+  mock's four; only the current round has stats (`GET /dashboard` scopes
+  `questions` to it) — earlier rounds read "This Round is Over", later ones
+  are blurred/locked over the mock's placeholder stats; the profile score
+  has no max/progress bar; the timer is hardcoded until `/getTime` exists.
 
 ### Server-authoritative state
 
