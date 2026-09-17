@@ -53,6 +53,31 @@ describe('RoundGate', () => {
     expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
   });
 
+  it('closes an old round once the contestant has qualified past it', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 0,
+      score: 0,
+      roundQualified: 2,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+
+    renderWithProviders(
+      <RoundGate roundId={1}>
+        <div>gameplay</div>
+      </RoundGate>
+    );
+
+    expect(await screen.findByRole('heading', { name: /has ended/i })).toBeInTheDocument();
+    expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
+  });
+
   it('renders the pending intermission before the round window opens', async () => {
     getSessionMock.mockResolvedValue({
       userId: 'u1',
