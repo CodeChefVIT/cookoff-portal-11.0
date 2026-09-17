@@ -13,15 +13,19 @@ export default function NotFound() {
       <div className={styles.contentGlow} aria-hidden="true" />
 
       <section className={styles.content}>
-        <p className={styles.eyebrow}>
-          <span aria-hidden="true" className={styles.eyebrowDot} />
-          Timeline error / 404
-        </p>
+        <p className={styles.eyebrow}>Timeline error / 404</p>
 
         <div className={styles.heroMark}>
           <span className={styles.number}>404</span>
           <span className={styles.chefFrame}>
-            <Image src="/404-chef.png" alt="" fill preload sizes="16rem" className={styles.chef} />
+            <Image
+              src="/dashboard/mascot.png"
+              alt=""
+              fill
+              preload
+              sizes="16rem"
+              className={styles.chef}
+            />
           </span>
         </div>
 
@@ -31,8 +35,6 @@ export default function NotFound() {
         <Link href="/dashboard" prefetch={false} className={styles.homeLink}>
           Return to dashboard <span aria-hidden="true">↗</span>
         </Link>
-
-        <p className={styles.hint}>Your next stop is only one click away.</p>
       </section>
     </main>
   );

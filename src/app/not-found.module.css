@@ -53,9 +53,6 @@
 }
 
 .eyebrow {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
   margin: 0 0 clamp(1.25rem, 3vw, 2rem);
   color: #b17b6e;
   font-size: clamp(0.65rem, 1vw, 0.8rem);
@@ -65,21 +62,13 @@
   text-transform: uppercase;
 }
 
-.eyebrowDot {
-  width: 0.45rem;
-  height: 0.45rem;
-  border-radius: 50%;
-  background: #c88b7d;
-  box-shadow: 0 0 1rem rgb(200 139 125 / 80%);
-}
-
 .heroMark {
   position: relative;
   display: flex;
   width: min(31rem, 100%);
   align-items: center;
   justify-content: center;
-  margin-right: 1.5rem;
+  margin-inline: auto;
 }
 
 .number {
@@ -135,7 +124,7 @@
   margin-top: clamp(1.75rem, 4vw, 2.5rem);
   padding: 0.8rem 1.2rem 0.8rem 1.35rem;
   border: 1px solid rgb(216 205 187 / 24%);
-  border-radius: 999px;
+  border-radius: 0.625rem;
   background: #70443f;
   color: #fffaf2;
   font-size: 0.78rem;
@@ -162,13 +151,6 @@
   outline-offset: 4px;
 }
 
-.hint {
-  margin: 0.85rem 0 0;
-  color: rgb(216 205 187 / 52%);
-  font-size: 0.7rem;
-  letter-spacing: 0.04em;
-}
-
 @keyframes not-found-chef-float {
   0%,
   100% {
@@ -189,10 +171,6 @@
 
   .content {
     width: min(28rem, calc(100% - 1.5rem));
-  }
-
-  .heroMark {
-    margin-right: 0.75rem;
   }
 
   .chefFrame {
