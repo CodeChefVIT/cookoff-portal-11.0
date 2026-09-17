@@ -8,6 +8,8 @@ import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
 export interface BuyInConfirmProps {
+  /** Coins this question costs to enter. */
+  buyIn: number;
   onEnter: () => void;
   /** Where ✕ navigates — the dashboard (rounds have no question list). */
   backHref: string;
@@ -32,7 +34,7 @@ const BUTTON =
  * least 640px wide (title/close offsets are net of the header bar's 1.77px
  * border); stacks in narrower columns. Only Enter or ✕ act.
  */
-export function BuyInConfirm({ onEnter, backHref, isPending }: BuyInConfirmProps) {
+export function BuyInConfirm({ buyIn, onEnter, backHref, isPending }: BuyInConfirmProps) {
   const router = useRouter();
   const titleId = useId();
   const descriptionId = useId();
@@ -67,8 +69,9 @@ export function BuyInConfirm({ onEnter, backHref, isPending }: BuyInConfirmProps
         Once you use your coins to attempt this question, the coins deducted will not be refunded.
         You must complete the question to earn points.
       </p>
-      <p className="mt-6 font-sans text-[18px] leading-[30px] font-medium whitespace-nowrap text-white @min-[640px]:absolute @min-[640px]:top-[248px] @min-[640px]:left-[208px] @min-[640px]:mt-0">
-        Do you want to jump in?
+      {/* Figma has only "Do you want to jump in?" here; the cost is added and the line centred. */}
+      <p className="mt-6 font-sans text-[18px] leading-[30px] font-medium whitespace-nowrap text-white @min-[640px]:absolute @min-[640px]:top-[248px] @min-[640px]:left-1/2 @min-[640px]:mt-0 @min-[640px]:-translate-x-1/2">
+        Spend <span className="font-bold text-brand-accent">{buyIn} coins</span> to jump in?
       </p>
       {/* Go Back was dropped from Figma's pair; Enter is centred in the 621px box instead of at 111px. */}
       <button
