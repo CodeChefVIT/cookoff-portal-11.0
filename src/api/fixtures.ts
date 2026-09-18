@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Deterministic fixtures for the endpoints not yet safe to hit for local/CI
  * development (`GET /getTime` doesn't exist on the backend at all — L2).
  * Selected when `NEXT_PUBLIC_USE_MOCK_API=true`; also reused directly by
@@ -19,6 +19,22 @@ import type { Session } from './session';
 import type { SubmissionRequestInput, SubmissionVerdict } from './submissions';
 import type { RoundTime } from './timer';
 import type { VisualSubmissionRequestInput } from './visual-submissions';
+
+export interface CustomRunResult {
+  stdout: string | null;
+  stderr: string | null;
+  message: string | null;
+  time?: string;
+  memory?: number;
+  status: { id: number; description: string };
+  isPassed: boolean;
+}
+
+export interface CustomRunRequestInput {
+  languageId: number;
+  sourceCode: string;
+  stdin?: string;
+}
 
 function delay<T>(value: T, ms = 150): Promise<T> {
   const { promise, resolve } = Promise.withResolvers<T>();
@@ -58,61 +74,89 @@ const R1_QUESTION_IDS = [
 
 const R2_QUESTION_IDS = [
   'd40d282d-459d-45ce-9082-10e4d50038de',
-  'c100ca85-4beb-4e31-ac93-85ab50551cc9',
-  '7372c099-2a36-4f74-97b4-4178d4edb87e',
-  'b8b5e17d-e30c-4d1e-98ee-1001f407bf52',
-  '6ae67c73-daa8-47b4-a409-437c6e43d525',
-  'afaa632e-ca4b-49de-835f-97ce914fd966',
-  '93002078-0c11-4980-b589-25a0319775a8',
-  '3508b561-da43-4fb9-ab70-fd949abbee0f',
-  'edb29c10-31c7-4081-8a3a-1c156671505c',
-  'd6d62ee1-9c9d-4e5f-bda8-854a2c84d03d',
+  'f73a45c7-9204-4340-a50d-bf061ffea054',
+  '2db5092f-b4b7-4560-b8be-b0f922eb9f0a',
 ] as const;
 
 const R3_QUESTION_IDS = [
-  'd0283235-ad95-4213-a5d2-410156ce1745',
-  '10ba6e98-4b9d-478a-9504-1d7b062bb765',
-  'a2340dc4-3957-4565-81bd-a6d0b9e6c144',
-  '3d477edb-49ba-4b0d-a355-e841f229d3bc',
+  'b289c894-3995-467b-b0b3-f09dfd4a0a4c',
+  '5fe45f94-e51c-43f5-bfbe-d4b68c34f3a7',
+  '3a290947-f4e9-4e78-bebc-031e426db12c',
 ] as const;
 
-const R2_FIXTURE_QUESTIONS: Question[] = R2_QUESTION_IDS.map((id, index) =>
+export const R2_FIXTURE_QUESTIONS: Question[] = [
   makeQuestion({
-    id,
-    title: `Round 2 Problem ${index + 1}`,
+    id: R2_QUESTION_IDS[0],
+    title: 'Two Sum',
     round: 2,
-    points: 10 + index * 5,
-  })
-);
-
-const R3_FIXTURE_QUESTIONS: Question[] = R3_QUESTION_IDS.map((id, index) =>
+    points: 10,
+    buyIn: '20',
+    reward: '50',
+  }),
   makeQuestion({
-    id,
-    title: `Round 3 Problem ${index + 1}`,
+    id: R2_QUESTION_IDS[1],
+    title: 'Reverse String',
+    round: 2,
+    points: 15,
+    buyIn: '25',
+    reward: '60',
+  }),
+  makeQuestion({
+    id: R2_QUESTION_IDS[2],
+    title: 'Palindrome Check',
+    round: 2,
+    points: 20,
+    buyIn: '30',
+    reward: '70',
+  }),
+];
+
+export const R3_FIXTURE_QUESTIONS: Question[] = [
+  makeQuestion({
+    id: R3_QUESTION_IDS[0],
+    title: 'Longest Palindrome',
     round: 3,
-    points: 25 + index * 25,
-  })
-);
+    points: 25,
+    buyIn: '0',
+    reward: '0',
+  }),
+  makeQuestion({
+    id: R3_QUESTION_IDS[1],
+    title: 'Median of Two Arrays',
+    round: 3,
+    points: 35,
+    buyIn: '0',
+    reward: '0',
+  }),
+  makeQuestion({
+    id: R3_QUESTION_IDS[2],
+    title: 'Graph Cycle Detection',
+    round: 3,
+    points: 40,
+    buyIn: '0',
+    reward: '0',
+  }),
+];
 
-/** Deterministic UUID-shaped ids for fixture blocks — see `getVisualBlocks`/`submitVisual`. */
-let blockSeq = 0;
-function block(content: string): VisualBlock {
-  blockSeq += 1;
-  const suffix = blockSeq.toString(16).padStart(12, '0');
-  return { id: `b10c0000-0000-4000-8000-${suffix}`, content };
-}
-
-function arraysEqual(a: readonly string[], b: readonly string[]): boolean {
+function arraysEqual(a: string[], b: string[]): boolean {
   return a.length === b.length && a.every((value, index) => value === b[index]);
 }
+
+const makeBlock = (prefix: string) => {
+  let counter = 0;
+  return (content: string): VisualBlock => ({
+    id: `${prefix}-block-${++counter}`,
+    content,
+  });
+};
+
+const block = makeBlock('b');
 
 const helloBlocks = [
   block('Print "Hello"'),
   block('Print "World"'),
-  block('Wait 1 second'),
-  block('Repeat 3 times'),
-  block('Set counter to 0'),
-  block('Clear output'),
+  block('Print "Goodbye"'),
+  block('Set x to 0'),
 ];
 
 const sumBlocks = [
@@ -259,6 +303,8 @@ interface FixtureMap {
   submitVisual: [[payload: VisualSubmissionRequestInput], VisualSubmissionResult];
   result: [[submissionId: string], SubmissionVerdict];
   time: [[], RoundTime];
+  runCode: [[payload: SubmissionRequestInput], SubmissionVerdict];
+  runCustom: [[payload: CustomRunRequestInput], CustomRunResult];
 }
 
 function buildFixture<K extends keyof FixtureMap>(
@@ -305,11 +351,7 @@ function buildFixture<K extends keyof FixtureMap>(
     return (puzzle ? [...puzzle.blocks].reverse() : []) as FixtureMap[K][1];
   }
   if (key === 'attempt') {
-    const outcome: AttemptOutcome = {
-      unlocked: true,
-      insufficientBalance: false,
-      roundNotRunning: false,
-    };
+    const outcome: AttemptOutcome = { unlocked: true, insufficientBalance: false };
     return outcome as FixtureMap[K][1];
   }
   if (key === 'submit') {
@@ -352,6 +394,40 @@ function buildFixture<K extends keyof FixtureMap>(
       })),
     };
     return verdict as FixtureMap[K][1];
+  }
+  if (key === 'runCode') {
+    const [payload] = args as FixtureMap['runCode'][0];
+    const cases = testcasesFor(payload.questionId).filter(tc => !tc.hidden);
+    const verdict: SubmissionVerdict = {
+      submissionId: `fixture-run-${Date.now()}`,
+      questionId: payload.questionId,
+      passed: cases.length,
+      failed: 0,
+      runtime: 0.02,
+      memory: 256,
+      submissionTime: new Date().toISOString(),
+      description: `All ${cases.length} testcases passed`,
+      testcases: cases.map(testcase => ({
+        testcaseId: testcase.id,
+        runtime: 0.02,
+        memory: 256,
+        status: 'Success',
+        description: 'Success',
+      })),
+    };
+    return verdict as FixtureMap[K][1];
+  }
+  if (key === 'runCustom') {
+    const result: CustomRunResult = {
+      stdout: 'Custom Output: Hello World !',
+      stderr: null,
+      message: null,
+      time: '0.020',
+      memory: 256,
+      status: { id: 3, description: 'Accepted' },
+      isPassed: true,
+    };
+    return result as FixtureMap[K][1];
   }
   if (key === 'time') {
     const now = Date.now();

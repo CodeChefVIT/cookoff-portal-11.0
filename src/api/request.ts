@@ -16,16 +16,7 @@ export async function request(
   const { schema, client = api, ...axiosConfig } = config;
   const response = await client.request(axiosConfig);
   if (schema) {
-    // A `.parse()` thrown *inside* a `.transform()` escapes `safeParse` — the
-    // shape schemas nest one (see `submissionResultSchema` in
-    // `submissions.ts`), so without this catch a raw ZodError reaches callers
-    // and every `isApiError()` check downstream silently fails.
-    let result: ReturnType<typeof schema.safeParse>;
-    try {
-      result = schema.safeParse(response.data);
-    } catch (error) {
-      throw toApiError(error);
-    }
+    const result = schema.safeParse(response.data);
     if (!result.success) throw toApiError(result.error);
     return result.data;
   }

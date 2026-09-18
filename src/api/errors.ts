@@ -29,30 +29,13 @@ export function isApiError(error: unknown): error is ApiError {
  */
 export function isNotPurchasedError(error: unknown): boolean {
   if (!isApiError(error)) return false;
-  if (error.status === 402) return true;
-  if (error.status !== 403) return false;
-  // Match the purchase message rather than treating every non-"not qualified"
-  // 403 as unpurchased: `AdminOnly` and the ban check answer 403 too, and
-  // classifying those as a stale buy-in re-locked a question the player had
-  // already paid for.
-  return /not purchased|not bought/i.test(error.message);
+  if (error.status !== 402 && error.status !== 403) return false;
+  return !/not qualified/i.test(error.message);
 }
 
 /** A 403 that means the round itself is closed to this account. */
 export function isNotQualifiedError(error: unknown): boolean {
   return isApiError(error) && error.status === 403 && /not qualified/i.test(error.message);
-}
-
-/**
- * `423 Locked` — the contest timer is stopped, or it is running a round other
- * than the one this question belongs to. Returned by `POST /submit`,
- * `POST /attempts/:id` and `POST /submit/visual` via `ensureRoundRunning`
- * (`internal/controllers/timer.go`). Deliberately distinct from the
- * 402/403/409 buy-in statuses: nothing about the question or the balance
- * changed, so the gate must not re-lock or blame the player's coins.
- */
-export function isRoundNotRunningError(error: unknown): boolean {
-  return isApiError(error) && error.status === 423;
 }
 
 export function toApiError(error: unknown): ApiError {

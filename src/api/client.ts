@@ -24,20 +24,6 @@ export function createApiClient(baseURL: string) {
     withCredentials: true,
   });
 
-  /**
-   * One shared refresh per client. The access token expires on a fixed TTL, so
-   * every query in flight 401s within the same instant — without this, a single
-   * page fired one `POST /refreshToken` per request, and the whole field does
-   * it simultaneously because everyone signs in at the same time.
-   */
-  let refreshInFlight: Promise<unknown> | null = null;
-  const refreshSession = () => {
-    refreshInFlight ??= client.post('/refreshToken', {}).finally(() => {
-      refreshInFlight = null;
-    });
-    return refreshInFlight;
-  };
-
   client.interceptors.response.use(
     response => response,
     async (error: AxiosError) => {
@@ -52,7 +38,7 @@ export function createApiClient(baseURL: string) {
       ) {
         originalRequest._retry = true;
         try {
-          await refreshSession();
+          await client.post('/refreshToken', {});
           return client(originalRequest);
         } catch {
           return Promise.reject(toApiError(error));
