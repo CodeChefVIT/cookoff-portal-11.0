@@ -19,6 +19,7 @@ const {
   createAttemptMock,
   submitCodeMock,
   getSubmissionResultMock,
+  runCodeMock,
   routerPushMock,
 } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),
@@ -28,6 +29,7 @@ const {
   createAttemptMock: vi.fn(),
   submitCodeMock: vi.fn(),
   getSubmissionResultMock: vi.fn(),
+  runCodeMock: vi.fn(),
   routerPushMock: vi.fn(),
 }));
 
@@ -42,6 +44,7 @@ vi.mock('@/api', async () => {
     createAttempt: createAttemptMock,
     submitCode: submitCodeMock,
     getSubmissionResult: getSubmissionResultMock,
+    runCode: runCodeMock,
   };
 });
 
@@ -133,6 +136,55 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     expect(submitCodeMock).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
     expect(screen.getByText('You earned 10 points and 50 coins.')).toBeInTheDocument();
+  });
+
+  it('shows a later run instead of an earlier failed submission', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 100,
+      score: 0,
+      roundQualified: 2,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+    getQuestionsByRoundMock.mockResolvedValue([QUESTION_R2]);
+    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+    submitCodeMock.mockResolvedValue({ submissionId: 'sub1' });
+    getSubmissionResultMock.mockResolvedValue({
+      submissionId: 'sub1',
+      questionId: 'q1',
+      passed: 0,
+      failed: 1,
+      description: '0/1 testcases passed (Wrong Answer)',
+      testcases: [{ testcaseId: 'tc1', status: 'Wrong Answer', description: 'Wrong Answer' }],
+    });
+    runCodeMock.mockResolvedValue({
+      submissionId: 'run-1',
+      questionId: 'q1',
+      passed: 1,
+      failed: 0,
+      description: 'All sample testcases passed',
+      testcases: [{ testcaseId: 'tc1', status: 'Success', description: '', stdout: 'out' }],
+    });
+
+    const user = userEvent.setup();
+    renderWorkspace(2, 'q1');
+
+    await user.click(await screen.findByRole('button', { name: 'Enter' }));
+    await user.click(await screen.findByRole('button', { name: /submit code/i }));
+    expect(await screen.findByText(/0\/1 Test Cases Passed/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /run code/i }));
+
+    expect(await screen.findByText(/1\/1 Test Cases Passed/)).toBeInTheDocument();
+    expect(screen.queryByText(/0\/1 Test Cases Passed/)).not.toBeInTheDocument();
+    expect(runCodeMock).toHaveBeenCalledTimes(1);
   });
 
   it('switches the language and swaps the pristine boilerplate', async () => {

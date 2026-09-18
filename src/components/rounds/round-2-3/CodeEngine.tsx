@@ -98,6 +98,9 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
         }
       );
     } else {
+      // The newest action owns the results panel: an earlier submission's
+      // verdict would otherwise outrank this run's (see `verdict` above).
+      submission.reset();
       codeRun.runPublic.mutate(
         {
           input: { questionId: question.id, languageId, sourceCode },
@@ -133,6 +136,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
       toast.error('The round has ended, so this submission was not sent.');
       return;
     }
+    codeRun.clearRun();
     submission.submit.mutate(
       { questionId: question.id, languageId, sourceCode },
       {
