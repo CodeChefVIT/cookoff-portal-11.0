@@ -17,7 +17,10 @@ export function CustomInputPanel({
   const hasOutput = result !== null && result !== undefined;
   const isPass = result?.isPassed;
   const outputText =
-    result?.stdout || result?.stderr || result?.message || (hasOutput ? '(Program produced no output)' : '');
+    result?.stdout ||
+    result?.stderr ||
+    result?.message ||
+    (hasOutput ? '(Program produced no output)' : '');
 
   return (
     <div className="flex h-full flex-col gap-3 rounded-[10px] bg-code-panel pt-[9px] pr-[20px] pb-[9px] pl-[21px]">
@@ -38,15 +41,15 @@ export function CustomInputPanel({
       </div>
 
       {isRunning && (
-        <div className="flex flex-1 flex-col justify-center items-center rounded-[10px] bg-code-inset p-4 text-white">
-          <p className="font-sans text-[14px] font-bold text-code-gold animate-pulse">
+        <div className="flex flex-1 flex-col items-center justify-center rounded-[10px] bg-code-inset p-4 text-white">
+          <p className="animate-pulse font-sans text-[14px] font-bold text-code-gold">
             Executing code with custom input…
           </p>
         </div>
       )}
 
       {hasOutput && !isRunning && (
-        <div className="flex flex-1 min-h-0 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col">
           <div className="flex items-center justify-between pl-[5px]">
             <h4 className="font-inria text-[13px] leading-[25.075px] font-bold text-white">
               Output

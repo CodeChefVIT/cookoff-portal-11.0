@@ -428,4 +428,3 @@ export function readFixture<K extends keyof FixtureMap>(
 export function getFixtureVisualSolution(questionId: string): string[] | undefined {
   return R1_PUZZLES[questionId]?.solution;
 }
-
