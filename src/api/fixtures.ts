@@ -1,6 +1,6 @@
-/**
+﻿/**
  * Deterministic fixtures for the endpoints not yet safe to hit for local/CI
- * development (`GET /getTime` doesn't exist on the backend at all — L2).
+ * development (`GET /getTime` doesn't exist on the backend at all â€” L2).
  * Selected when `NEXT_PUBLIC_USE_MOCK_API=true`; also reused directly by
  * component/integration tests so test data and demo data never drift apart.
  * Every resource module calls `readFixture` behind the exact same return
@@ -29,7 +29,7 @@ function delay<T>(value: T, ms = 150): Promise<T> {
 function makeQuestion(
   overrides: Partial<Question> & Pick<Question, 'id' | 'title' | 'round' | 'points'>
 ): Question {
-  // R1 and R3 have no buy-in (RoundConfig.hasBuyIn === false) — `bought: true`
+  // R1 and R3 have no buy-in (RoundConfig.hasBuyIn === false) â€” `bought: true`
   // simulates the "already open, nothing to purchase" state.
   const isFreeRound = overrides.round === 1 || overrides.round === 3;
   return {
@@ -94,7 +94,7 @@ const R3_FIXTURE_QUESTIONS: Question[] = R3_QUESTION_IDS.map((id, index) =>
   })
 );
 
-/** Deterministic UUID-shaped ids for fixture blocks — see `getVisualBlocks`/`submitVisual`. */
+/** Deterministic UUID-shaped ids for fixture blocks â€” see `getVisualBlocks`/`submitVisual`. */
 let blockSeq = 0;
 function block(content: string): VisualBlock {
   blockSeq += 1;
@@ -259,6 +259,8 @@ interface FixtureMap {
   submitVisual: [[payload: VisualSubmissionRequestInput], VisualSubmissionResult];
   result: [[submissionId: string], SubmissionVerdict];
   time: [[], RoundTime];
+  runCode: [[payload: SubmissionRequestInput], SubmissionVerdict];
+  runCustom: [[payload: CustomRunRequestInput], CustomRunResult];
 }
 
 function buildFixture<K extends keyof FixtureMap>(
@@ -300,7 +302,7 @@ function buildFixture<K extends keyof FixtureMap>(
   if (key === 'visualBlocks') {
     const [questionId] = args as FixtureMap['visualBlocks'][0];
     const puzzle = R1_PUZZLES[questionId];
-    // Reversed, not the solution order — the palette should never hand the
+    // Reversed, not the solution order â€” the palette should never hand the
     // chain back pre-solved.
     return (puzzle ? [...puzzle.blocks].reverse() : []) as FixtureMap[K][1];
   }
@@ -353,6 +355,40 @@ function buildFixture<K extends keyof FixtureMap>(
     };
     return verdict as FixtureMap[K][1];
   }
+  if (key === 'runCode') {
+    const [payload] = args as FixtureMap['runCode'][0];
+    const cases = testcasesFor(payload.questionId).filter(tc => !tc.hidden);
+    const verdict: SubmissionVerdict = {
+      submissionId: `fixture-run-${Date.now()}`,
+      questionId: payload.questionId,
+      passed: cases.length,
+      failed: 0,
+      runtime: 0.02,
+      memory: 256,
+      submissionTime: new Date().toISOString(),
+      description: `All ${cases.length} testcases passed`,
+      testcases: cases.map(testcase => ({
+        testcaseId: testcase.id,
+        runtime: 0.02,
+        memory: 256,
+        status: 'Success',
+        description: 'Success',
+      })),
+    };
+    return verdict as FixtureMap[K][1];
+  }
+  if (key === 'runCustom') {
+    const result: CustomRunResult = {
+      stdout: 'Custom Output: Hello World !',
+      stderr: null,
+      message: null,
+      time: '0.020',
+      memory: 256,
+      status: { id: 3, description: 'Accepted' },
+      isPassed: true,
+    };
+    return result as FixtureMap[K][1];
+  }
   if (key === 'time') {
     const now = Date.now();
     const time: RoundTime = {
@@ -363,6 +399,22 @@ function buildFixture<K extends keyof FixtureMap>(
     return time as FixtureMap[K][1];
   }
   throw new Error(`No fixture registered for "${key}"`);
+}
+
+export interface CustomRunResult {
+  stdout: string | null;
+  stderr: string | null;
+  message: string | null;
+  time?: string;
+  memory?: number;
+  status: { id: number; description: string };
+  isPassed: boolean;
+}
+
+export interface CustomRunRequestInput {
+  languageId: number;
+  sourceCode: string;
+  stdin?: string;
 }
 
 export function readFixture<K extends keyof FixtureMap>(
@@ -376,3 +428,4 @@ export function readFixture<K extends keyof FixtureMap>(
 export function getFixtureVisualSolution(questionId: string): string[] | undefined {
   return R1_PUZZLES[questionId]?.solution;
 }
+
