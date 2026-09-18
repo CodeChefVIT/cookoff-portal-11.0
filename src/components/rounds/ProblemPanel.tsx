@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode, SyntheticEvent } from 'react';
 import { cva } from 'class-variance-authority';
 
 import { QuestionHeader } from '@/components/ui/question-header';
@@ -82,6 +82,10 @@ const sampleLabelVariants = cva('text-xs font-bold tracking-wide uppercase', {
   defaultVariants: { variant: 'default' },
 });
 
+function blockClipboard(event: SyntheticEvent) {
+  event.preventDefault();
+}
+
 /** Left column: full problem statement, independently scrollable. */
 export function ProblemPanel({
   question,
@@ -107,9 +111,16 @@ export function ProblemPanel({
   );
 
   return (
+    // Deters copying the statement out (e.g. into an AI tool): text can't be
+    // selected, and copy/cut/drag/context-menu are cancelled. A determined
+    // user can still use devtools or a screenshot — this only raises the bar.
     <section
       aria-labelledby="problem-heading"
-      className={cn(panelVariants({ variant }), className)}
+      className={cn(panelVariants({ variant }), 'select-none', className)}
+      onCopy={blockClipboard}
+      onCut={blockClipboard}
+      onDragStart={blockClipboard}
+      onContextMenu={blockClipboard}
     >
       {heading}
       <div id="problem-heading" className={headerVariants({ variant })}>
