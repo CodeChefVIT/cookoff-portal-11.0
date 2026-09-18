@@ -156,7 +156,8 @@ export async function getSubmissionResult(
     url: `/result/${submissionId}`,
     method: 'GET',
     schema: envelope(submissionResultSchema),
-    timeout: 130_000,
+    // The server holds the request for up to 90s (`resultLongPollTimeout`).
+    timeout: 100_000,
     signal,
   });
 }
