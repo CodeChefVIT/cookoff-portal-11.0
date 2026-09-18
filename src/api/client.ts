@@ -10,11 +10,10 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
 }
 
 /**
- * `cookoff-11.0-be`'s middleware (`internal/middlewares/jwt.go`) reads a
- * Bearer header, but it is attached to no route today, and the LLD (§2.5.4)
- * plus the admin client both use httpOnly cookies + `POST /refreshToken`.
- * We follow the cookie contract; if the backend ships Bearer auth instead,
- * this file is the only place that needs to change.
+ * Session auth is the backend's httpOnly `access_token`/`refresh_token`
+ * cookies (`internal/helpers/auth`), so every request goes out
+ * `withCredentials`, and a 401 triggers one shared `POST /refreshToken`
+ * before the request is replayed.
  */
 export function createApiClient(baseURL: string) {
   const client = axios.create({

@@ -49,9 +49,9 @@ export function unwrapEnvelope(value: unknown): unknown {
  * Wraps a "shape" schema (validating the domain payload) so it also accepts
  * the live backend's `dto.SuccessResponse{success,message,data}` envelope,
  * unwrapping `data` first. Every real GET/POST response is wrapped this way
- * (`internal/dto/common.go`); fixtures and unit tests pass the domain shape
- * directly, so this is applied at the call site (each `getX()`/`postX()`
- * function), not inside the shape schemas themselves.
+ * (`internal/dto/common.go`); unit tests pass the domain shape directly, so
+ * this is applied at the call site (each `getX()`/`postX()` function), not
+ * inside the shape schemas themselves.
  */
 export function envelope<T extends z.ZodType>(inner: T) {
   return z

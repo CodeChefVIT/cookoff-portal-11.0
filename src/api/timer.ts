@@ -34,7 +34,8 @@ export interface RoundTime {
   roundStartTime: Date | null;
   /** `null` until the admin starts the round (`POST /admin/startRound`). */
   roundEndTime: Date | null;
-  /** The round the contest timer belongs to; absent in fixtures. */
+  /** The round the contest timer belongs to. */
+  // Optional so hand-built test values can omit it.
   round?: number;
 }
 

@@ -75,11 +75,9 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
           </button>
         </div>
       ) : question.round !== roundId ? (
-        // `GET /question/:id` is not round-scoped, so a hand-typed or shared
-        // URL can address another round's question. Rendering it under this
-        // round's config would apply the wrong buy-in rules — on R3
-        // (`hasBuyIn: false`, `autoAttempt: true`) that silently debits an R2
-        // question's buy-in with no confirmation box.
+        // A hand-typed or shared URL can address another round's question.
+        // Rendering it under this round's config would apply the wrong
+        // buy-in rules, so refuse it instead.
         <div
           className={cn('flex min-h-[50dvh] flex-col items-center justify-center gap-3', TABS_BAND)}
         >
