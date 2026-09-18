@@ -19,6 +19,8 @@ export interface TestcasePanelProps {
   onRetryTestcases?: () => void;
 }
 
+const COMPILATION_ERROR = 'Compilation Error';
+
 const EYE_OFF_MASK: CSSProperties = {
   maskImage: 'url(/code-round/eye-off.png)',
   WebkitMaskImage: 'url(/code-round/eye-off.png)',
@@ -52,7 +54,9 @@ export function TestcasePanel({
   const visibleIds = new Set(testcases.map(testcase => testcase.id));
   const hiddenResults = verdict.testcases.filter(result => !visibleIds.has(result.testcaseId));
   const hiddenPassed = hiddenResults.filter(isPassed).length;
-  const compiledOk = verdict.testcases.length > 0;
+  const compiledOk =
+    verdict.testcases.length > 0 &&
+    !verdict.testcases.some(result => result.status === COMPILATION_ERROR);
   // The judge counts every testcase, public and hidden, so its own totals win.
   // Falling back to the public count alone under-reported a run as "3/3" when
   // the server had said 3 of 5.

@@ -120,6 +120,7 @@ export const judge0CallbackPayloadShape = z.object({
   stdout: z.string().nullable().optional(),
   stderr: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
+  compile_output: z.string().nullable().optional(),
   time: z.string().nullable().optional(),
   memory: z.number().nullable().optional(),
   status: judge0StatusShape.default({ id: 0, description: 'Unknown' }),
@@ -188,7 +189,10 @@ export async function runCode(
     const isPass = r.status.id === 3;
     const testcaseId = publicTestcases[index]?.id ?? `public-case-${index + 1}`;
     const outputDesc =
-      r.stderr || r.message || (isPass ? '' : r.status.description || 'Wrong Answer');
+      r.compile_output ||
+      r.stderr ||
+      r.message ||
+      (isPass ? '' : r.status.description || 'Wrong Answer');
     return {
       testcaseId,
       runtime: r.time ? parseFloat(r.time) * 1000 : undefined,
@@ -229,7 +233,7 @@ export async function runCustom(input: CustomRunRequestInput): Promise<CustomRun
 
   return {
     stdout: raw.stdout ?? null,
-    stderr: raw.stderr ?? null,
+    stderr: raw.stderr ?? raw.compile_output ?? null,
     message: raw.message ?? null,
     time: raw.time ?? undefined,
     memory: raw.memory ?? undefined,
