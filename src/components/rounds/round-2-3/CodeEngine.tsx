@@ -13,17 +13,12 @@ import {
 } from '@/api';
 import { useRoundStore } from '@/stores';
 
-import {
-  useCodeRun,
-  useCodeSubmission,
-  useRoundExpired,
-} from '../hooks';
+import { useCodeRun, useCodeSubmission, useRoundExpired } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
 import { getRoundConfig } from '../round-config';
 import type { Question } from '../types';
 import { VerdictBox } from '../VerdictBox';
 import { EditorToolbar, LanguageSelector, MonacoWrapper } from './code-editor';
-import { ConfirmSubmitDialog } from './ConfirmSubmitDialog';
 import { CustomInputPanel } from './CustomInputPanel';
 import { DEFAULT_LANGUAGE, getLanguageById } from './languages';
 import { ResultsPlaceholder } from './ResultsPlaceholder';
@@ -80,10 +75,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     submission.result.data !== undefined &&
     submission.result.data.failed === 0 &&
     submission.result.data.passed > 0;
-  const resultOpen =
-    allPassed && submission.result.data?.submissionId !== dismissedSubmissionId;
-
-  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+  const resultOpen = allPassed && submission.result.data?.submissionId !== dismissedSubmissionId;
 
   function handleRun() {
     if (!sourceCode.trim()) {
@@ -99,7 +91,9 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
         },
         {
           onError: (error: unknown) => {
-            toast.error(error instanceof Error ? error.message : 'Failed to run code with custom input');
+            toast.error(
+              error instanceof Error ? error.message : 'Failed to run code with custom input'
+            );
           },
         }
       );
@@ -118,14 +112,6 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     }
   }
 
-  function requestSubmit() {
-    if (!sourceCode.trim()) {
-      toast.error('Write some code before submitting.');
-      return;
-    }
-    setConfirmSubmitOpen(true);
-  }
-
   const [submitFailed, setSubmitFailed] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
   const [dismissedErrorAt, setDismissedErrorAt] = useState<number | null>(null);
@@ -134,8 +120,13 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     !submission.timedOut &&
     submission.result.errorUpdatedAt !== dismissedErrorAt;
 
-  function confirmSubmit() {
-    setConfirmSubmitOpen(false);
+  // Submits straight away — no confirmation step, since participants may
+  // resubmit as many times as they like.
+  function handleSubmit() {
+    if (!sourceCode.trim()) {
+      toast.error('Write some code before submitting.');
+      return;
+    }
     setSubmitFailed(false);
     setSubmitError(undefined);
     if (isExpired) {
@@ -167,7 +158,11 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
   }
 
   const isSubmitDisabled =
-    isExpired || !sourceCode.trim() || submission.submit.isPending || submission.result.isFetching || codeRun.isRunning;
+    isExpired ||
+    !sourceCode.trim() ||
+    submission.submit.isPending ||
+    submission.result.isFetching ||
+    codeRun.isRunning;
 
   const placeholder = submission.timedOut
     ? 'Taking longer than expected.'
@@ -209,7 +204,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
             <EditorToolbar
               onRun={handleRun}
               isRunning={codeRun.isRunning}
-              onSubmit={requestSubmit}
+              onSubmit={handleSubmit}
               isSubmitting={submission.submit.isPending}
               disabled={isSubmitDisabled}
               customInputEnabled={customInputEnabled}
@@ -249,12 +244,6 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
           setSubmitError(undefined);
           setDismissedErrorAt(submission.result.errorUpdatedAt);
         }}
-      />
-      <ConfirmSubmitDialog
-        open={confirmSubmitOpen}
-        onOpenChange={setConfirmSubmitOpen}
-        onConfirm={confirmSubmit}
-        isSubmitting={submission.submit.isPending}
       />
       {submission.result.data && allPassed && (
         <VerdictBox

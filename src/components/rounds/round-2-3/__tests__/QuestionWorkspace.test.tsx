@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -128,10 +128,6 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     await user.click(await screen.findByRole('button', { name: 'Enter' }));
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(await screen.findByText(/1\/1 Test Cases Passed/)).toBeInTheDocument();
     expect(submitCodeMock).toHaveBeenCalledTimes(1);
@@ -193,10 +189,6 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     renderWorkspace(2, 'q1');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(await screen.findByText('CONFIRM PURCHASE')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enter' })).toBeInTheDocument();
@@ -227,10 +219,6 @@ describe('QuestionWorkspace — submit failure', () => {
     renderWorkspace(3, 'q2');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
 
@@ -292,10 +280,6 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     renderWorkspace(3, 'q2');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     // Round 3 has no buy-in gate to fall back on, so swallowing this left the player with nothing.
     expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
@@ -313,10 +297,6 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     renderWorkspace(3, 'q2');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(
       await screen.findByText(/round is no longer open for your account/i)
