@@ -7,6 +7,8 @@ export interface RoundStats {
   incomplete: number;
   percent: number;
   score: number;
+  /** Every point on offer this round — the denominator for the profile bar. */
+  totalPoints: number;
 }
 
 export const DASHBOARD_ROUNDS = [1, 2, 3] as const;
@@ -25,6 +27,7 @@ export function summarizeRound(questions: DashboardQuestionSummary[]): RoundStat
     incomplete: total - answered.length,
     percent: total === 0 ? 0 : Math.round((answered.length / total) * 100),
     score: answered.reduce((sum, question) => sum + question.points, 0),
+    totalPoints: questions.reduce((sum, question) => sum + question.points, 0),
   };
 }
 

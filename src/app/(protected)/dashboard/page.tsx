@@ -5,6 +5,7 @@ import {
   DetailsPanel,
   ProfilePanel,
   StatisticsPanel,
+  summarizeRound,
   Timeline,
   useStageZoom,
 } from '@/components/dashboard';
@@ -22,6 +23,9 @@ export default function DashboardPage() {
   if (!session.data) return <LoadingScreen />;
 
   const { name, email, score, roundQualified, questions } = session.data;
+  // Current-round points for the profile bar — the lifetime `score` has no
+  // denominator, since /dashboard only returns this round's questions.
+  const roundStats = summarizeRound(questions);
 
   return (
     <div className="relative min-h-dvh bg-dash-bg lg:h-dvh lg:overflow-hidden">
@@ -40,6 +44,9 @@ export default function DashboardPage() {
               name={name || email}
               email={email}
               score={score}
+              roundQualified={roundQualified}
+              earnedPoints={roundStats.score}
+              totalPoints={roundStats.totalPoints}
               className="lg:absolute lg:top-[246px] lg:left-[19px]"
             />
             <StatisticsPanel

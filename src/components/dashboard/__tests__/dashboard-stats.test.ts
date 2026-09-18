@@ -29,11 +29,17 @@ describe('summarizeRound', () => {
         question('c', 5, 'answered'),
         question('d', 20, 'bought'),
       ])
-    ).toEqual({ completed: 3, incomplete: 1, percent: 75, score: 25 });
+    ).toEqual({ completed: 3, incomplete: 1, percent: 75, score: 25, totalPoints: 45 });
   });
 
   it('reports zero percent for a round with no questions', () => {
-    expect(summarizeRound([])).toEqual({ completed: 0, incomplete: 0, percent: 0, score: 0 });
+    expect(summarizeRound([])).toEqual({
+      completed: 0,
+      incomplete: 0,
+      percent: 0,
+      score: 0,
+      totalPoints: 0,
+    });
   });
 });
 

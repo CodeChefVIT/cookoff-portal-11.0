@@ -8,14 +8,28 @@ interface Props {
   className?: string;
   name: string;
   email: string;
+  /** Lifetime, cumulative across every round. */
   score: number;
+  roundQualified: number;
+  /** Points banked from answered questions in the current round. */
+  earnedPoints: number;
+  /** Every point on offer in the current round. */
+  totalPoints: number;
 }
 
 const DETAIL_TEXT =
   "absolute left-[73px] right-[28px] h-[34.685px] truncate font-scratch-sans text-[24px] leading-normal font-bold tracking-[0.48px] text-dash-ink [font-variation-settings:'opsz'_14]";
 
 // Figma 323:1916. Coordinates are relative to the panel's top-left (frame 19, 345).
-export function ProfilePanel({ className, name, email, score }: Props) {
+export function ProfilePanel({
+  className,
+  name,
+  email,
+  score,
+  roundQualified,
+  earnedPoints,
+  totalPoints,
+}: Props) {
   return (
     <DashboardPanel
       title="Profile"
@@ -64,6 +78,38 @@ export function ProfilePanel({ className, name, email, score }: Props) {
         <span className="sr-only">Score: </span>
         {score}
       </p>
+
+      {/*
+        The score above is lifetime and cumulative across rounds, so it has no
+        matching denominator — `GET /dashboard` only returns the current round's
+        questions. This bar therefore tracks *this round's* points instead, which
+        is the only total the API exposes, and is labelled as such so the two
+        numbers can't be mistaken for each other.
+      */}
+      {totalPoints > 0 && (
+        <div className="absolute inset-x-[28px] top-[597px]">
+          <p className="flex justify-between font-scratch-sans text-[14px] leading-normal font-bold tracking-[0.28px] text-dash-ink opacity-90 [font-variation-settings:'opsz'_14]">
+            <span>Round {roundQualified}</span>
+            <span>
+              <span className="sr-only">: </span>
+              {earnedPoints} / {totalPoints}
+            </span>
+          </p>
+          <div
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={totalPoints}
+            aria-valuenow={earnedPoints}
+            aria-label={`Round ${roundQualified} points`}
+            className="mt-[6px] h-[8px] w-full overflow-hidden rounded-full bg-dash-ink/20"
+          >
+            <div
+              className="h-full rounded-full bg-code-sand transition-[width] duration-500 motion-reduce:transition-none"
+              style={{ width: `${Math.round((earnedPoints / totalPoints) * 100)}%` }}
+            />
+          </div>
+        </div>
+      )}
     </DashboardPanel>
   );
 }
