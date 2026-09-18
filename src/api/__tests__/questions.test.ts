@@ -132,3 +132,23 @@ describe('questionSchema nullable numeric columns', () => {
     expect(questionSchema.parse({ ...base, description: null }).description).toBe('');
   });
 });
+
+describe('questionSchema type tolerance', () => {
+  const base = { id: 'q1', title: 'Two Sum', round: 1, points: 10 };
+
+  // `dto.QuestionResponse.Type` ships as `type`; the DB column is `q_type` and
+  // the backend matches it case-insensitively (LOWER(q_type), EqualFold), so
+  // case-variant rows are legal. A bare literal union threw on "Visual" and,
+  // via z.array(questionSchema), took the whole round down with it.
+  it('accepts case-variant type values', () => {
+    expect(questionSchema.parse({ ...base, type: 'Visual' }).type).toBe('visual');
+    expect(questionSchema.parse({ ...base, type: 'CODE' }).type).toBe('code');
+    expect(questionSchema.parse({ ...base, type: 'visual' }).type).toBe('visual');
+  });
+
+  it('falls back to code for an unknown or absent type', () => {
+    expect(questionSchema.parse({ ...base, type: 'mystery' }).type).toBe('code');
+    expect(questionSchema.parse({ ...base, type: null }).type).toBe('code');
+    expect(questionSchema.parse(base).type).toBe('code');
+  });
+});

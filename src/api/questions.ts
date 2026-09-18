@@ -51,7 +51,16 @@ const questionShape = z.object({
   id: z.string(),
   description: nullableString(''),
   title: z.string(),
-  type: z.union([z.literal('visual'), z.literal('code')]).default('code'),
+  /**
+   * The backend compares `q_type` case-insensitively everywhere
+   * (`LOWER(q_type) = 'visual'`, `strings.EqualFold`), so case-variant data is
+   * expected. A bare literal union threw on `"Visual"` and took the whole
+   * question — and, through `z.array(questionSchema)`, the whole round — down.
+   */
+  type: z
+    .union([z.string(), z.null(), z.undefined()])
+    .transform(value => (value ?? '').toLowerCase())
+    .pipe(z.union([z.literal('visual'), z.literal('code')]).catch('code')),
   inputFormat: stringArray(),
   buyIn: numericString('0'),
   reward: numericString('0'),

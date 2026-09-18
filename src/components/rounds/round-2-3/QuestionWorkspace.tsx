@@ -88,7 +88,7 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
           </p>
         </div>
       ) : (
-        <QuestionReady roundId={roundId} questionId={questionId} question={question} />
+        <QuestionReady roundId={roundId} question={question} />
       )}
     </div>
   );
@@ -96,7 +96,6 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
 
 interface QuestionReadyProps {
   roundId: 2 | 3;
-  questionId: string;
   question: Question;
 }
 
@@ -105,12 +104,14 @@ interface QuestionReadyProps {
  * `402/403` from `/submit` (stale unlock cache) forces the gate closed again,
  * per AGENTS.md rule 6: the server always wins.
  */
-function QuestionReady({ roundId, questionId, question }: QuestionReadyProps) {
+function QuestionReady({ roundId, question }: QuestionReadyProps) {
   const [forceLocked, setForceLocked] = useState(false);
 
   return (
     <BuyInGate
-      questionId={questionId}
+      // The server's canonical id, so the attempt mutation key matches the one
+      // `CodeEngine` uses for its draft and submission state.
+      questionId={question.id}
       roundId={roundId}
       question={question}
       forceLocked={forceLocked}

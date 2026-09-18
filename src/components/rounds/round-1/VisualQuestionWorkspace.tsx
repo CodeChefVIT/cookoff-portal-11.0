@@ -53,7 +53,11 @@ export function VisualQuestionWorkspace({ questionId }: VisualQuestionWorkspaceP
   }
 
   return (
-    <BuyInGate questionId={questionId} roundId={1} question={question}>
+    // `question.id` rather than the route param: a hand-typed or shared URL can
+    // spell the UUID in a different case, and the header's Submit button keys
+    // its chain and mutation off whatever is passed here. Mismatched keys left
+    // Submit greyed out beside a full chain.
+    <BuyInGate questionId={question.id} roundId={1} question={question}>
       <ScratchEngine question={question} />
     </BuyInGate>
   );

@@ -25,8 +25,6 @@ export interface RoundConfig {
    * (L14) — so the attempt is created silently when a question opens.
    */
   autoAttempt: boolean;
-  expectedQuestionCount: number;
-  nominalDurationLabel: string;
   /** R3 has no next round: completion freezes the platform. */
   isFinalRound: boolean;
   intermissionCopy: {
@@ -47,8 +45,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     headerSubmit: true,
     chrome: 'scratch',
     autoAttempt: true,
-    expectedQuestionCount: 4,
-    nominalDurationLabel: '01:00',
     isFinalRound: false,
     intermissionCopy: {
       pending: 'Round 1 begins shortly. Warm up your block-building skills.',
@@ -66,8 +62,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     headerSubmit: false,
     chrome: 'code',
     autoAttempt: false,
-    expectedQuestionCount: 12,
-    nominalDurationLabel: '01:30',
     isFinalRound: false,
     intermissionCopy: {
       pending: "Chef's Pantry begins shortly. Place your bets wisely once the kitchen opens.",
@@ -88,8 +82,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     // (`submission.go:85-97`), so R3 unlocks silently on open. Its questions
     // are free (`buy_in = 0`), so this costs the finalist nothing.
     autoAttempt: true,
-    expectedQuestionCount: 4,
-    nominalDurationLabel: '02:00',
     isFinalRound: true,
     intermissionCopy: {
       pending: 'The Crucible begins shortly. Only the top 16 contestants made it this far.',
