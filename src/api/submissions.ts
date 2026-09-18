@@ -17,6 +17,13 @@ export const CAPABILITIES = {
 
 export const PASSED_STATUS = 'Success';
 
+/**
+ * `/runcode` and `/runcustom` wait for Judge0 synchronously; the server allows
+ * them 45s (`runWriteDeadline`, `controllers/runcode.go`), so give it a little
+ * more before giving up.
+ */
+const RUN_TIMEOUT_MS = 50_000;
+
 export const submissionRequestSchema = z.object({
   questionId: uuidSchema,
   languageId: z.number().int().positive(),
@@ -170,7 +177,7 @@ export async function runCode(
       source_code: payload.sourceCode,
     },
     schema: envelope(z.array(judge0CallbackPayloadShape)),
-    timeout: 30_000,
+    timeout: RUN_TIMEOUT_MS,
   });
 
   const passed = results.filter(r => r.status.id === 3).length;
@@ -218,7 +225,7 @@ export async function runCustom(input: CustomRunRequestInput): Promise<CustomRun
       stdin: payload.stdin,
     },
     schema: envelope(judge0CallbackPayloadShape),
-    timeout: 30_000,
+    timeout: RUN_TIMEOUT_MS,
   });
 
   return {

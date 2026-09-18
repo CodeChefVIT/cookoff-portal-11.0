@@ -331,6 +331,43 @@ describe('QuestionWorkspace — submit failure', () => {
   });
 });
 
+describe('QuestionWorkspace — rate limited', () => {
+  it('disables Submit for the Retry-After window instead of showing a failure', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 100,
+      score: 0,
+      roundQualified: 3,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+    getQuestionsByRoundMock.mockResolvedValue([QUESTION_R3]);
+    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+    submitCodeMock.mockRejectedValue(
+      new ApiError({
+        message: 'Too many requests, slow down',
+        status: 429,
+        code: 'RATE_LIMITED',
+        retryAfter: 5,
+      })
+    );
+
+    const user = userEvent.setup();
+    renderWorkspace(3, 'q2');
+
+    const submit = await screen.findByRole('button', { name: /submit code/i });
+    await user.click(submit);
+
+    await waitFor(() => expect(submit).toBeDisabled());
+    expect(screen.queryByText('Submission Failed')).not.toBeInTheDocument();
+  });
+});
+
 describe('QuestionWorkspace — Round 3 (no betting)', () => {
   it('is unlocked immediately with no bet UI and no currency box', async () => {
     getSessionMock.mockResolvedValue({

@@ -11,10 +11,11 @@ const READER_STALE_TIME_MS = 30_000;
  * `round_qualified` used to refresh only on focus or after a mutation, so an
  * admin promotion left the open page on a stale round: the timer poll flipped
  * it to the "round over" intermission while the cached session still named the
- * old round, and that screen has no way forward. Poll on the same cadence as
- * the contest timer so a promotion is picked up without a manual refresh.
+ * old round, and that screen has no way forward. Poll often enough that a
+ * promotion is picked up without a manual refresh; it is a heavier request than
+ * `/getTime` (two queries), so half as often.
  */
-const SESSION_RESYNC_INTERVAL_MS = 120_000;
+const SESSION_RESYNC_INTERVAL_MS = 60_000;
 
 /**
  * `round_qualified`, `balance`, and `score` are server-authoritative and
