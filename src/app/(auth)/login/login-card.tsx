@@ -8,7 +8,16 @@ import { env } from '@/env';
 // the mock's account-chooser row and LOGIN button had no backing data or
 // action (the backend's only auth path is this one redirect), so they were
 // dropped rather than shipped as dead UI.
-export function LoginCard() {
+const LOGIN_ERRORS: Record<string, string> = {
+  not_registered:
+    'This Google account is not registered for CookOff. Sign in with the email you registered with.',
+  banned: 'This account has been banned. Contact the organisers if you think this is a mistake.',
+  oauth_failed: 'Google sign-in did not complete. Please try again.',
+  server_error: 'Something went wrong on our side. Please try again in a moment.',
+};
+
+export function LoginCard({ error }: { error?: string }) {
+  const errorMessage = error ? (LOGIN_ERRORS[error] ?? LOGIN_ERRORS.oauth_failed) : undefined;
   return (
     <div className="relative w-full max-w-[41rem]">
       <div
@@ -35,6 +44,15 @@ export function LoginCard() {
           <Sparkle className="size-3 shrink-0 text-[#b7ab98]" fill="currentColor" />
           <span className="h-px flex-1 bg-scratch-rule/70" />
         </div>
+
+        {errorMessage && (
+          <p
+            role="alert"
+            className="w-full rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-center font-login-body text-sm text-destructive"
+          >
+            {errorMessage}
+          </p>
+        )}
 
         <a
           href={`${env.NEXT_PUBLIC_API_URL}/auth/google`}
