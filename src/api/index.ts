@@ -1,4 +1,4 @@
-export { api, createApiClient } from './client';
+﻿export { api, createApiClient } from './client';
 export {
   ApiError,
   isApiError,
@@ -41,10 +41,20 @@ export {
   isPassed,
   submissionKeys,
   submissionRequestSchema,
+  customRunRequestSchema,
   submitCode,
   getSubmissionResult,
+  runCode,
+  runCustom,
 } from './submissions';
-export type { SubmissionRequestInput, SubmissionVerdict, TestcaseResult } from './submissions';
+export type {
+  SubmissionRequestInput,
+  SubmissionVerdict,
+  TestcaseResult,
+  CustomRunRequestInput,
+  CustomRunResult,
+  Judge0CallbackPayload,
+} from './submissions';
 
 export { getRoundTime, remainingMs, timerKeys } from './timer';
 export type { RoundTime } from './timer';

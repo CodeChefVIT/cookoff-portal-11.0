@@ -1,26 +1,20 @@
-import * as z from 'zod';
+﻿import * as z from 'zod';
 
 import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import { uuidSchema } from '@/schemas';
 
+import type { CustomRunResult } from './fixtures';
 import { readFixture } from './fixtures';
 import { request } from './request';
 import { envelope, normalizeWire } from './wire';
 
-/**
- * `/runcode` and `/runcustom` are wired (`RunCode`/`RunCustom` in
- * `internal/controllers/runcode.go`) but return a raw array of Judge0
- * callback payloads with no `dto.SuccessResponse` envelope and no persisted
- * submission id — a materially different contract from `/submit` +
- * `/result/:id`. Gated behind this flag until that shape is normalised;
- * "Run Code" stays visibly disabled with an explanation until then.
- */
+export type { CustomRunResult };
+
 export const CAPABILITIES = {
-  runCode: false,
+  runCode: true,
 } as const;
 
-/** `dto.Judge0StatusMap`'s success string (`internal/helpers/utils/const.go`) — the only status value that means "passed". */
 export const PASSED_STATUS = 'Success';
 
 export const submissionRequestSchema = z.object({
@@ -30,6 +24,14 @@ export const submissionRequestSchema = z.object({
 });
 
 export type SubmissionRequestInput = z.infer<typeof submissionRequestSchema>;
+
+export const customRunRequestSchema = z.object({
+  languageId: z.number().int().positive(),
+  sourceCode: z.string().min(1, 'Write some code before running.'),
+  stdin: z.string().default(''),
+});
+
+export type CustomRunRequestInput = z.infer<typeof customRunRequestSchema>;
 
 const submitResponseShape = z.object({ submissionId: z.string() });
 
@@ -69,14 +71,7 @@ const submissionResultShape = z.object({
   runtime: z.coerce.number().optional(),
   memory: z.coerce.number().optional(),
   submissionTime: z.string().optional(),
-  /** Overall verdict, e.g. "All 3 testcases passed" or "2/3 testcases passed (Wrong Answer)". */
   description: z.string().default(''),
-  /**
-   * `dto.TestcaseResult.ID` is the *testcase* id and ships as `id`
-   * (`internal/dto/result.go:4`), so it needs the same remap the submission
-   * level does for `submissionId` below. A nil `Testcases` slice marshals to
-   * `null`, hence the same null-tolerance every other list schema uses.
-   */
   testcases: z
     .union([z.array(z.unknown()), z.null(), z.undefined()])
     .transform(value => value ?? [])
@@ -92,27 +87,30 @@ const submissionResultShape = z.object({
 
 export type SubmissionVerdict = z.infer<typeof submissionResultShape>;
 
-/**
- * Exported so the wire contract is unit-testable without mocking axios — the
- * `/result/:id` shape is the one layer `QuestionWorkspace.test.tsx` bypasses
- * (it mocks `getSubmissionResult` wholesale), which is how the missing
- * `testcaseId` remap survived.
- */
 export const submissionResultSchema = z.looseObject({}).transform(raw => {
   const wire = normalizeWire(raw, SUBMISSION_RESULT_FIELDS);
   return submissionResultShape.parse({ ...wire, submissionId: wire.id });
 });
 
+const judge0StatusShape = z.object({
+  id: z.number(),
+  description: z.string(),
+});
+
+export const judge0CallbackPayloadShape = z.object({
+  token: z.string().optional(),
+  stdout: z.string().nullable().optional(),
+  stderr: z.string().nullable().optional(),
+  message: z.string().nullable().optional(),
+  time: z.string().nullable().optional(),
+  memory: z.number().nullable().optional(),
+  status: judge0StatusShape.default({ id: 0, description: 'Unknown' }),
+});
+
+export type Judge0CallbackPayload = z.infer<typeof judge0CallbackPayloadShape>;
+
 export const submissionKeys = createQueryKeys('submissions');
 
-/**
- * `POST /submit` (`internal/controllers/submission.go#SubmitCode`). Notably
- * does **not** check attempt/purchase status before enqueueing Judge0 — a
- * `402/403 "not purchased"` response is defensive handling for a contract
- * the LLD describes but the current implementation doesn't enforce
- * synchronously (buy-in accounting instead happens at result-finalize time
- * via `EnsureAttempt`). Never auto-retried (mutations.retry stays 0).
- */
 export async function submitCode(input: SubmissionRequestInput): Promise<{ submissionId: string }> {
   const payload = submissionRequestSchema.parse(input);
   if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('submit', payload);
@@ -133,14 +131,6 @@ export async function submitCode(input: SubmissionRequestInput): Promise<{ submi
   });
 }
 
-/**
- * `GET /result/:submission_id` (`internal/controllers/result.go#GetResult`)
- * long-polls **server-side** for up to 2 minutes and returns the final,
- * terminal result directly — there is no Judge0 numeric status id in the
- * response, and no client-side polling loop is needed. A `408` means the
- * submission still hadn't finished after 2 minutes; the caller offers a
- * manual "Check again" instead of hammering the endpoint.
- */
 export async function getSubmissionResult(
   submissionId: string,
   signal?: AbortSignal
@@ -153,4 +143,81 @@ export async function getSubmissionResult(
     timeout: 130_000,
     signal,
   });
+}
+
+export async function runCode(
+  input: SubmissionRequestInput,
+  publicTestcases: { id: string }[] = []
+): Promise<SubmissionVerdict> {
+  const payload = submissionRequestSchema.parse(input);
+  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('runCode', payload);
+
+  const results = await request({
+    url: '/runcode',
+    method: 'POST',
+    data: {
+      question_id: payload.questionId,
+      language_id: payload.languageId,
+      source_code: payload.sourceCode,
+    },
+    schema: envelope(z.array(judge0CallbackPayloadShape)),
+    timeout: 30_000,
+  });
+
+  const passed = results.filter(r => r.status.id === 3).length;
+  const failed = results.length - passed;
+  const allPassed = passed === results.length && results.length > 0;
+
+  const testcases: TestcaseResult[] = results.map((r, index) => {
+    const isPass = r.status.id === 3;
+    const testcaseId = publicTestcases[index]?.id ?? `public-case-${index + 1}`;
+    const outputDesc =
+      r.stderr || r.message || (isPass ? '' : r.status.description || 'Wrong Answer');
+    return {
+      testcaseId,
+      runtime: r.time ? parseFloat(r.time) * 1000 : undefined,
+      memory: r.memory ?? undefined,
+      status: isPass ? PASSED_STATUS : r.status.description || 'Failed',
+      description: outputDesc,
+    };
+  });
+
+  return {
+    submissionId: `run-${Date.now()}`,
+    questionId: payload.questionId,
+    passed,
+    failed,
+    submissionTime: new Date().toISOString(),
+    description: allPassed
+      ? 'All sample testcases passed'
+      : `${passed}/${results.length} testcases passed`,
+    testcases,
+  };
+}
+
+export async function runCustom(input: CustomRunRequestInput): Promise<CustomRunResult> {
+  const payload = customRunRequestSchema.parse(input);
+  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('runCustom', payload);
+
+  const raw = await request({
+    url: '/runcustom',
+    method: 'POST',
+    data: {
+      source_code: payload.sourceCode,
+      language_id: payload.languageId,
+      stdin: payload.stdin,
+    },
+    schema: envelope(judge0CallbackPayloadShape),
+    timeout: 30_000,
+  });
+
+  return {
+    stdout: raw.stdout ?? null,
+    stderr: raw.stderr ?? null,
+    message: raw.message ?? null,
+    time: raw.time ?? undefined,
+    memory: raw.memory ?? undefined,
+    status: raw.status,
+    isPassed: raw.status.id === 3,
+  };
 }
