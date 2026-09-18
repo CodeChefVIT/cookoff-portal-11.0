@@ -84,10 +84,10 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     autoAttempt: true,
     isFinalRound: true,
     intermissionCopy: {
-      pending: 'Round 3 begins shortly. Only the top 16 contestants made it this far.',
+      pending: 'Round 3 begins shortly. Only the top contestants made it this far.',
       ended: 'Round 3 has ended. Thank you to every finalist. The platform is now frozen.',
       notQualified:
-        'Thank you for your participation thus far. Only the top 16 contestants qualify for Round 3.',
+        'Thank you for your participation thus far. Only the top contestants qualify for Round 3.',
     },
   },
 };
