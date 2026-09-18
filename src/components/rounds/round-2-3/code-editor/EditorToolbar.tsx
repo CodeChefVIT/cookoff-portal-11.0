@@ -1,17 +1,11 @@
-import type { CSSProperties } from 'react';
+﻿import type { CSSProperties } from 'react';
 
 import { CAPABILITIES } from '@/api';
 import { cn } from '@/lib/utils';
 
-/**
- * Code Editor - EditorToolbar
- *
- * The action row under the editor in Figma `Desktop - 15/14`, at the frame's
- * pixels from `lg`: custom-input toggle + label, Run Code (feature-flagged,
- * L8 — disabled but drawn exactly as designed) and Submit Code. Below `lg`
- * the two groups wrap so it never scrolls horizontally (AGENTS.md §15).
- */
 export interface EditorToolbarProps {
+  onRun?: () => void;
+  isRunning?: boolean;
   onSubmit: () => void;
   isSubmitting: boolean;
   disabled?: boolean;
@@ -30,6 +24,8 @@ const TOGGLE_MASK: CSSProperties = {
 const BUTTON_SHADOW = 'shadow-[0px_4px_4px_0px_rgba(0,0,0,0.25)]';
 
 export function EditorToolbar({
+  onRun,
+  isRunning = false,
   onSubmit,
   isSubmitting,
   disabled,
@@ -66,23 +62,24 @@ export function EditorToolbar({
       <div className="flex items-center gap-[17px]">
         <button
           type="button"
-          disabled={!CAPABILITIES.runCode}
+          onClick={onRun}
+          disabled={disabled || isRunning || isSubmitting || !CAPABILITIES.runCode}
           title={
             CAPABILITIES.runCode
               ? undefined
-              : 'Run Code is not available yet. The /runcode contract is undefined (see AGENTS.md L8).'
+              : 'Run Code is currently unavailable.'
           }
           className={cn(
-            'h-[26.4px] w-[161.2px] rounded-[10px] bg-code-run font-sans text-[16px] leading-[25.075px] font-semibold text-white enabled:cursor-pointer disabled:cursor-not-allowed lg:absolute lg:top-[5.41px] lg:right-[174.9px]',
+            'h-[26.4px] w-[161.2px] rounded-[10px] bg-code-run font-sans text-[16px] leading-[25.075px] font-semibold text-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 lg:absolute lg:top-[5.41px] lg:right-[174.9px]',
             BUTTON_SHADOW
           )}
         >
-          Run Code
+          {isRunning ? 'Running…' : 'Run Code'}
         </button>
         <button
           type="button"
           onClick={onSubmit}
-          disabled={disabled || isSubmitting}
+          disabled={disabled || isSubmitting || isRunning}
           className={cn(
             'h-[26.4px] w-[161px] rounded-[10px] bg-brand-accent pb-[2.2px] font-inria text-[20px] leading-[25.075px] font-bold text-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 lg:absolute lg:top-[2.44px] lg:-right-[3px]',
             BUTTON_SHADOW

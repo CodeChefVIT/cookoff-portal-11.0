@@ -1,6 +1,6 @@
 ﻿/**
  * Deterministic fixtures for the endpoints not yet safe to hit for local/CI
- * development (`GET /getTime` doesn't exist on the backend at all — L2).
+ * development (`GET /getTime` doesn't exist on the backend at all â€” L2).
  * Selected when `NEXT_PUBLIC_USE_MOCK_API=true`; also reused directly by
  * component/integration tests so test data and demo data never drift apart.
  * Every resource module calls `readFixture` behind the exact same return
@@ -20,22 +20,6 @@ import type { SubmissionRequestInput, SubmissionVerdict } from './submissions';
 import type { RoundTime } from './timer';
 import type { VisualSubmissionRequestInput } from './visual-submissions';
 
-export interface CustomRunResult {
-  stdout: string | null;
-  stderr: string | null;
-  message: string | null;
-  time?: string;
-  memory?: number;
-  status: { id: number; description: string };
-  isPassed: boolean;
-}
-
-export interface CustomRunRequestInput {
-  languageId: number;
-  sourceCode: string;
-  stdin?: string;
-}
-
 function delay<T>(value: T, ms = 150): Promise<T> {
   const { promise, resolve } = Promise.withResolvers<T>();
   setTimeout(() => resolve(value), ms);
@@ -45,7 +29,7 @@ function delay<T>(value: T, ms = 150): Promise<T> {
 function makeQuestion(
   overrides: Partial<Question> & Pick<Question, 'id' | 'title' | 'round' | 'points'>
 ): Question {
-  // R1 and R3 have no buy-in (RoundConfig.hasBuyIn === false) — `bought: true`
+  // R1 and R3 have no buy-in (RoundConfig.hasBuyIn === false) â€” `bought: true`
   // simulates the "already open, nothing to purchase" state.
   const isFreeRound = overrides.round === 1 || overrides.round === 3;
   return {
@@ -74,89 +58,61 @@ const R1_QUESTION_IDS = [
 
 const R2_QUESTION_IDS = [
   'd40d282d-459d-45ce-9082-10e4d50038de',
-  'f73a45c7-9204-4340-a50d-bf061ffea054',
-  '2db5092f-b4b7-4560-b8be-b0f922eb9f0a',
+  'c100ca85-4beb-4e31-ac93-85ab50551cc9',
+  '7372c099-2a36-4f74-97b4-4178d4edb87e',
+  'b8b5e17d-e30c-4d1e-98ee-1001f407bf52',
+  '6ae67c73-daa8-47b4-a409-437c6e43d525',
+  'afaa632e-ca4b-49de-835f-97ce914fd966',
+  '93002078-0c11-4980-b589-25a0319775a8',
+  '3508b561-da43-4fb9-ab70-fd949abbee0f',
+  'edb29c10-31c7-4081-8a3a-1c156671505c',
+  'd6d62ee1-9c9d-4e5f-bda8-854a2c84d03d',
 ] as const;
 
 const R3_QUESTION_IDS = [
-  'b289c894-3995-467b-b0b3-f09dfd4a0a4c',
-  '5fe45f94-e51c-43f5-bfbe-d4b68c34f3a7',
-  '3a290947-f4e9-4e78-bebc-031e426db12c',
+  'd0283235-ad95-4213-a5d2-410156ce1745',
+  '10ba6e98-4b9d-478a-9504-1d7b062bb765',
+  'a2340dc4-3957-4565-81bd-a6d0b9e6c144',
+  '3d477edb-49ba-4b0d-a355-e841f229d3bc',
 ] as const;
 
-export const R2_FIXTURE_QUESTIONS: Question[] = [
+const R2_FIXTURE_QUESTIONS: Question[] = R2_QUESTION_IDS.map((id, index) =>
   makeQuestion({
-    id: R2_QUESTION_IDS[0],
-    title: 'Two Sum',
+    id,
+    title: `Round 2 Problem ${index + 1}`,
     round: 2,
-    points: 10,
-    buyIn: '20',
-    reward: '50',
-  }),
-  makeQuestion({
-    id: R2_QUESTION_IDS[1],
-    title: 'Reverse String',
-    round: 2,
-    points: 15,
-    buyIn: '25',
-    reward: '60',
-  }),
-  makeQuestion({
-    id: R2_QUESTION_IDS[2],
-    title: 'Palindrome Check',
-    round: 2,
-    points: 20,
-    buyIn: '30',
-    reward: '70',
-  }),
-];
+    points: 10 + index * 5,
+  })
+);
 
-export const R3_FIXTURE_QUESTIONS: Question[] = [
+const R3_FIXTURE_QUESTIONS: Question[] = R3_QUESTION_IDS.map((id, index) =>
   makeQuestion({
-    id: R3_QUESTION_IDS[0],
-    title: 'Longest Palindrome',
+    id,
+    title: `Round 3 Problem ${index + 1}`,
     round: 3,
-    points: 25,
-    buyIn: '0',
-    reward: '0',
-  }),
-  makeQuestion({
-    id: R3_QUESTION_IDS[1],
-    title: 'Median of Two Arrays',
-    round: 3,
-    points: 35,
-    buyIn: '0',
-    reward: '0',
-  }),
-  makeQuestion({
-    id: R3_QUESTION_IDS[2],
-    title: 'Graph Cycle Detection',
-    round: 3,
-    points: 40,
-    buyIn: '0',
-    reward: '0',
-  }),
-];
+    points: 25 + index * 25,
+  })
+);
 
-function arraysEqual(a: string[], b: string[]): boolean {
-  return a.length === b.length && a.every((value, index) => value === b[index]);
+/** Deterministic UUID-shaped ids for fixture blocks â€” see `getVisualBlocks`/`submitVisual`. */
+let blockSeq = 0;
+function block(content: string): VisualBlock {
+  blockSeq += 1;
+  const suffix = blockSeq.toString(16).padStart(12, '0');
+  return { id: `b10c0000-0000-4000-8000-${suffix}`, content };
 }
 
-const makeBlock = (prefix: string) => {
-  let counter = 0;
-  return (content: string): VisualBlock => ({
-    id: `${prefix}-block-${++counter}`,
-    content,
-  });
-};
-
-const block = makeBlock('b');
+function arraysEqual(a: readonly string[], b: readonly string[]): boolean {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
 
 const helloBlocks = [
   block('Print "Hello"'),
   block('Print "World"'),
-  block('Print "Goodbye"'),
-  block('Set x to 0'),
+  block('Wait 1 second'),
+  block('Repeat 3 times'),
+  block('Set counter to 0'),
+  block('Clear output'),
 ];
 
 const sumBlocks = [
@@ -346,7 +302,7 @@ function buildFixture<K extends keyof FixtureMap>(
   if (key === 'visualBlocks') {
     const [questionId] = args as FixtureMap['visualBlocks'][0];
     const puzzle = R1_PUZZLES[questionId];
-    // Reversed, not the solution order — the palette should never hand the
+    // Reversed, not the solution order â€” the palette should never hand the
     // chain back pre-solved.
     return (puzzle ? [...puzzle.blocks].reverse() : []) as FixtureMap[K][1];
   }
@@ -445,6 +401,22 @@ function buildFixture<K extends keyof FixtureMap>(
   throw new Error(`No fixture registered for "${key}"`);
 }
 
+export interface CustomRunResult {
+  stdout: string | null;
+  stderr: string | null;
+  message: string | null;
+  time?: string;
+  memory?: number;
+  status: { id: number; description: string };
+  isPassed: boolean;
+}
+
+export interface CustomRunRequestInput {
+  languageId: number;
+  sourceCode: string;
+  stdin?: string;
+}
+
 export function readFixture<K extends keyof FixtureMap>(
   key: K,
   ...args: FixtureMap[K][0]
@@ -456,3 +428,4 @@ export function readFixture<K extends keyof FixtureMap>(
 export function getFixtureVisualSolution(questionId: string): string[] | undefined {
   return R1_PUZZLES[questionId]?.solution;
 }
+
