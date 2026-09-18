@@ -21,16 +21,8 @@ export function useAttempt(roundId: RoundId, questionId: string) {
     mutationKey: attemptKeys.detail(questionId),
     mutationFn: () => createAttempt(questionId),
     onSuccess: outcome => {
-      if (!outcome.unlocked) {
-        // A rejected buy-in still means our cached balance disagreed with the
-        // server's — refresh it, or the gate keeps offering a bet the player
-        // cannot afford and quotes a shortfall from the stale number.
-        if (outcome.insufficientBalance) {
-          void queryClient.invalidateQueries({ queryKey: sessionKeys.all() });
-        }
-        return;
-      }
-      if (getRoundConfig(roundId).hasBuyIn) toast.success('Bet placed! The editor is unlocked.');
+      if (!outcome.unlocked) return;
+      if (getRoundConfig(roundId).hasBuyIn) toast.success('Bet placed — the editor is unlocked.');
       void queryClient.invalidateQueries({ queryKey: sessionKeys.all() });
       void queryClient.invalidateQueries({ queryKey: questionKeys.list({ round: roundId }) });
     },

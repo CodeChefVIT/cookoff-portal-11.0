@@ -1,5 +1,3 @@
-import Link from 'next/link';
-
 import { getRoundConfig } from './round-config';
 import { RoundTimer } from './RoundTimer';
 import type { RoundId } from './types';
@@ -35,31 +33,12 @@ export function RoundIntermission({ roundId, variant }: RoundIntermissionProps) 
         ? config.intermissionCopy.ended
         : config.intermissionCopy.pending;
 
-  // The eyebrow exists to name the round when the heading is something else
-  // ("You didn't make the cut"). Now that a round's name is just its number it
-  // would otherwise repeat the heading verbatim, so drop it in that case.
-  const showEyebrow = !heading.startsWith(config.label);
-
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-      {showEyebrow && (
-        <p className="text-xs tracking-widest text-muted-foreground uppercase">{config.label}</p>
-      )}
+      <p className="text-xs tracking-widest text-muted-foreground uppercase">{config.label}</p>
       <h1 className="font-display text-3xl text-brand sm:text-4xl">{heading}</h1>
       <p className="max-w-md text-sm text-muted-foreground sm:text-base">{body}</p>
       {variant === 'pending' && <RoundTimer />}
-      {/*
-        Every one of these states is otherwise a dead end — no link, no button.
-        That matters most at a round boundary: a promoted finalist gets flipped
-        here by the timer poll before their session refreshes, and without a way
-        out they are stuck until they hard-refresh.
-      */}
-      <Link
-        href="/dashboard"
-        className="rounded-full bg-secondary px-4 py-1.5 text-sm font-medium text-secondary-foreground hover:bg-secondary/80 focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none"
-      >
-        Back to dashboard
-      </Link>
     </div>
   );
 }

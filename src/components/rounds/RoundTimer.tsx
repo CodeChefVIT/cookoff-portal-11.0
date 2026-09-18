@@ -44,7 +44,7 @@ export function RoundTimer({ onExpire, className, variant }: RoundTimerProps) {
   const mounted = useMounted();
   const { remaining, isUrgent, isExpired, isError } = useRoundTimer(onExpire);
 
-  const label = !mounted || remaining === null ? '--:--:--' : formatRemaining(remaining);
+  const label = !mounted || remaining === null ? '—:—:—' : formatRemaining(remaining);
   const time = (
     <span aria-label={isError ? 'Round clock unavailable' : `Time remaining ${label}`}>
       {label}

@@ -100,7 +100,7 @@ describe('RoundGate', () => {
       </RoundGate>
     );
 
-    expect(await screen.findByText('Round 1')).toBeInTheDocument();
+    expect(await screen.findByText('Scratch')).toBeInTheDocument();
     expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
   });
 
@@ -125,7 +125,7 @@ describe('RoundGate', () => {
       </RoundGate>
     );
 
-    expect(await screen.findByText('Round 2')).toBeInTheDocument();
+    expect(await screen.findByText("Chef's Pantry")).toBeInTheDocument();
     expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
   });
 
@@ -225,7 +225,7 @@ describe('RoundGate — Round 1', () => {
       </RoundGate>
     );
 
-    expect(await screen.findByRole('heading', { name: 'Round 1' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Scratch' })).toBeInTheDocument();
     expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
   });
 
@@ -274,7 +274,7 @@ describe('RoundGate — Round 1', () => {
       </RoundGate>
     );
 
-    expect(await screen.findByRole('heading', { name: 'Round 1 has ended' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Scratch has ended' })).toBeInTheDocument();
     expect(screen.queryByText('gameplay')).not.toBeInTheDocument();
   });
 });

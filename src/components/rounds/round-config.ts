@@ -25,6 +25,8 @@ export interface RoundConfig {
    * (L14) — so the attempt is created silently when a question opens.
    */
   autoAttempt: boolean;
+  expectedQuestionCount: number;
+  nominalDurationLabel: string;
   /** R3 has no next round: completion freezes the platform. */
   isFinalRound: boolean;
   intermissionCopy: {
@@ -37,7 +39,7 @@ export interface RoundConfig {
 const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
   1: {
     id: 1,
-    name: 'Round 1',
+    name: 'Scratch',
     label: 'Round 1',
     engine: 'visual',
     hasBuyIn: false,
@@ -45,16 +47,18 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     headerSubmit: true,
     chrome: 'scratch',
     autoAttempt: true,
+    expectedQuestionCount: 4,
+    nominalDurationLabel: '01:00',
     isFinalRound: false,
     intermissionCopy: {
       pending: 'Round 1 begins shortly. Warm up your block-building skills.',
-      ended: 'Round 1 has ended. Thanks for cooking! We are tallying the results now.',
+      ended: 'Round 1 has ended. Thank you for cooking — results are being tallied.',
       notQualified: 'Round 1 hasn’t opened for you yet.',
     },
   },
   2: {
     id: 2,
-    name: 'Round 2',
+    name: "Chef's Pantry",
     label: 'Round 2',
     engine: 'code',
     hasBuyIn: true,
@@ -62,16 +66,18 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     headerSubmit: false,
     chrome: 'code',
     autoAttempt: false,
+    expectedQuestionCount: 12,
+    nominalDurationLabel: '01:30',
     isFinalRound: false,
     intermissionCopy: {
-      pending: 'Round 2 begins shortly. Place your bets wisely once the kitchen opens.',
-      ended: 'Round 2 has ended. Thanks for cooking! We are tallying the results now.',
+      pending: "Chef's Pantry begins shortly. Place your bets wisely once the kitchen opens.",
+      ended: 'Round 2 has ended. Thank you for cooking — results are being tallied.',
       notQualified: 'Round 2 is reserved for contestants who qualified out of Round 1.',
     },
   },
   3: {
     id: 3,
-    name: 'Round 3',
+    name: 'the Crucible',
     label: 'Round 3',
     engine: 'code',
     hasBuyIn: false,
@@ -82,12 +88,14 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     // (`submission.go:85-97`), so R3 unlocks silently on open. Its questions
     // are free (`buy_in = 0`), so this costs the finalist nothing.
     autoAttempt: true,
+    expectedQuestionCount: 4,
+    nominalDurationLabel: '02:00',
     isFinalRound: true,
     intermissionCopy: {
-      pending: 'Round 3 begins shortly. Only the top contestants made it this far.',
-      ended: 'Round 3 has ended. Thank you to every finalist. The platform is now frozen.',
+      pending: 'The Crucible begins shortly. Only the top 16 contestants made it this far.',
+      ended: 'The Crucible has ended. Thank you to every finalist — the platform is now frozen.',
       notQualified:
-        'Thank you for your participation thus far. Only the top contestants qualify for Round 3.',
+        'Thank you for your participation thus far. Only the top 16 contestants qualify for Round 3.',
     },
   },
 };
