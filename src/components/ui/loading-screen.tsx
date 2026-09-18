@@ -16,24 +16,25 @@ export interface LoadingScreenProps {
 const ASSET_PATH = '/loading-page-assests';
 
 interface RingConfig {
-  size: number; // % of stage
+  size: number; // % of stage width
+  ratio?: number; // natural width / height — defaults to 1 (square asset)
   rotate: number; // deg, base offset
   duration: number; // s
   reverse?: boolean;
   opacity: number;
 }
 
+// Evenly spaced (~22-24pt steps) so rings read as distinct, not crowded.
 const NUMERAL_RINGS: RingConfig[] = [
-  { size: 30, rotate: 5, duration: 42, opacity: 0.55 },
-  { size: 42, rotate: -35, duration: 58, reverse: true, opacity: 0.65 },
-  { size: 54, rotate: 60, duration: 50, opacity: 0.75 },
-  { size: 66, rotate: -15, duration: 66, reverse: true, opacity: 0.85 },
-  { size: 80, rotate: 40, duration: 74, opacity: 0.92 },
-  { size: 96, rotate: -50, duration: 90, reverse: true, opacity: 1 },
+  { size: 32, rotate: 8, duration: 46, opacity: 0.6 },
+  { size: 54, rotate: -30, duration: 62, reverse: true, opacity: 0.75 },
+  { size: 76, rotate: 55, duration: 78, opacity: 0.88 },
+  { size: 100, rotate: -70, duration: 96, reverse: true, opacity: 1 },
 ];
 
 function SpinLayer({
   size,
+  ratio = 1,
   rotate,
   duration,
   reverse,
@@ -42,8 +43,12 @@ function SpinLayer({
 }: RingConfig & { src: string }) {
   return (
     <div
-      className="absolute inset-0 m-auto"
-      style={{ width: `${size}%`, height: `${size}%`, transform: `rotate(${rotate}deg)` }}
+      className="absolute top-1/2 left-1/2"
+      style={{
+        width: `${size}%`,
+        aspectRatio: ratio,
+        transform: `translate(-50%, -50%) rotate(${rotate}deg)`,
+      }}
     >
       <img
         src={src}
@@ -97,14 +102,16 @@ export function LoadingScreen({ message = 'Loading…', className }: LoadingScre
 
         <SpinLayer
           src={`${ASSET_PATH}/r-lines-2.svg`}
-          size={70}
+          size={66}
+          ratio={1271 / 1259}
           rotate={0}
           duration={120}
           opacity={0.9}
         />
         <SpinLayer
           src={`${ASSET_PATH}/r-line-1.svg`}
-          size={108}
+          size={112}
+          ratio={1252 / 1215}
           rotate={0}
           duration={140}
           reverse
@@ -112,15 +119,15 @@ export function LoadingScreen({ message = 'Loading…', className }: LoadingScre
         />
 
         {NUMERAL_RINGS.map(ring => (
-          <SpinLayer key={ring.size} src={`${ASSET_PATH}/nums.svg`} {...ring} />
+          <SpinLayer key={ring.size} src={`${ASSET_PATH}/nums.svg`} ratio={189 / 188} {...ring} />
         ))}
 
         <img
           src={`${ASSET_PATH}/chef-hat-glass.svg`}
           alt=""
-          className="absolute inset-0 m-auto w-[24%] motion-reduce:animate-none"
+          className="absolute inset-0 m-auto w-[31.2%] motion-reduce:animate-none"
           style={{
-            animation: 'portal-breathe 3.2s ease-in-out infinite',
+            animation: 'portal-bob 3.2s ease-in-out infinite',
             filter: 'drop-shadow(0 0 30px rgba(191, 98, 70, 0.55))',
           }}
         />
