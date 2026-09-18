@@ -1,0 +1,186 @@
+.page {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  min-height: 100dvh;
+  height: 100dvh;
+  width: 100%;
+  place-items: center;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 56% 44%, rgb(103 55 50 / 22%), transparent 30rem),
+    linear-gradient(112deg, #111212 0%, #161313 62%, #141515 100%);
+}
+
+.page::before {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 2%) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 2%) 1px, transparent 1px);
+  background-size: 4rem 4rem;
+  mask-image: radial-gradient(ellipse at center, #000 0%, transparent 72%);
+  content: '';
+  pointer-events: none;
+}
+
+.contentGlow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(70rem, 90vw);
+  height: min(42rem, 82svh);
+  z-index: -1;
+  border: 1px solid rgb(216 205 187 / 7%);
+  border-radius: 50%;
+  box-shadow:
+    0 0 8rem rgb(115 67 60 / 13%),
+    inset 0 0 6rem rgb(115 67 60 / 8%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  width: min(48rem, calc(100% - 2rem));
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(1.5rem, 4vw, 3rem) 1rem;
+  text-align: center;
+}
+
+.eyebrow {
+  margin: 0 0 clamp(1.25rem, 3vw, 2rem);
+  color: #b17b6e;
+  font-size: clamp(0.65rem, 1vw, 0.8rem);
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.heroMark {
+  position: relative;
+  display: flex;
+  width: min(31rem, 100%);
+  align-items: center;
+  justify-content: center;
+  margin-inline: auto;
+}
+
+.number {
+  color: transparent;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(7rem, 17vw, 12.5rem);
+  font-weight: 900;
+  letter-spacing: -0.14em;
+  line-height: 0.75;
+  text-shadow: 0 0 2rem rgb(188 148 121 / 10%);
+  -webkit-text-stroke: clamp(2px, 0.25vw, 4px) rgb(216 205 187 / 68%);
+}
+
+.chefFrame {
+  position: relative;
+  width: clamp(9.5rem, 18vw, 14rem);
+  aspect-ratio: 1;
+  margin-left: -3.5rem;
+  margin-top: -1rem;
+}
+
+.chef {
+  animation: not-found-chef-float 6s ease-in-out infinite;
+  object-fit: contain;
+  transform-origin: 50% 60%;
+  will-change: transform;
+}
+
+.errorWord {
+  margin: clamp(1rem, 2.5vw, 1.75rem) 0 0;
+  color: #efebe4;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: clamp(2.5rem, 6vw, 4.75rem);
+  font-weight: 900;
+  letter-spacing: -0.08em;
+  line-height: 0.9;
+  text-shadow: 0 0 2rem rgb(239 235 228 / 15%);
+}
+
+.message {
+  max-width: 38rem;
+  margin: 1.25rem 0 0;
+  color: #d8cdbb;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: clamp(1.05rem, 2vw, 1.5rem);
+  line-height: 1.45;
+}
+
+.homeLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: clamp(1.75rem, 4vw, 2.5rem);
+  padding: 0.8rem 1.2rem 0.8rem 1.35rem;
+  border: 1px solid rgb(216 205 187 / 24%);
+  border-radius: 0.625rem;
+  background: #70443f;
+  color: #fffaf2;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  box-shadow: 0 0.75rem 2rem rgb(0 0 0 / 24%);
+  transition:
+    background-color 200ms ease,
+    border-color 200ms ease,
+    box-shadow 200ms ease,
+    transform 200ms ease;
+}
+
+.homeLink:hover,
+.homeLink:focus-visible {
+  border-color: rgb(255 250 242 / 55%);
+  background: #89544c;
+  box-shadow: 0 1rem 2.5rem rgb(0 0 0 / 34%);
+  transform: translateY(-2px);
+}
+
+.homeLink:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+}
+
+@keyframes not-found-chef-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+
+  50% {
+    transform: translate3d(0, -6px, 0) rotate(-0.5deg);
+  }
+}
+
+@media (max-width: 48rem) {
+  .page {
+    background:
+      radial-gradient(circle at 50% 43%, rgb(103 55 50 / 24%), transparent 20rem),
+      linear-gradient(112deg, #111212 0%, #161313 100%);
+  }
+
+  .content {
+    width: min(28rem, calc(100% - 1.5rem));
+  }
+
+  .chefFrame {
+    margin-left: -2.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chef {
+    animation: none;
+    will-change: auto;
+  }
+}
