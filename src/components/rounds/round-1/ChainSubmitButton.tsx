@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useMounted } from '@/hooks/use-mounted';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
-import { useRoundExpired, useVisualSubmission } from '../hooks';
+import { useQuestion, useRoundExpired, useVisualSubmission } from '../hooks';
 
 export interface ChainSubmitButtonProps {
   questionId: string;
@@ -50,7 +50,13 @@ export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
     filters: { mutationKey: attemptKeys.detail(questionId) },
     select: mutation => mutation.state.status,
   });
-  const unlocked = unlockStatuses.at(-1) === 'success';
+  // Two signals, either of which means the attempt exists server-side. The
+  // mutation alone is not enough: `BuyInGate` skips the auto-unlock entirely
+  // once `question.bought` is true, so on a question that was already unlocked
+  // — a reload, or coming back to it — there is no mutation to observe and
+  // gating on one alone left Submit permanently dead.
+  const { question } = useQuestion(1, questionId);
+  const unlocked = question?.bought === true || unlockStatuses.at(-1) === 'success';
 
   // `submission.isPending` only covers *this* mount's mutation instance, so a
   // question-tab switch and back re-enabled Submit while the first request was
