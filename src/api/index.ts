@@ -38,7 +38,6 @@ export { createAttempt, attemptKeys } from './attempts';
 export type { AttemptOutcome } from './attempts';
 
 export {
-  CAPABILITIES,
   PASSED_STATUS,
   isPassed,
   submissionKeys,

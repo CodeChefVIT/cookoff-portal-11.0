@@ -17,10 +17,6 @@ export interface CustomRunResult {
   isPassed: boolean;
 }
 
-export const CAPABILITIES = {
-  runCode: true,
-} as const;
-
 export const PASSED_STATUS = 'Success';
 
 /**
