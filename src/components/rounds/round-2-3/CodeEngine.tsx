@@ -57,7 +57,6 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
   }, [question.id]);
 
   const [customInputEnabled, setCustomInputEnabled] = useState(false);
-  const [dismissedSubmissionId, setDismissedSubmissionId] = useState<string | null>(null);
   const [wasAlreadySolved, setWasAlreadySolved] = useState(question.solved === true);
 
   const submission = useCodeSubmission(roundId, question.id);
@@ -75,7 +74,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     submission.result.data !== undefined &&
     submission.result.data.failed === 0 &&
     submission.result.data.passed > 0;
-  const resultOpen = allPassed && submission.result.data?.submissionId !== dismissedSubmissionId;
+  const resultOpen = allPassed && !submission.verdictDismissed;
 
   function handleRun() {
     if (!sourceCode.trim()) {
@@ -254,9 +253,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
           correct
           open={resultOpen}
           onClose={() => {
-            if (submission.result.data) {
-              setDismissedSubmissionId(submission.result.data.submissionId);
-            }
+            submission.dismissVerdict();
             setWasAlreadySolved(true);
           }}
           question={question}
