@@ -21,4 +21,6 @@ export interface ApiErrorData {
   code?: string;
   details?: unknown;
   status?: number;
+  /** Seconds from a `Retry-After` header (429 / 503). */
+  retryAfter?: number;
 }

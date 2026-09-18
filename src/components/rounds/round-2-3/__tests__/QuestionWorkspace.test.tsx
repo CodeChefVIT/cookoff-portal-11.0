@@ -285,7 +285,9 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     });
     getQuestionsByRoundMock.mockResolvedValue([{ ...QUESTION_R2, bought: true }]);
     getPublicTestcasesMock.mockResolvedValue(TESTCASES);
-    submitCodeMock.mockRejectedValue(new ApiError({ message: 'not purchased', status: 402 }));
+    submitCodeMock.mockRejectedValue(
+      new ApiError({ message: 'not purchased', status: 403, code: 'NOT_PURCHASED' })
+    );
 
     const user = userEvent.setup();
     renderWorkspace(2, 'q1');
@@ -375,6 +377,7 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
       new ApiError({
         message: 'Question not purchased — buy this question before submitting',
         status: 403,
+        code: 'NOT_PURCHASED',
       })
     );
 
@@ -392,7 +395,11 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     mockRoundThree();
     createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
     submitCodeMock.mockRejectedValue(
-      new ApiError({ message: 'User not qualified for this round', status: 403 })
+      new ApiError({
+        message: 'User not qualified for this round',
+        status: 403,
+        code: 'NOT_QUALIFIED',
+      })
     );
 
     const user = userEvent.setup();

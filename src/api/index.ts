@@ -1,7 +1,9 @@
 ﻿export { api, createApiClient } from './client';
 export {
   ApiError,
+  ERROR_CODES,
   isApiError,
+  isTryLaterError,
   isNotPurchasedError,
   isNotQualifiedError,
   isRoundNotRunningError,

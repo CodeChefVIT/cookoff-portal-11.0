@@ -1,7 +1,7 @@
 import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 
-import { isApiError, isRoundNotRunningError } from './errors';
+import { ERROR_CODES, isApiError, isRoundNotRunningError } from './errors';
 import { readFixture } from './fixtures';
 import { request } from './request';
 
@@ -22,7 +22,7 @@ export interface AttemptOutcome {
  * `buy_in` is debited server-side in one transaction. A `409` means an
  * `attempts` row already exists for this `(user, question)` — per L3 that
  * is treated as a successful unlock, never as an error. `402` is
- * "insufficient balance".
+ * "insufficient balance"; anything else (e.g. `NOT_QUALIFIED`) is thrown.
  */
 export async function createAttempt(questionId: string): Promise<AttemptOutcome> {
   if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('attempt', questionId);
@@ -37,7 +37,7 @@ export async function createAttempt(questionId: string): Promise<AttemptOutcome>
     if (isRoundNotRunningError(error)) {
       return { unlocked: false, insufficientBalance: false, roundNotRunning: true };
     }
-    if (isApiError(error) && (error.status === 402 || error.status === 403)) {
+    if (isApiError(error) && error.code === ERROR_CODES.insufficientBalance) {
       return { unlocked: false, insufficientBalance: true, roundNotRunning: false };
     }
     throw error;
