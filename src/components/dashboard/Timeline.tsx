@@ -2,12 +2,16 @@ import Image from 'next/image';
 
 import { timelineMilestone } from './dashboard-stats';
 
-// Flag group left edges as a share of the 1193px track (Figma x 124/499/894/1273);
-// the dot, label and chef all centre 22px in from there.
+// Flag group left edges as a share of the 1193px track; the dot, label and chef
+// all centre 22px in from there. Figma drew four flags (x 124/499/894/1273) with
+// no stop of its own for Round 3, so a finalist's chef sat on END. START and END
+// keep their frame positions and the three rounds divide the span evenly
+// (96.312 / 4), which stays within ~7% of the original flag spacing.
 const MILESTONES = [
   { label: 'START', offset: 0 },
-  { label: 'ROUND 1', offset: 31.433 },
-  { label: 'ROUND 2', offset: 64.543 },
+  { label: 'ROUND 1', offset: 24.078 },
+  { label: 'ROUND 2', offset: 48.156 },
+  { label: 'ROUND 3', offset: 72.234 },
   { label: 'END', offset: 96.312 },
 ] as const;
 

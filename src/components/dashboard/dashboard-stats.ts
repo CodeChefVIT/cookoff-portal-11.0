@@ -31,10 +31,10 @@ export function summarizeRound(questions: DashboardQuestionSummary[]): RoundStat
   };
 }
 
-// Timeline milestones are START, ROUND 1, ROUND 2, END. The chef sits on the
-// flag where the qualified round starts; Round 3 has no flag of its own, so
-// it sits on END.
-const TIMELINE_LAST_MILESTONE = 3;
+// Timeline milestones are START, ROUND 1, ROUND 2, ROUND 3, END. The chef sits
+// on the flag where the qualified round starts, so a finalist now rests on
+// ROUND 3 rather than on END; END is reached only past the last round.
+const TIMELINE_LAST_MILESTONE = 4;
 
 export function timelineMilestone(roundQualified: number): number {
   return Math.min(Math.max(roundQualified, 0), TIMELINE_LAST_MILESTONE);

@@ -45,8 +45,16 @@ describe('summarizeRound', () => {
 
 describe('timelineMilestone', () => {
   it('puts each round on its own start flag and clamps out-of-range rounds', () => {
+    expect(timelineMilestone(0)).toBe(0);
     expect(timelineMilestone(1)).toBe(1);
+    expect(timelineMilestone(2)).toBe(2);
     expect(timelineMilestone(-1)).toBe(0);
-    expect(timelineMilestone(9)).toBe(3);
+    expect(timelineMilestone(9)).toBe(4);
+  });
+
+  // Round 3 has its own flag now, so a finalist rests on it instead of being
+  // pushed onto END as if the contest were over.
+  it('puts a round 3 finalist on the round 3 flag, not END', () => {
+    expect(timelineMilestone(3)).toBe(3);
   });
 });
