@@ -72,6 +72,10 @@ export function MonacoWrapper({
             fontSize: 14,
             automaticLayout: true,
             tabFocusMode: true,
+            // When a language swap replaces the buffer, Monaco trims the
+            // cursor line's indentation and reports it as a user edit — which
+            // lands the old language's code in the new language's draft.
+            trimAutoWhitespace: false,
             padding: { top: 10 },
           }}
         />
