@@ -23,18 +23,34 @@ export function useCodeRun() {
       input: SubmissionRequestInput;
       publicTestcases: { id: string }[];
     }) => runCode(input, publicTestcases),
-    // Drop the previous verdict so a re-run never shows the last result as its own.
-    onMutate: () => setRunVerdict(null),
+    // Drop the previous verdict so a re-run never shows the last result as its
+    // own — but put it back if the run never happened (rate limited, judge
+    // busy, network), so a refused click doesn't wipe the panel.
+    onMutate: () => {
+      const previous = runVerdict;
+      setRunVerdict(null);
+      return { previous };
+    },
     onSuccess: verdict => {
       setRunVerdict(verdict);
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) setRunVerdict(context.previous);
     },
   });
 
   const runCustomInput = useMutation({
     mutationFn: (input: CustomRunRequestInput) => runCustom(input),
-    onMutate: () => setCustomResult(null),
+    onMutate: () => {
+      const previous = customResult;
+      setCustomResult(null);
+      return { previous };
+    },
     onSuccess: result => {
       setCustomResult(result);
+    },
+    onError: (_error, _input, context) => {
+      if (context?.previous) setCustomResult(context.previous);
     },
   });
 
