@@ -1,10 +1,8 @@
 import * as z from 'zod';
 
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import type { Testcase } from '@/types';
 
-import { readFixture } from './fixtures';
 import { request } from './request';
 import { envelope, normalizeWire } from './wire';
 
@@ -47,7 +45,6 @@ export const testcaseKeys = createQueryKeys('testcases');
  * R2/R3 — it would leak hidden testcase data.
  */
 export async function getPublicTestcases(questionId: string): Promise<Testcase[]> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('publicTestcases', questionId);
   return request({
     url: `/question/${questionId}/testcases/public`,
     method: 'GET',

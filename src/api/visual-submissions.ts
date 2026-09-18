@@ -1,11 +1,9 @@
 import * as z from 'zod';
 
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import { uuidSchema } from '@/schemas';
 import type { VisualSubmissionResult } from '@/types';
 
-import { readFixture } from './fixtures';
 import { request } from './request';
 import { normalizeWire, unwrapEnvelope } from './wire';
 
@@ -59,7 +57,6 @@ export async function submitVisual(
   input: VisualSubmissionRequestInput
 ): Promise<VisualSubmissionResult> {
   const payload = visualSubmissionRequestSchema.parse(input);
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('submitVisual', payload);
   const raw = await request<unknown>({
     url: '/submit/visual',
     method: 'POST',

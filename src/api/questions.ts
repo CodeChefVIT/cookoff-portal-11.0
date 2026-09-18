@@ -1,10 +1,8 @@
 import * as z from 'zod';
 
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import type { Question } from '@/types';
 
-import { readFixture } from './fixtures';
 import { request } from './request';
 import type { DashboardQuestionSummary } from './session';
 import { envelope, normalizeWire } from './wire';
@@ -104,19 +102,16 @@ export const questionKeys = createQueryKeys('questions');
  * the wrong round's problems.
  */
 export async function getQuestionsByRound(round: number): Promise<Question[]> {
-  const questions = env.NEXT_PUBLIC_USE_MOCK_API
-    ? await readFixture('questionsByRound', round)
-    : await request({
-        url: '/question/round',
-        method: 'GET',
-        schema: envelope(questionListShape),
-      });
+  const questions = await request({
+    url: '/question/round',
+    method: 'GET',
+    schema: envelope(questionListShape),
+  });
   return questions.filter(question => question.round === round);
 }
 
 /** `GET /question/:id` — participant-facing (JWT + ban check only, not admin-gated). */
 export async function getQuestionById(questionId: string): Promise<Question> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('questionById', questionId);
   return request({
     url: `/question/${questionId}`,
     method: 'GET',

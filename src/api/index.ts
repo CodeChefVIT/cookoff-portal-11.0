@@ -12,7 +12,7 @@ export {
 export { request } from './request';
 export { envelope, normalizeWire, unwrapEnvelope } from './wire';
 
-export { getSession, logout, sessionKeys, sessionSchema } from './session';
+export { getSession, sessionKeys, sessionSchema } from './session';
 export type { Session, DashboardQuestionSummary } from './session';
 
 export {
@@ -60,5 +60,3 @@ export type {
 
 export { getRoundTime, remainingMs, timerKeys } from './timer';
 export type { RoundTime } from './timer';
-
-export { readFixture } from './fixtures';

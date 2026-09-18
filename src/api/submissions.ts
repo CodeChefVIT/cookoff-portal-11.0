@@ -1,15 +1,21 @@
 ﻿import * as z from 'zod';
 
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import { uuidSchema } from '@/schemas';
 
-import type { CustomRunResult } from './fixtures';
-import { readFixture } from './fixtures';
 import { request } from './request';
 import { envelope, normalizeWire } from './wire';
 
-export type { CustomRunResult };
+/** What `/runcustom` ran and printed, shaped for the custom-input panel. */
+export interface CustomRunResult {
+  stdout: string | null;
+  stderr: string | null;
+  message: string | null;
+  time?: string;
+  memory?: number;
+  status: { id: number; description: string };
+  isPassed: boolean;
+}
 
 export const CAPABILITIES = {
   runCode: true,
@@ -129,7 +135,6 @@ export const submissionKeys = createQueryKeys('submissions');
 
 export async function submitCode(input: SubmissionRequestInput): Promise<{ submissionId: string }> {
   const payload = submissionRequestSchema.parse(input);
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('submit', payload);
   return request({
     url: '/submit',
     method: 'POST',
@@ -151,7 +156,6 @@ export async function getSubmissionResult(
   submissionId: string,
   signal?: AbortSignal
 ): Promise<SubmissionVerdict> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('result', submissionId);
   return request({
     url: `/result/${submissionId}`,
     method: 'GET',
@@ -166,7 +170,6 @@ export async function runCode(
   publicTestcases: { id: string }[] = []
 ): Promise<SubmissionVerdict> {
   const payload = submissionRequestSchema.parse(input);
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('runCode', payload);
 
   const results = await request({
     url: '/runcode',
@@ -214,7 +217,6 @@ export async function runCode(
 
 export async function runCustom(input: CustomRunRequestInput): Promise<CustomRunResult> {
   const payload = customRunRequestSchema.parse(input);
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('runCustom', payload);
 
   const raw = await request({
     url: '/runcustom',

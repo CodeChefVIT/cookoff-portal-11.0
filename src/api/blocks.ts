@@ -1,10 +1,8 @@
 import * as z from 'zod';
 
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import type { VisualBlock } from '@/types';
 
-import { readFixture } from './fixtures';
 import { request } from './request';
 import { normalizeWire, unwrapEnvelope } from './wire';
 
@@ -35,7 +33,6 @@ export const blockKeys = createQueryKeys('blocks');
  * strips it before the list schema runs.
  */
 export async function getVisualBlocks(questionId: string): Promise<VisualBlock[]> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('visualBlocks', questionId);
   const raw = await request<unknown>({ url: `/question/${questionId}/blocks`, method: 'GET' });
   return visualBlockListSchema.parse(unwrapEnvelope(raw));
 }

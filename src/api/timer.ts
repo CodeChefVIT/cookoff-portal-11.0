@@ -1,9 +1,7 @@
 import * as z from 'zod';
 
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 
-import { readFixture } from './fixtures';
 import { request } from './request';
 import { envelope } from './wire';
 
@@ -73,7 +71,6 @@ function runningEndTime(
 export const timerKeys = createQueryKeys('round-time');
 
 export async function getRoundTime(): Promise<RoundTime> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('time');
   return request({ url: '/getTime', method: 'GET', schema: roundTimeSchema });
 }
 

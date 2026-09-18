@@ -1,8 +1,6 @@
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 
 import { ERROR_CODES, isApiError, isRoundNotRunningError } from './errors';
-import { readFixture } from './fixtures';
 import { request } from './request';
 
 export const attemptKeys = createQueryKeys('attempts');
@@ -25,8 +23,6 @@ export interface AttemptOutcome {
  * "insufficient balance"; anything else (e.g. `NOT_QUALIFIED`) is thrown.
  */
 export async function createAttempt(questionId: string): Promise<AttemptOutcome> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('attempt', questionId);
-
   try {
     await request({ url: `/attempts/${questionId}`, method: 'POST', data: {} });
     return { unlocked: true, insufficientBalance: false, roundNotRunning: false };

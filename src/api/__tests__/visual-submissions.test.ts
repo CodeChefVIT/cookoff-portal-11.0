@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 
-import { getFixtureVisualSolution, readFixture } from '../fixtures';
 import { visualSubmissionRequestSchema, visualSubmissionResultSchema } from '../visual-submissions';
 import { unwrapEnvelope } from '../wire';
 
@@ -78,37 +77,6 @@ describe('visualSubmissionResultSchema', () => {
   it('defaults alreadyAnswered to false when absent', () => {
     const parsed = visualSubmissionResultSchema.parse({ pointsAwarded: 0 });
     expect(parsed.alreadyAnswered).toBe(false);
-  });
-});
-
-describe('readFixture("submitVisual")', () => {
-  const questionId = '0a0a0a0a-1a1a-4a1a-8a1a-0a0a0a0a0a01';
-
-  it('awards points for the exact ordered solution', async () => {
-    const solution = getFixtureVisualSolution(questionId);
-    expect(solution).toBeDefined();
-
-    const result = await readFixture('submitVisual', { questionId, blocks: solution! });
-    expect(result.correct).toBe(true);
-    expect(result.pointsAwarded).toBeGreaterThan(0);
-  });
-
-  it('rejects a chain in the wrong order', async () => {
-    const solution = getFixtureVisualSolution(questionId);
-    const wrongOrder = [...solution!].reverse();
-
-    const result = await readFixture('submitVisual', { questionId, blocks: wrongOrder });
-    expect(result.correct).toBe(false);
-    expect(result.pointsAwarded).toBe(0);
-  });
-
-  it('rejects an unknown question id', async () => {
-    const result = await readFixture('submitVisual', {
-      questionId: '99999999-9999-4999-8999-999999999999',
-      blocks: ['22222222-2222-4222-8222-222222222222'],
-    });
-    expect(result.correct).toBe(false);
-    expect(result.pointsAwarded).toBe(0);
   });
 });
 
