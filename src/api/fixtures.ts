@@ -79,7 +79,7 @@ const R3_QUESTION_IDS = [
 const R2_FIXTURE_QUESTIONS: Question[] = R2_QUESTION_IDS.map((id, index) =>
   makeQuestion({
     id,
-    title: `Chef's Pantry Problem ${index + 1}`,
+    title: `Round 2 Problem ${index + 1}`,
     round: 2,
     points: 10 + index * 5,
   })
@@ -88,7 +88,7 @@ const R2_FIXTURE_QUESTIONS: Question[] = R2_QUESTION_IDS.map((id, index) =>
 const R3_FIXTURE_QUESTIONS: Question[] = R3_QUESTION_IDS.map((id, index) =>
   makeQuestion({
     id,
-    title: `The Crucible Problem ${index + 1}`,
+    title: `Round 3 Problem ${index + 1}`,
     round: 3,
     points: 25 + index * 25,
   })
@@ -305,7 +305,11 @@ function buildFixture<K extends keyof FixtureMap>(
     return (puzzle ? [...puzzle.blocks].reverse() : []) as FixtureMap[K][1];
   }
   if (key === 'attempt') {
-    const outcome: AttemptOutcome = { unlocked: true, insufficientBalance: false };
+    const outcome: AttemptOutcome = {
+      unlocked: true,
+      insufficientBalance: false,
+      roundNotRunning: false,
+    };
     return outcome as FixtureMap[K][1];
   }
   if (key === 'submit') {

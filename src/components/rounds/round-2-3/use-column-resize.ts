@@ -39,6 +39,9 @@ export function useColumnResize() {
   const setColumns = useUiStore(state => state.setCodeColumns);
 
   function onPointerDown(event: PointerEvent<HTMLElement>) {
+    // Only the primary button drags — a right-click on the gutter used to
+    // start a resize that then followed the pointer around.
+    if (event.button !== 0) return;
     const handle = event.currentTarget;
     const widths = neighbourWidths(handle);
     if (!widths) return;
@@ -48,16 +51,25 @@ export function useColumnResize() {
     const start = columns;
     handle.setPointerCapture(event.pointerId);
 
+    // Unlike the R1 columns and the results split, this value has a second
+    // reader: `QuestionWorkspace` builds the question-tab overlay from the same
+    // grid. Buffering the drag in local state would leave the tabs behind the
+    // divider, so this one keeps writing through on every move.
     const onMove = (move: globalThis.PointerEvent) =>
       setColumns(resizeColumns(start, widths[0], widths[1], move.clientX - startX));
     const onEnd = () => {
       handle.removeEventListener('pointermove', onMove);
       handle.removeEventListener('pointerup', onEnd);
       handle.removeEventListener('pointercancel', onEnd);
+      // Capture can be lost without a pointerup/pointercancel (an alert, a
+      // window switch); without this the move listener stayed bound and the
+      // pane jumped on the next hover.
+      handle.removeEventListener('lostpointercapture', onEnd);
     };
     handle.addEventListener('pointermove', onMove);
     handle.addEventListener('pointerup', onEnd);
     handle.addEventListener('pointercancel', onEnd);
+    handle.addEventListener('lostpointercapture', onEnd);
   }
 
   function onKeyDown(event: KeyboardEvent<HTMLElement>) {

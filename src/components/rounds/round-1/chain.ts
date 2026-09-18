@@ -38,3 +38,29 @@ export function moveItem<T>(items: T[], from: number, to: number): T[] {
   next.splice(to, 0, moved);
   return next;
 }
+
+/** The vertical extent of a dragged or hovered element, as dnd-kit reports it. */
+export interface VerticalRect {
+  top: number;
+  height: number;
+}
+
+/**
+ * Where a palette block dropped over the chain item at `overIndex` should
+ * land. Dropping past the hovered block's midpoint inserts *after* it, so the
+ * final slot is reachable by dragging.
+ *
+ * Without the midpoint test every drop landed before the hovered block, and
+ * once the chain filled its scroll container no reachable target appended —
+ * a contestant who dragged rather than tapped could never build the last step.
+ */
+export function insertIndexFor(
+  overIndex: number,
+  activeRect: VerticalRect | null | undefined,
+  overRect: VerticalRect | null | undefined
+): number {
+  if (!activeRect || !overRect) return overIndex;
+  const activeCenter = activeRect.top + activeRect.height / 2;
+  const overCenter = overRect.top + overRect.height / 2;
+  return activeCenter > overCenter ? overIndex + 1 : overIndex;
+}

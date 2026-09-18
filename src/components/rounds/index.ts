@@ -15,5 +15,5 @@ export * from './BuyInGate';
 export * from './BuyInLock';
 export * from './RoundEntry';
 export * from './ProblemPanel';
-export * from './SolvedBox';
+export * from './VerdictBox';
 export * from './hooks';

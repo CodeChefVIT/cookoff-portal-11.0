@@ -4,6 +4,7 @@ export {
   isApiError,
   isNotPurchasedError,
   isNotQualifiedError,
+  isRoundNotRunningError,
   toApiError,
 } from './errors';
 export { request } from './request';

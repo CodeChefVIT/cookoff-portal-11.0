@@ -74,8 +74,21 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
             Retry
           </button>
         </div>
+      ) : question.round !== roundId ? (
+        // `GET /question/:id` is not round-scoped, so a hand-typed or shared
+        // URL can address another round's question. Rendering it under this
+        // round's config would apply the wrong buy-in rules — on R3
+        // (`hasBuyIn: false`, `autoAttempt: true`) that silently debits an R2
+        // question's buy-in with no confirmation box.
+        <div
+          className={cn('flex min-h-[50dvh] flex-col items-center justify-center gap-3', TABS_BAND)}
+        >
+          <p className="text-sm text-muted-foreground">
+            This problem belongs to Round {question.round}, not Round {roundId}.
+          </p>
+        </div>
       ) : (
-        <QuestionReady roundId={roundId} questionId={questionId} question={question} />
+        <QuestionReady roundId={roundId} question={question} />
       )}
     </div>
   );
@@ -83,7 +96,6 @@ export function QuestionWorkspace({ roundId, questionId }: QuestionWorkspaceProp
 
 interface QuestionReadyProps {
   roundId: 2 | 3;
-  questionId: string;
   question: Question;
 }
 
@@ -92,12 +104,14 @@ interface QuestionReadyProps {
  * `402/403` from `/submit` (stale unlock cache) forces the gate closed again,
  * per AGENTS.md rule 6: the server always wins.
  */
-function QuestionReady({ roundId, questionId, question }: QuestionReadyProps) {
+function QuestionReady({ roundId, question }: QuestionReadyProps) {
   const [forceLocked, setForceLocked] = useState(false);
 
   return (
     <BuyInGate
-      questionId={questionId}
+      // The server's canonical id, so the attempt mutation key matches the one
+      // `CodeEngine` uses for its draft and submission state.
+      questionId={question.id}
       roundId={roundId}
       question={question}
       forceLocked={forceLocked}
@@ -106,6 +120,10 @@ function QuestionReady({ roundId, questionId, question }: QuestionReadyProps) {
         question={question}
         roundId={roundId}
         onNotPurchased={() => setForceLocked(true)}
+        // Clears the forced re-lock once the server accepts a fresh unlock.
+        // Without this the flag was one-way: after a single stale-unlock 403,
+        // the `question.bought` path stayed ANDed with `!forceLocked` forever.
+        onPurchased={() => setForceLocked(false)}
       />
     </BuyInGate>
   );

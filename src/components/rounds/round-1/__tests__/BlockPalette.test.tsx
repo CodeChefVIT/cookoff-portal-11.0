@@ -39,9 +39,13 @@ describe('BlockPalette', () => {
     expect(screen.getByRole('button', { name: 'Print "World"' })).toBeInTheDocument();
   });
 
-  it('shows the empty-state copy once every block is placed', () => {
+  // The tray emptying does not mean the chain is correct — questions ship with
+  // decoy blocks and the grader matches the solution exactly, length included.
+  it('says the tray is empty without implying the chain is complete', () => {
     renderPalette([]);
-    expect(screen.getByText('Every block is in your chain.')).toBeInTheDocument();
+    expect(screen.getByText(/No blocks left to place/)).toBeInTheDocument();
+    expect(screen.getByText(/Not every block belongs in the answer/)).toBeInTheDocument();
+    expect(screen.queryByText('Every block is in your chain.')).not.toBeInTheDocument();
   });
 
   it('is labelled for assistive tech', () => {

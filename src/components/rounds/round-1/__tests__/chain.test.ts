@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { VisualBlock } from '../../types';
-import { moveItem, paletteFor, resolveChain } from '../chain';
+import { insertIndexFor, moveItem, paletteFor, resolveChain } from '../chain';
 
 const BLOCKS: VisualBlock[] = [
   { id: 'a', content: 'Set count to 1' },
@@ -62,5 +62,28 @@ describe('moveItem', () => {
     const original = [...items];
     moveItem(items, 0, 2);
     expect(items).toEqual(original);
+  });
+});
+
+describe('insertIndexFor', () => {
+  const over = { top: 100, height: 40 }; // midpoint at 120
+
+  it('inserts before the hovered block when dropped above its midpoint', () => {
+    expect(insertIndexFor(2, { top: 80, height: 40 }, over)).toBe(2); // centre 100
+  });
+
+  it('inserts after the hovered block when dropped below its midpoint', () => {
+    expect(insertIndexFor(2, { top: 120, height: 40 }, over)).toBe(3); // centre 140
+  });
+
+  // The whole point of the midpoint test: the final slot has to be reachable.
+  it('appends past the last block', () => {
+    const chainLength = 4;
+    expect(insertIndexFor(chainLength - 1, { top: 200, height: 40 }, over)).toBe(chainLength);
+  });
+
+  it('falls back to the hovered index when a rect is missing', () => {
+    expect(insertIndexFor(1, null, over)).toBe(1);
+    expect(insertIndexFor(1, { top: 300, height: 40 }, undefined)).toBe(1);
   });
 });

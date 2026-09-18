@@ -1,13 +1,14 @@
 'use client';
 
-import { useIsMutating } from '@tanstack/react-query';
+import { useIsMutating, useMutationState } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { attemptKeys, isApiError } from '@/api';
+import { attemptKeys, isApiError, visualSubmissionKeys } from '@/api';
 import { Button } from '@/components/ui/button';
+import { useMounted } from '@/hooks/use-mounted';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
-import { useRoundExpired, useVisualSubmission } from '../hooks';
+import { useQuestion, useRoundExpired, useVisualSubmission } from '../hooks';
 
 export interface ChainSubmitButtonProps {
   questionId: string;
@@ -34,14 +35,41 @@ export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
     // explicit "Clear chain" action in WorkspaceCanvas does that.
     submission.mutate(chain, {
       onError: error => {
-        toast.error(isApiError(error) ? error.message : 'Could not submit — try again.');
+        toast.error(isApiError(error) ? error.message : 'Could not submit. Give it another go.');
       },
     });
   }
 
-  // `BuyInGate` auto-creates the R1 attempt on open; submitting before it lands would 403 (L14).
-  const unlocking = useIsMutating({ mutationKey: attemptKeys.detail(questionId) }) > 0;
-  const disabled = isExpired || chain.length === 0 || submission.isPending || unlocking;
+  // `BuyInGate` auto-creates the R1 attempt on open; submitting before it lands
+  // 403s with "Question not bought yet" (L14) — nonsense copy for a round with
+  // no buy-in. Gate on the unlock having *succeeded*, not merely on it being
+  // in flight: the unlock is fired from an effect, so on the first paint there
+  // is no mutation to observe yet and a restored chain could be submitted
+  // straight into that 403.
+  const unlockStatuses = useMutationState({
+    filters: { mutationKey: attemptKeys.detail(questionId) },
+    select: mutation => mutation.state.status,
+  });
+  // Two signals, either of which means the attempt exists server-side. The
+  // mutation alone is not enough: `BuyInGate` skips the auto-unlock entirely
+  // once `question.bought` is true, so on a question that was already unlocked
+  // — a reload, or coming back to it — there is no mutation to observe and
+  // gating on one alone left Submit permanently dead.
+  const { question } = useQuestion(1, questionId);
+  const unlocked = question?.bought === true || unlockStatuses.at(-1) === 'success';
+
+  // `submission.isPending` only covers *this* mount's mutation instance, so a
+  // question-tab switch and back re-enabled Submit while the first request was
+  // still in flight — two submissions, two contradictory verdicts. The
+  // mutation cache is shared across mounts, so ask it instead.
+  const submitting = useIsMutating({ mutationKey: visualSubmissionKeys.detail(questionId) }) > 0;
+
+  // `chain-store` rehydrates from localStorage after the server render, so the
+  // button's disabled state would otherwise differ between the two passes.
+  const mounted = useMounted();
+
+  const disabled =
+    !mounted || isExpired || chain.length === 0 || submission.isPending || submitting || !unlocked;
 
   return (
     <Button

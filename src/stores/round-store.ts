@@ -4,6 +4,14 @@ import { persist } from 'zustand/middleware';
 
 import { createSelectors } from './create-selectors';
 
+/**
+ * Judge0's C++ id, matching `DEFAULT_LANGUAGE` in
+ * `components/rounds/round-2-3/languages.ts`. Duplicated rather than imported
+ * to keep the store layer free of component imports; `round-store.test.ts`
+ * asserts the two stay in step.
+ */
+export const DEFAULT_LANGUAGE_ID = 54;
+
 interface QuestionDraft {
   sourceCode: string;
   languageId: number;
@@ -24,6 +32,8 @@ interface RoundState {
    */
   setLanguage: (questionId: string, languageId: number, boilerplateSourceCode: string) => void;
   resetDraft: (questionId: string, languageId: number, boilerplateSourceCode: string) => void;
+  /** Drops every question's draft — used when a different account signs in. */
+  resetAll: () => void;
 }
 
 const useRoundStoreBase = create<RoundState>()(
@@ -62,6 +72,7 @@ const useRoundStoreBase = create<RoundState>()(
             },
           };
         }),
+      resetAll: () => set({ drafts: {} }),
       resetDraft: (questionId, languageId, boilerplateSourceCode) =>
         set(state => ({
           drafts: {
@@ -79,11 +90,17 @@ const useRoundStoreBase = create<RoundState>()(
   )
 ) as unknown as UseBoundStore<StoreApi<RoundState>>;
 
+/**
+ * `languageId: 0` used to be the placeholder here, but `0` is not a Judge0
+ * language and `??` does not catch it — a draft created by an edit that landed
+ * before `resetDraft` showed C++ in the selector while submitting `0`, which
+ * `submissionRequestSchema` then rejected with an unexplainable error.
+ */
 function requireDraft(state: RoundState, questionId: string): QuestionDraft {
   return (
     state.drafts[questionId] ?? {
       sourceCode: '',
-      languageId: 0,
+      languageId: DEFAULT_LANGUAGE_ID,
       customInput: '',
       boilerplateSourceCode: '',
     }

@@ -16,11 +16,11 @@ import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
 import { useRoundExpired, useVisualBlocks, useVisualSubmissionState } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
-import { SolvedBox } from '../SolvedBox';
 import type { Question, VisualSubmissionResult } from '../types';
+import { VerdictBox } from '../VerdictBox';
 import { DraggableBlock, WorkspaceCanvas } from './block-workspace';
 import { BlockPalette } from './BlockPalette';
-import { paletteFor, resolveChain } from './chain';
+import { insertIndexFor, paletteFor, resolveChain } from './chain';
 import { scratchPanelVariants } from './scratch-panel';
 import { ScratchLayout } from './ScratchLayout';
 import { ScratchPanelTitle } from './ScratchPanelTitle';
@@ -41,6 +41,13 @@ export interface ScratchEngineProps {
   question: Question;
 }
 
+/**
+ * Which verdict the player has already dismissed, per question. Module state
+ * rather than component state so it survives the remount a question-tab switch
+ * causes; not persisted, so a page reload shows the celebration once more.
+ */
+const dismissedResults = new Map<string, VisualSubmissionResult>();
+
 export function ScratchEngine({ question }: ScratchEngineProps) {
   const blocksQuery = useVisualBlocks(question.id);
   const blocks = blocksQuery.data ?? [];
@@ -56,7 +63,25 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
   const { result, isPending } = useVisualSubmissionState(question.id);
 
   const [activeBlockId, setActiveBlockId] = useState<string | null>(null);
-  const [dismissedResult, setDismissedResult] = useState<VisualSubmissionResult | null>(null);
+  const [dismissedResult, setDismissedResultState] = useState<VisualSubmissionResult | null>(
+    () => dismissedResults.get(question.id) ?? null
+  );
+
+  // Dismissal has to outlive the component: `result` lives in the mutation
+  // cache for the 5min gcTime, but this state died on every unmount, so
+  // tabbing away from a solved question and back re-opened the celebration
+  // over the workspace.
+  const setDismissedResult = (value: VisualSubmissionResult | null) => {
+    if (value === null) dismissedResults.delete(question.id);
+    else dismissedResults.set(question.id, value);
+    setDismissedResultState(value);
+  };
+
+  const [trackedQuestionId, setTrackedQuestionId] = useState(question.id);
+  if (trackedQuestionId !== question.id) {
+    setTrackedQuestionId(question.id);
+    setDismissedResultState(dismissedResults.get(question.id) ?? null);
+  }
 
   // Drop any id the server no longer returns for this question — a stale
   // chain persisted from before the question's blocks changed.
@@ -73,7 +98,10 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
   const palette = paletteFor(blocks, chain);
   const chainBlocks = resolveChain(blocks, chain);
   const activeBlock = blocks.find(b => b.id === activeBlockId) ?? null;
-  const disabled = isExpired;
+  // Frozen while a verdict is in flight too: `mutate` snapshots the chain at
+  // call time, so editing during "Checking your chain…" produced a verdict
+  // describing the old chain while the screen showed the new one.
+  const disabled = isExpired || isPending;
 
   function onDragStart(event: DragStartEvent) {
     setActiveBlockId(String(event.active.id));
@@ -95,7 +123,13 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
 
     if (origin === 'palette') {
       const overIndex = chain.indexOf(String(over.id));
-      addBlock(question.id, activeId, overIndex === -1 ? undefined : overIndex);
+      addBlock(
+        question.id,
+        activeId,
+        overIndex === -1
+          ? undefined
+          : insertIndexFor(overIndex, active.rect.current.translated, over.rect)
+      );
       return;
     }
 
@@ -107,7 +141,9 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
     }
   }
 
-  const resultOpen = result !== undefined && result.correct && result !== dismissedResult;
+  // Both outcomes open the box — a wrong answer used to be a small banner under
+  // the workspace that was easy to miss next to a full-screen celebration.
+  const resultOpen = result !== undefined && result !== dismissedResult;
 
   if (blocksQuery.isLoading) {
     return (
@@ -162,7 +198,7 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
                 onClear={() => clearChain(question.id)}
                 disabled={disabled}
               />
-              <VisualVerdict result={result} isSubmitting={isPending} />
+              <VisualVerdict isSubmitting={isPending} />
             </div>
           }
           palette={
@@ -178,8 +214,9 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
         </DragOverlay>
       </DndContext>
       {result && (
-        <SolvedBox
+        <VerdictBox
           open={resultOpen}
+          correct={result.correct}
           onClose={() => setDismissedResult(result)}
           question={question}
           pointsAwarded={result.pointsAwarded}

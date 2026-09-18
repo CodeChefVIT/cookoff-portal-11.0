@@ -111,3 +111,32 @@ describe('readFixture("submitVisual")', () => {
     expect(result.pointsAwarded).toBe(0);
   });
 });
+
+describe('visualSubmissionResultSchema explicit correctness', () => {
+  // `submit_round1.go` only pays out while the attempt is still "bought", so a
+  // resubmission on a settled attempt scores zero with a correct chain. Before
+  // the backend sent `correct`, that was rendered as "Not quite — rearrange
+  // your chain and try again" on a provably right answer.
+  it('trusts a correct flag even when no points were awarded', () => {
+    const parsed = visualSubmissionResultSchema.parse({
+      points_awarded: 0,
+      correct: true,
+      already_answered: true,
+    });
+    expect(parsed).toMatchObject({ correct: true, alreadyAnswered: true, pointsAwarded: 0 });
+  });
+
+  it('reports a genuinely wrong chain as incorrect', () => {
+    const parsed = visualSubmissionResultSchema.parse({
+      points_awarded: 0,
+      correct: false,
+      already_answered: false,
+    });
+    expect(parsed.correct).toBe(false);
+  });
+
+  it('still derives correctness when an older backend omits the flag', () => {
+    expect(visualSubmissionResultSchema.parse({ points_awarded: 25 }).correct).toBe(true);
+    expect(visualSubmissionResultSchema.parse({ points_awarded: 0 }).correct).toBe(false);
+  });
+});

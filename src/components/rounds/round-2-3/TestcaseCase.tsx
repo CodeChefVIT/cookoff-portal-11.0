@@ -20,7 +20,7 @@ export function TestcaseCase({ testcase, result }: TestcaseCaseProps) {
   if (testcase.hidden) {
     return (
       <p className="mr-[20px] ml-[21px] font-sans text-sm text-code-case-ink">
-        Hidden test case —{' '}
+        Hidden test case:{' '}
         {result && isPassed(result) ? 'passed' : 'result withheld until you pass it'}.
       </p>
     );
@@ -28,7 +28,7 @@ export function TestcaseCase({ testcase, result }: TestcaseCaseProps) {
 
   const output = result
     ? result.description && result.description !== result.status
-      ? `${result.status} — ${result.description}`
+      ? `${result.status}: ${result.description}`
       : result.status
     : '';
 

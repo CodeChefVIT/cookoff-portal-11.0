@@ -38,6 +38,8 @@ export interface BuyInGateProps {
 }
 
 const BET_FAILED = 'Couldn’t place your bet. Try again.';
+/** 423 — nothing is wrong with the bet or the balance; the round is closed. */
+const ROUND_NOT_RUNNING = 'This round is not running right now, so your coins were not touched.';
 
 export function BuyInGate({
   children,
@@ -68,12 +70,15 @@ export function BuyInGate({
   useEffect(() => {
     if (!config.hasBuyIn || !forceLocked) return;
     reset();
-    toast.error('The server didn’t recognize your bet — place it again before submitting.');
+    toast.error('The server did not recognise your bet. Place it again before you submit.');
   }, [config.hasBuyIn, forceLocked, reset]);
 
   if (!config.hasBuyIn) {
     const unlockFailed =
       config.autoAttempt && (attempt.isError || attempt.data?.unlocked === false);
+    // A 423 is not a broken unlock — the round simply isn't open. Retrying
+    // cannot help until an admin starts it, so don't offer the button.
+    const roundNotRunning = attempt.data?.roundNotRunning === true;
     return (
       <>
         {unlockFailed && (
@@ -81,10 +86,18 @@ export function BuyInGate({
             role="alert"
             className="mx-4 mb-3 flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive lg:mx-[31px]"
           >
-            <span>Couldn&rsquo;t unlock this question — submitting will fail until it is.</span>
-            <Button size="sm" variant="outline" onClick={() => unlock()}>
-              Retry unlock
-            </Button>
+            {roundNotRunning ? (
+              <span>This round is not running right now. Hold tight.</span>
+            ) : (
+              <>
+                <span>
+                  Couldn&rsquo;t unlock this question. Submitting will not work until it does.
+                </span>
+                <Button size="sm" variant="outline" onClick={() => unlock()}>
+                  Retry unlock
+                </Button>
+              </>
+            )}
           </div>
         )}
         {children}
@@ -98,15 +111,19 @@ export function BuyInGate({
 
   function handleEnter() {
     if (balance < buyIn) {
-      toast.error(`Not enough coins — you need ${buyIn - balance} more.`);
+      toast.error(`Not enough coins. You need ${buyIn - balance} more.`);
       return;
     }
     attempt.mutate(undefined, {
       onSuccess: outcome => {
         if (outcome.unlocked) return;
+        if (outcome.roundNotRunning) {
+          toast.error(ROUND_NOT_RUNNING);
+          return;
+        }
         toast.error(
           outcome.insufficientBalance
-            ? `Not enough coins — you need ${buyIn - balance} more.`
+            ? `Not enough coins. You need ${buyIn - balance} more.`
             : BET_FAILED
         );
       },

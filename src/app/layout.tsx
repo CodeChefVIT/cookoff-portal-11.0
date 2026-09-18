@@ -100,7 +100,7 @@ const novaSquare = Nova_Square({ variable: '--font-timeline', subsets: ['latin']
 
 export const metadata: Metadata = {
   title: 'CookOff 11.0',
-  description: 'CodeChef-VIT CookOff 11.0 — competitive programming contest platform.',
+  description: 'The competitive programming contest platform for CodeChef-VIT CookOff 11.0.',
 };
 
 export default function RootLayout({

@@ -1,7 +1,7 @@
 import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 
-import { isApiError } from './errors';
+import { isApiError, isRoundNotRunningError } from './errors';
 import { readFixture } from './fixtures';
 import { request } from './request';
 
@@ -12,6 +12,8 @@ export interface AttemptOutcome {
   unlocked: boolean;
   /** Set when the server rejected the buy-in for an affordability reason. */
   insufficientBalance: boolean;
+  /** Set on a `423` — the round is stopped, or the timer is on another round. */
+  roundNotRunning: boolean;
 }
 
 /**
@@ -27,13 +29,16 @@ export async function createAttempt(questionId: string): Promise<AttemptOutcome>
 
   try {
     await request({ url: `/attempts/${questionId}`, method: 'POST', data: {} });
-    return { unlocked: true, insufficientBalance: false };
+    return { unlocked: true, insufficientBalance: false, roundNotRunning: false };
   } catch (error) {
     if (isApiError(error) && error.status === 409) {
-      return { unlocked: true, insufficientBalance: false };
+      return { unlocked: true, insufficientBalance: false, roundNotRunning: false };
+    }
+    if (isRoundNotRunningError(error)) {
+      return { unlocked: false, insufficientBalance: false, roundNotRunning: true };
     }
     if (isApiError(error) && (error.status === 402 || error.status === 403)) {
-      return { unlocked: false, insufficientBalance: true };
+      return { unlocked: false, insufficientBalance: true, roundNotRunning: false };
     }
     throw error;
   }

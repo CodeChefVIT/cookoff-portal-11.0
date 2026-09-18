@@ -29,18 +29,32 @@ describe('summarizeRound', () => {
         question('c', 5, 'answered'),
         question('d', 20, 'bought'),
       ])
-    ).toEqual({ completed: 3, incomplete: 1, percent: 75, score: 25 });
+    ).toEqual({ completed: 3, incomplete: 1, percent: 75, score: 25, totalPoints: 45 });
   });
 
   it('reports zero percent for a round with no questions', () => {
-    expect(summarizeRound([])).toEqual({ completed: 0, incomplete: 0, percent: 0, score: 0 });
+    expect(summarizeRound([])).toEqual({
+      completed: 0,
+      incomplete: 0,
+      percent: 0,
+      score: 0,
+      totalPoints: 0,
+    });
   });
 });
 
 describe('timelineMilestone', () => {
   it('puts each round on its own start flag and clamps out-of-range rounds', () => {
+    expect(timelineMilestone(0)).toBe(0);
     expect(timelineMilestone(1)).toBe(1);
+    expect(timelineMilestone(2)).toBe(2);
     expect(timelineMilestone(-1)).toBe(0);
-    expect(timelineMilestone(9)).toBe(3);
+    expect(timelineMilestone(9)).toBe(4);
+  });
+
+  // Round 3 has its own flag now, so a finalist rests on it instead of being
+  // pushed onto END as if the contest were over.
+  it('puts a round 3 finalist on the round 3 flag, not END', () => {
+    expect(timelineMilestone(3)).toBe(3);
   });
 });

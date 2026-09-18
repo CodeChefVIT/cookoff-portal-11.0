@@ -29,6 +29,8 @@ interface ChainState {
   /** Reorders the chain, moving the item at `from` to `to`. Out-of-range indices are a no-op. */
   moveBlock: (questionId: string, from: number, to: number) => void;
   clearChain: (questionId: string) => void;
+  /** Drops every question's chain — used when a different account signs in. */
+  resetAll: () => void;
 }
 
 const useChainStoreBase = create<ChainState>()(
@@ -65,6 +67,7 @@ const useChainStoreBase = create<ChainState>()(
           return { chains: { ...state.chains, [questionId]: next } };
         }),
       clearChain: questionId => set(state => ({ chains: { ...state.chains, [questionId]: [] } })),
+      resetAll: () => set({ chains: {} }),
     }),
     { name: 'chain-store' }
   )

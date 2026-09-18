@@ -299,7 +299,7 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
 
     // Round 3 has no buy-in gate to fall back on, so swallowing this left the player with nothing.
     expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
-    expect(screen.getByText(/isn.t unlocked yet — reopen it and try again/i)).toBeInTheDocument();
+    expect(screen.getByText(/is not unlocked yet\. Reopen it and try again/i)).toBeInTheDocument();
   });
 
   it('names the reason when the round is no longer open for the account', async () => {

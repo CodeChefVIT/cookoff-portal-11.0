@@ -4,14 +4,20 @@ import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
-import { getPublicTestcases, isNotPurchasedError, isNotQualifiedError, testcaseKeys } from '@/api';
+import {
+  getPublicTestcases,
+  isNotPurchasedError,
+  isNotQualifiedError,
+  isRoundNotRunningError,
+  testcaseKeys,
+} from '@/api';
 import { useCodeSubmission, useRoundExpired } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
 import { ProblemPanel } from '../ProblemPanel';
 import { getRoundConfig } from '../round-config';
-import { SolvedBox } from '../SolvedBox';
 import type { Question } from '../types';
+import { VerdictBox } from '../VerdictBox';
 import { EditorToolbar } from './code-editor/EditorToolbar';
 import { LanguageSelector } from './code-editor/LanguageSelector';
 import { MonacoWrapper } from './code-editor/MonacoWrapper';
@@ -37,13 +43,19 @@ export interface CodeEngineProps {
   question: Question;
   roundId: 2 | 3;
   onNotPurchased?: () => void;
+  /** A submission the server accepted — any forced re-lock can be cleared. */
+  onPurchased?: () => void;
 }
 
-export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProps) {
+export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: CodeEngineProps) {
   const testcases = useQuery({
     queryKey: testcaseKeys.detail(question.id),
     queryFn: () => getPublicTestcases(question.id),
     staleTime: Infinity,
+    // Without a retry, one failed fetch stuck for the whole session: an empty
+    // public set makes `TestcasePanel` classify every result as hidden, so the
+    // contestant loses the input/expected/output columns with nothing to click.
+    retry: 3,
   });
 
   // Subscribe to this question's draft: `use.getDraft` only subscribes to the
@@ -72,7 +84,7 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
   // invalidates the round question list.
   const [wasAlreadySolved, setWasAlreadySolved] = useState(question.solved === true);
 
-  const submission = useCodeSubmission(roundId);
+  const submission = useCodeSubmission(roundId, question.id);
   const isExpired = useRoundExpired();
 
   useEffect(() => {
@@ -96,42 +108,66 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
   // A failed submit or result fetch shows Figma `Desktop - 18`'s card over whatever verdict is on screen.
   const [submitFailed, setSubmitFailed] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
-  const [dismissedResultErrorFor, setDismissedResultErrorFor] = useState<string | null>(null);
+  // Keyed on *when* the error happened, not on the submission: dismissing once
+  // must not silence a later failure of the same submission's "Check again".
+  const [dismissedErrorAt, setDismissedErrorAt] = useState<number | null>(null);
   const resultFailed =
     submission.result.isError &&
     !submission.timedOut &&
-    submission.submissionId !== dismissedResultErrorFor;
+    submission.result.errorUpdatedAt !== dismissedErrorAt;
 
   function confirmSubmit() {
     setConfirmSubmitOpen(false);
     setSubmitFailed(false);
     setSubmitError(undefined);
+    // The round can close while this dialog sits open, so re-check here rather
+    // than trusting the button's disabled state from when it was pressed.
+    if (isExpired) {
+      toast.error('The round has ended, so this submission was not sent.');
+      return;
+    }
     submission.submit.mutate(
       { questionId: question.id, languageId, sourceCode },
       {
+        onSuccess: () => onPurchased?.(),
         onError: error => {
           // In R2 a "not purchased" 402/403 re-locks the question instead
           // (BuyInGate). Every other round has no gate to fall back on, so the
           // card is the only thing that tells the player anything.
+          // A 423 must not re-lock the question — the buy-in is still valid,
+          // the round just isn't open.
+          if (isRoundNotRunningError(error)) {
+            setSubmitFailed(true);
+            setSubmitError(
+              'This round is not running right now, so your submission was not judged.'
+            );
+            return;
+          }
           if (isNotPurchasedError(error) && getRoundConfig(roundId).hasBuyIn) return;
           setSubmitFailed(true);
           if (isNotQualifiedError(error)) {
             setSubmitError('This round is no longer open for your account.');
           } else if (isNotPurchasedError(error)) {
-            setSubmitError('This question isn’t unlocked yet — reopen it and try again.');
+            setSubmitError('This question is not unlocked yet. Reopen it and try again.');
           }
         },
       }
     );
   }
 
-  const isSubmitDisabled = isExpired || !sourceCode.trim() || submission.submit.isPending;
+  // Also blocked while the verdict is still being fetched: each result request
+  // holds a 120s server-side long poll, so re-submitting would stack them and
+  // exhaust the browser's per-host connection budget.
+  const isSubmitDisabled =
+    isExpired || !sourceCode.trim() || submission.submit.isPending || submission.result.isFetching;
 
   const placeholder = submission.timedOut
     ? 'Taking longer than expected.'
     : submission.submit.isPending || submission.result.isFetching
       ? 'Judging your submission…'
-      : 'You must run your code first';
+      : submission.result.isError
+        ? 'Couldn’t fetch your verdict.'
+        : 'You must run your code first';
 
   return (
     <>
@@ -177,11 +213,22 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
               onChange={value => setCustomInput(question.id, value)}
             />
           ) : verdict ? (
-            <TestcasePanel testcases={testcases.data ?? []} verdict={verdict} />
+            <TestcasePanel
+              testcases={testcases.data ?? []}
+              verdict={verdict}
+              // Distinguishes "this question has no public cases" from "we
+              // couldn't load them", which otherwise both render as a panel
+              // claiming every result is hidden.
+              testcasesUnavailable={testcases.isError}
+              onRetryTestcases={() => void testcases.refetch()}
+            />
           ) : (
             <ResultsPlaceholder
               message={placeholder}
-              onRetry={submission.timedOut ? submission.retryResult : undefined}
+              // Any result failure is recoverable by asking again — a 500 or a
+              // dropped connection stranded the player on "You must run your
+              // code first" with no way back to their verdict.
+              onRetry={submission.result.isError ? submission.retryResult : undefined}
             />
           )
         }
@@ -192,7 +239,7 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
         onClose={() => {
           setSubmitFailed(false);
           setSubmitError(undefined);
-          setDismissedResultErrorFor(submission.submissionId);
+          setDismissedErrorAt(submission.result.errorUpdatedAt);
         }}
       />
       <ConfirmSubmitDialog
@@ -202,7 +249,8 @@ export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProp
         isSubmitting={submission.submit.isPending}
       />
       {verdict && allPassed && (
-        <SolvedBox
+        <VerdictBox
+          correct
           open={resultOpen}
           onClose={() => {
             setDismissedSubmissionId(verdict.submissionId);

@@ -71,16 +71,34 @@ const submissionResultShape = z.object({
   submissionTime: z.string().optional(),
   /** Overall verdict, e.g. "All 3 testcases passed" or "2/3 testcases passed (Wrong Answer)". */
   description: z.string().default(''),
-  testcases: z.array(
-    z
-      .looseObject({})
-      .transform(raw => testcaseResultShape.parse(normalizeWire(raw, TESTCASE_RESULT_FIELDS)))
-  ),
+  /**
+   * `dto.TestcaseResult.ID` is the *testcase* id and ships as `id`
+   * (`internal/dto/result.go:4`), so it needs the same remap the submission
+   * level does for `submissionId` below. A nil `Testcases` slice marshals to
+   * `null`, hence the same null-tolerance every other list schema uses.
+   */
+  testcases: z
+    .union([z.array(z.unknown()), z.null(), z.undefined()])
+    .transform(value => value ?? [])
+    .pipe(
+      z.array(
+        z.looseObject({}).transform(raw => {
+          const wire = normalizeWire(raw, TESTCASE_RESULT_FIELDS);
+          return testcaseResultShape.parse({ ...wire, testcaseId: wire.id });
+        })
+      )
+    ),
 });
 
 export type SubmissionVerdict = z.infer<typeof submissionResultShape>;
 
-const resultShape = z.looseObject({}).transform(raw => {
+/**
+ * Exported so the wire contract is unit-testable without mocking axios — the
+ * `/result/:id` shape is the one layer `QuestionWorkspace.test.tsx` bypasses
+ * (it mocks `getSubmissionResult` wholesale), which is how the missing
+ * `testcaseId` remap survived.
+ */
+export const submissionResultSchema = z.looseObject({}).transform(raw => {
   const wire = normalizeWire(raw, SUBMISSION_RESULT_FIELDS);
   return submissionResultShape.parse({ ...wire, submissionId: wire.id });
 });
@@ -123,12 +141,16 @@ export async function submitCode(input: SubmissionRequestInput): Promise<{ submi
  * submission still hadn't finished after 2 minutes; the caller offers a
  * manual "Check again" instead of hammering the endpoint.
  */
-export async function getSubmissionResult(submissionId: string): Promise<SubmissionVerdict> {
+export async function getSubmissionResult(
+  submissionId: string,
+  signal?: AbortSignal
+): Promise<SubmissionVerdict> {
   if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('result', submissionId);
   return request({
     url: `/result/${submissionId}`,
     method: 'GET',
-    schema: envelope(resultShape),
+    schema: envelope(submissionResultSchema),
     timeout: 130_000,
+    signal,
   });
 }

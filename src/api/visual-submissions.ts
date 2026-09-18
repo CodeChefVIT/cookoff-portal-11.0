@@ -40,9 +40,10 @@ export const visualSubmissionResultSchema = z
   .transform(raw => visualSubmissionResultShape.parse(normalizeWire(raw, VISUAL_RESULT_FIELDS)))
   .transform((result): VisualSubmissionResult => ({
     ...result,
-    // `dto.SubmitVisualSolutionResponse` (round1.go) sends only
-    // `points_awarded` today — no `correct` flag. Derive it until the
-    // backend adds one explicitly; this is the only place that guesses.
+    // `dto.SubmitVisualSolutionResponse` now sends `correct` and
+    // `already_answered` explicitly. The `pointsAwarded > 0` fallback is kept
+    // only for an older backend: it is wrong for a resubmission on a settled
+    // attempt, which scores zero even though the chain is right.
     correct: result.correct ?? result.pointsAwarded > 0,
   }));
 
