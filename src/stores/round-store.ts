@@ -140,3 +140,15 @@ function withSourceCode(draft: QuestionDraft, sourceCode: string): QuestionDraft
 }
 
 export const useRoundStore = createSelectors(useRoundStoreBase);
+
+type Persisted = { persist: { rehydrate: () => Promise<void> | void } };
+
+// Every write persists this tab's whole state, so a second portal tab would
+// overwrite the drafts the first one saved. Pick up the other tab's writes
+// before making our own.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', event => {
+    if (event.key === 'round-store')
+      void (useRoundStoreBase as unknown as Persisted).persist.rehydrate();
+  });
+}
