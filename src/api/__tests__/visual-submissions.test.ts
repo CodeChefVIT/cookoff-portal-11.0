@@ -47,11 +47,12 @@ describe('visualSubmissionRequestSchema', () => {
 });
 
 describe('visualSubmissionResultSchema', () => {
-  it('parses camelCase wire fields (portal convention)', () => {
+  it('maps dto.SubmitVisualSolutionResponse to camelCase', () => {
     const parsed = visualSubmissionResultSchema.parse({
-      pointsAwarded: 10,
+      status: 'success',
+      points_awarded: 10,
       correct: true,
-      alreadyAnswered: false,
+      already_answered: false,
     });
     expect(parsed).toEqual({ pointsAwarded: 10, correct: true, alreadyAnswered: false });
   });
@@ -60,22 +61,14 @@ describe('visualSubmissionResultSchema', () => {
     const envelope = {
       success: true,
       message: 'Visual solution submitted successfully',
-      data: { points_awarded: 25 },
+      data: { points_awarded: 25, correct: true },
     };
     const parsed = visualSubmissionResultSchema.parse(unwrapEnvelope(envelope));
     expect(parsed.pointsAwarded).toBe(25);
   });
 
-  it('derives correct from pointsAwarded when the backend omits the flag (dto/round1.go gap)', () => {
-    const solved = visualSubmissionResultSchema.parse({ pointsAwarded: 10 });
-    expect(solved.correct).toBe(true);
-
-    const wrong = visualSubmissionResultSchema.parse({ pointsAwarded: 0 });
-    expect(wrong.correct).toBe(false);
-  });
-
   it('defaults alreadyAnswered to false when absent', () => {
-    const parsed = visualSubmissionResultSchema.parse({ pointsAwarded: 0 });
+    const parsed = visualSubmissionResultSchema.parse({ points_awarded: 0, correct: false });
     expect(parsed.alreadyAnswered).toBe(false);
   });
 });
@@ -103,8 +96,7 @@ describe('visualSubmissionResultSchema explicit correctness', () => {
     expect(parsed.correct).toBe(false);
   });
 
-  it('still derives correctness when an older backend omits the flag', () => {
-    expect(visualSubmissionResultSchema.parse({ points_awarded: 25 }).correct).toBe(true);
-    expect(visualSubmissionResultSchema.parse({ points_awarded: 0 }).correct).toBe(false);
+  it('rejects a response without the correct flag instead of guessing from points', () => {
+    expect(() => visualSubmissionResultSchema.parse({ points_awarded: 25 })).toThrow();
   });
 });

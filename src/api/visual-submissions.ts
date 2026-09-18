@@ -5,7 +5,7 @@ import { uuidSchema } from '@/schemas';
 import type { VisualSubmissionResult } from '@/types';
 
 import { request } from './request';
-import { normalizeWire, unwrapEnvelope } from './wire';
+import { envelope, normalizeWire } from './wire';
 
 /**
  * A block can only sit in one slot of the chain (Round 1 blocks are used
@@ -29,26 +29,21 @@ const VISUAL_RESULT_FIELDS = ['pointsAwarded', 'correct', 'alreadyAnswered'] as 
 
 const visualSubmissionResultShape = z.object({
   pointsAwarded: z.coerce.number().default(0),
-  correct: z.boolean().optional(),
+  correct: z.boolean(),
   alreadyAnswered: z.boolean().default(false),
 });
 
+/** `dto.SubmitVisualSolutionResponse` — `correct` is sent explicitly, never derived from points. */
 export const visualSubmissionResultSchema = z
   .looseObject({})
-  .transform(raw => visualSubmissionResultShape.parse(normalizeWire(raw, VISUAL_RESULT_FIELDS)))
-  .transform((result): VisualSubmissionResult => ({
-    ...result,
-    // `dto.SubmitVisualSolutionResponse` now sends `correct` and
-    // `already_answered` explicitly. The `pointsAwarded > 0` fallback is kept
-    // only for an older backend: it is wrong for a resubmission on a settled
-    // attempt, which scores zero even though the chain is right.
-    correct: result.correct ?? result.pointsAwarded > 0,
-  }));
+  .transform((raw): VisualSubmissionResult =>
+    visualSubmissionResultShape.parse(normalizeWire(raw, VISUAL_RESULT_FIELDS))
+  );
 
 export const visualSubmissionKeys = createQueryKeys('visual-submissions');
 
 /**
- * `POST /submit/visual` — SPEC-ONLY (LLD, dto/round1.go). Synchronous, no
+ * `POST /submit/visual` (`controllers/submit_round1.go`). Synchronous, no
  * polling: the backend scores the chain against `visual_solutions` inline
  * and returns the verdict in the same response. Never auto-retried
  * (mutations default to `retry: 0`, see `lib/query.ts`).
@@ -57,10 +52,10 @@ export async function submitVisual(
   input: VisualSubmissionRequestInput
 ): Promise<VisualSubmissionResult> {
   const payload = visualSubmissionRequestSchema.parse(input);
-  const raw = await request<unknown>({
+  return request({
     url: '/submit/visual',
     method: 'POST',
     data: { question_id: payload.questionId, blocks: payload.blocks },
+    schema: envelope(visualSubmissionResultSchema),
   });
-  return visualSubmissionResultSchema.parse(unwrapEnvelope(raw));
 }

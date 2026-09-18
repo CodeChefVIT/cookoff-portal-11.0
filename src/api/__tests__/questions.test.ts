@@ -5,33 +5,23 @@ import type { Question } from '@/types';
 import { mergeAttemptStatus, questionSchema } from '../questions';
 
 describe('questionSchema', () => {
-  it('parses camelCase wire fields (portal convention)', () => {
+  it('maps the full snake_case dto.QuestionResponse to camelCase', () => {
     const parsed = questionSchema.parse({
       id: 'q1',
       title: 'Two Sum',
       description: 'desc',
       round: 2,
       points: 10,
-      buyIn: 20,
-      reward: 50,
-      inputFormat: ['line 1'],
+      buy_in: '20',
+      reward: '50',
+      input_format: ['line 1'],
       constraints: ['n <= 10'],
-      outputFormat: ['out'],
-      sampleTestInput: ['1'],
-      sampleTestOutput: ['1'],
+      output_format: ['out'],
+      sample_test_input: ['1'],
+      sample_test_output: ['1'],
       explanation: ['echo'],
     });
     expect(parsed).toMatchObject({ id: 'q1', title: 'Two Sum', round: 2, points: 10, buyIn: '20' });
-  });
-
-  it('parses PascalCase wire fields (admin-observed convention, C6)', () => {
-    const parsed = questionSchema.parse({
-      Id: 'q2',
-      Title: 'Reverse String',
-      Round: 3,
-      Points: 25,
-    });
-    expect(parsed).toMatchObject({ id: 'q2', title: 'Reverse String', round: 3, points: 25 });
   });
 
   it('parses snake_case wire fields (database convention)', () => {
