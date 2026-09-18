@@ -6,6 +6,8 @@ import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
 
+import { useMonacoReady } from './monaco-loader';
+
 /**
  * Code Editor - MonacoWrapper
  *
@@ -78,6 +80,7 @@ export function MonacoWrapper({
   className,
 }: MonacoWrapperProps) {
   const [position, setPosition] = useState({ line: 1, column: 1 });
+  const monacoReady = useMonacoReady();
 
   const handleMount: OnMount = (editor, monaco) => {
     editor.updateOptions({ accessibilitySupport: 'on' });
@@ -141,32 +144,34 @@ export function MonacoWrapper({
         className="min-h-0 flex-1 overflow-hidden rounded-[10px] bg-code-panel"
         onPasteCapture={guardPaste}
       >
-        <Editor
-          height="100%"
-          language={language}
-          value={value}
-          onChange={next => onChange(next ?? '')}
-          beforeMount={defineTheme}
-          onMount={handleMount}
-          theme={THEME}
-          options={{
-            readOnly,
-            minimap: { enabled: false },
-            fontSize: 14,
-            automaticLayout: true,
-            // When a language swap replaces the buffer, Monaco trims the
-            // cursor line's indentation and reports it as a user edit — which
-            // lands the old language's code in the new language's draft.
-            trimAutoWhitespace: false,
-            // See the component comment: both would bypass the paste guard.
-            contextmenu: false,
-            dropIntoEditor: { enabled: false },
-            // The native EditContext input path can skip the DOM paste event;
-            // the classic textarea always raises it for the guard above.
-            editContext: false,
-            padding: { top: 10 },
-          }}
-        />
+        {monacoReady && (
+          <Editor
+            height="100%"
+            language={language}
+            value={value}
+            onChange={next => onChange(next ?? '')}
+            beforeMount={defineTheme}
+            onMount={handleMount}
+            theme={THEME}
+            options={{
+              readOnly,
+              minimap: { enabled: false },
+              fontSize: 14,
+              automaticLayout: true,
+              // When a language swap replaces the buffer, Monaco trims the
+              // cursor line's indentation and reports it as a user edit — which
+              // lands the old language's code in the new language's draft.
+              trimAutoWhitespace: false,
+              // See the component comment: both would bypass the paste guard.
+              contextmenu: false,
+              dropIntoEditor: { enabled: false },
+              // The native EditContext input path can skip the DOM paste event;
+              // the classic textarea always raises it for the guard above.
+              editContext: false,
+              padding: { top: 10 },
+            }}
+          />
+        )}
       </div>
       <p className="relative -mt-[3.4px] h-[30px] shrink-0 text-right font-sans text-[16px] leading-[30px] whitespace-pre text-code-sand">
         {`line: ${position.line}   column: ${position.column}`}

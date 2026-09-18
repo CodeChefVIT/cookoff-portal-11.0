@@ -9,6 +9,11 @@ afterEach(cleanup);
 // Monaco does not render under jsdom (AGENTS.md §16) — every test gets a
 // controlled <textarea> stand-in so MonacoWrapper/CodeEngine stay testable
 // without a real editor instance.
+// The bundled Monaco is a browser-only import; the editor stand-in below needs none of it.
+vi.mock('@/components/rounds/round-2-3/code-editor/monaco-loader', () => ({
+  useMonacoReady: () => true,
+}));
+
 vi.mock('@monaco-editor/react', () => ({
   default: ({
     value,
