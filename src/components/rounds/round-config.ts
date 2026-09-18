@@ -1,4 +1,4 @@
-import type { Question, RoundId } from '@/types';
+import type { RoundId } from '@/types';
 
 /**
  * The single seam between Round 1 ("Scratch"), Round 2 ("Chef's Pantry") and
@@ -87,13 +87,4 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
 
 export function getRoundConfig(roundId: RoundId): RoundConfig {
   return ROUND_CONFIG[roundId];
-}
-
-/**
- * No `difficulty` or ordering column exists on `questions` (L6). `points`
- * is the closest available proxy for difficulty per the product doc's
- * "increasing order of difficulty" requirement; title is a stable tiebreak.
- */
-export function sortQuestionsForRound(questions: Question[]): Question[] {
-  return [...questions].sort((a, b) => a.points - b.points || a.title.localeCompare(b.title));
 }

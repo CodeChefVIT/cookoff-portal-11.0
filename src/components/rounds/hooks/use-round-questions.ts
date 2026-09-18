@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getQuestionsByRound, mergeAttemptStatus, questionKeys } from '@/api';
 
-import { sortQuestionsForRound } from '../round-config';
 import { useSession } from './use-session';
 
 /**
@@ -16,7 +15,8 @@ export function useRoundQuestions(roundId: number) {
   const session = useSession();
   const query = useQuery({
     queryKey: questionKeys.list({ round: roundId }),
-    queryFn: async () => sortQuestionsForRound(await getQuestionsByRound(roundId)),
+    // Ordered server-side by points, then title (`ListQuestionsByRound`).
+    queryFn: () => getQuestionsByRound(roundId),
     staleTime: 30_000,
   });
 
