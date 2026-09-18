@@ -7,7 +7,6 @@ import { DashboardPanel, PanelHeading } from './DashboardPanel';
 interface Props {
   className?: string;
   name: string;
-  userId: string;
   email: string;
   score: number;
 }
@@ -16,7 +15,7 @@ const DETAIL_TEXT =
   "absolute left-[73px] right-[28px] h-[34.685px] truncate font-scratch-sans text-[24px] leading-normal font-bold tracking-[0.48px] text-dash-ink [font-variation-settings:'opsz'_14]";
 
 // Figma 323:1916. Coordinates are relative to the panel's top-left (frame 19, 345).
-export function ProfilePanel({ className, name, userId, email, score }: Props) {
+export function ProfilePanel({ className, name, email, score }: Props) {
   return (
     <DashboardPanel
       title="Profile"
@@ -42,16 +41,6 @@ export function ProfilePanel({ className, name, userId, email, score }: Props) {
 
       <p className="absolute inset-x-0 top-[260px] h-[32px] truncate px-[28px] text-center font-sans text-[24px] leading-normal font-bold text-dash-ink uppercase opacity-90">
         {name}
-      </p>
-
-      <div
-        aria-hidden
-        className="absolute top-[357.66px] left-[30.3px] size-[25.387px] bg-code-sand mask-size-[25.387px_25.386px] mask-no-repeat"
-        style={{ maskImage: 'url("/dashboard/user-mask.png")' }}
-      />
-      <p className={cn(DETAIL_TEXT, 'top-[353.57px]')} title={userId}>
-        <span className="sr-only">User ID: </span>
-        {userId}
       </p>
 
       <Image

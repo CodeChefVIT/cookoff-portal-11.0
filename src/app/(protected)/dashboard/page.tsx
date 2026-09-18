@@ -21,7 +21,7 @@ export default function DashboardPage() {
 
   if (!session.data) return <LoadingScreen />;
 
-  const { name, userId, email, score, roundQualified, questions } = session.data;
+  const { name, email, score, roundQualified, questions } = session.data;
 
   return (
     <div className="relative min-h-dvh bg-dash-bg lg:h-dvh lg:overflow-hidden">
@@ -38,7 +38,6 @@ export default function DashboardPage() {
           <div className="mt-8 flex w-full flex-col items-center gap-6 lg:contents">
             <ProfilePanel
               name={name || email}
-              userId={userId}
               email={email}
               score={score}
               className="lg:absolute lg:top-[246px] lg:left-[19px]"
