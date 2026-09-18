@@ -327,3 +327,24 @@
     @apply font-sans;
   }
 }
+
+/* Loading portal (src/components/ui/loading-screen.tsx) — concentric ring spin + hat breathe. */
+@keyframes portal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes portal-spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes portal-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.045);
+  }
+}
