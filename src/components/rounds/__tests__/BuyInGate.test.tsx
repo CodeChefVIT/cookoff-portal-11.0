@@ -186,51 +186,23 @@ describe('BuyInGate — Round 2 (hasBuyIn: true)', () => {
   });
 });
 
-describe('BuyInGate — Round 1 (hasBuyIn: false, autoAttempt: true)', () => {
-  const r1Question = makeQuestion({ round: 1, type: 'visual', buyIn: '0', reward: '0' });
-
-  it('renders children immediately and creates the attempt exactly once', async () => {
-    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
-
+describe('BuyInGate — Round 1 (hasBuyIn: false)', () => {
+  // The backend opens the R1 attempt on the first visual submission, so the
+  // gate never calls /attempts for it.
+  it('renders children immediately and creates no attempt', () => {
     renderWithProviders(
-      <BuyInGate questionId="q1" roundId={1} question={r1Question}>
+      <BuyInGate
+        questionId="q1"
+        roundId={1}
+        question={makeQuestion({ round: 1, type: 'visual', buyIn: '0', reward: '0' })}
+      >
         <div>workspace</div>
       </BuyInGate>
     );
 
     expect(screen.getByText('workspace')).toBeInTheDocument();
     expect(screen.queryByText('CONFIRM PURCHASE')).not.toBeInTheDocument();
-    await waitFor(() => expect(createAttemptMock).toHaveBeenCalledTimes(1));
-    expect(createAttemptMock).toHaveBeenCalledWith('q1');
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  });
-
-  it('skips the attempt when the question is already bought', () => {
-    renderWithProviders(
-      <BuyInGate questionId="q1" roundId={1} question={{ ...r1Question, bought: true }}>
-        <div>workspace</div>
-      </BuyInGate>
-    );
-
-    expect(screen.getByText('workspace')).toBeInTheDocument();
     expect(createAttemptMock).not.toHaveBeenCalled();
-  });
-
-  it('shows a retry banner when the unlock fails, and retries on click', async () => {
-    createAttemptMock.mockRejectedValueOnce(new Error('boom'));
-    createAttemptMock.mockResolvedValueOnce({ unlocked: true, insufficientBalance: false });
-
-    const user = userEvent.setup();
-    renderWithProviders(
-      <BuyInGate questionId="q1" roundId={1} question={r1Question}>
-        <div>workspace</div>
-      </BuyInGate>
-    );
-
-    await user.click(await screen.findByRole('button', { name: 'Retry unlock' }));
-    await waitFor(() => expect(createAttemptMock).toHaveBeenCalledTimes(2));
-    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
-    expect(screen.getByText('workspace')).toBeInTheDocument();
   });
 });
 

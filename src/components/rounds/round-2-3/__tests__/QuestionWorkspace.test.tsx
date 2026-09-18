@@ -396,14 +396,13 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     expect(screen.queryByText('CONFIRM PURCHASE')).not.toBeInTheDocument();
   });
 
-  it('unlocks the free attempt on open, because /submit requires one in every round', async () => {
+  it('does not call /attempts on open: the backend opens R3 attempts itself', async () => {
     mockRoundThree();
-    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
 
     renderWorkspace(3, 'q2');
 
-    await waitFor(() => expect(createAttemptMock).toHaveBeenCalledTimes(1));
-    expect(createAttemptMock).toHaveBeenCalledWith('q2');
+    expect(await screen.findByRole('button', { name: /submit code/i })).toBeInTheDocument();
+    expect(createAttemptMock).not.toHaveBeenCalled();
     expect(screen.queryByText('CONFIRM PURCHASE')).not.toBeInTheDocument();
   });
 

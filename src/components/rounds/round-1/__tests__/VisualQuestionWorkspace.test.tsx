@@ -78,8 +78,6 @@ function mockOpenRound() {
   });
   getQuestionsByRoundMock.mockResolvedValue([QUESTION_R1]);
   getVisualBlocksMock.mockResolvedValue(BLOCKS);
-  // R1 auto-creates the attempt on open (RoundConfig.autoAttempt, L14).
-  createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
 }
 
 function renderWorkspace(questionId: string) {
@@ -119,7 +117,7 @@ describe('VisualQuestionWorkspace — Round 1 happy path', () => {
 
     await user.click(screen.getByRole('button', { name: 'Submit' }));
 
-    expect(createAttemptMock).toHaveBeenCalledWith('q1');
+    expect(createAttemptMock).not.toHaveBeenCalled();
     expect(submitVisualMock).toHaveBeenCalledWith({ questionId: 'q1', blocks: ['b1', 'b2'] });
     expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
     expect(screen.getByText('You earned 10 points.')).toBeInTheDocument();
@@ -201,14 +199,11 @@ describe('VisualQuestionWorkspace — Round 1 happy path', () => {
   });
 });
 
-describe('ChainSubmitButton unlock gating', () => {
-  // `BuyInGate` skips the auto-unlock when `question.bought` is already true,
-  // so an already-unlocked question produces no attempt mutation at all.
-  // Gating Submit purely on that mutation succeeding left it permanently
-  // disabled on reload — the round was unplayable after the first visit.
-  it('enables Submit on an already-bought question with no unlock mutation', async () => {
+describe('ChainSubmitButton', () => {
+  // The backend opens the attempt on the first submission, so Submit only
+  // waits for a chain — never for an unlock call.
+  it('enables Submit as soon as the chain has a block, without calling /attempts', async () => {
     mockOpenRound();
-    getQuestionsByRoundMock.mockResolvedValue([{ ...QUESTION_R1, bought: true }]);
 
     const user = userEvent.setup();
     renderWorkspace('q1');
@@ -217,18 +212,5 @@ describe('ChainSubmitButton unlock gating', () => {
 
     expect(createAttemptMock).not.toHaveBeenCalled();
     expect(screen.getByRole('button', { name: 'Submit' })).toBeEnabled();
-  });
-
-  it('still blocks Submit until a fresh question finishes unlocking', async () => {
-    mockOpenRound();
-    // Never settles: the attempt is in flight for the whole test.
-    createAttemptMock.mockReturnValue(new Promise(() => {}));
-
-    const user = userEvent.setup();
-    renderWorkspace('q1');
-
-    await user.click(await screen.findByRole('button', { name: 'Print "Hello"' }));
-
-    expect(screen.getByRole('button', { name: 'Submit' })).toBeDisabled();
   });
 });
