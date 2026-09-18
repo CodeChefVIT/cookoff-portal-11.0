@@ -43,14 +43,19 @@ export function ProfilePanel({ className, name, email, score }: Props) {
         {name}
       </p>
 
+      {/*
+        Email moves up into the first detail slot (Figma's user-id row, 353.57)
+        now that the id is gone, keeping its original 5.25px icon-to-text offset
+        so the row reads the same — just directly under the name.
+      */}
       <Image
         src="/dashboard/email.png"
         alt=""
         width={24}
         height={24}
-        className="absolute top-[417px] left-[31px] size-[24px] max-w-none object-cover opacity-90"
+        className="absolute top-[358.82px] left-[31px] size-[24px] max-w-none object-cover opacity-90"
       />
-      <p className={cn(DETAIL_TEXT, 'top-[411.75px]')} title={email}>
+      <p className={cn(DETAIL_TEXT, 'top-[353.57px]')} title={email}>
         <span className="sr-only">Email: </span>
         {email}
       </p>
