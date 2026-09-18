@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ClipboardEvent as ReactClipboardEvent } from 'react';
 import Editor, { type BeforeMount, type OnMount } from '@monaco-editor/react';
+import { toast } from 'sonner';
 
 import { cn } from '@/lib/utils';
 
@@ -10,10 +11,18 @@ import { cn } from '@/lib/utils';
  *
  * Thin wrapper around @monaco-editor/react: the #131414 editor panel from
  * Figma `Desktop - 15/14` plus its "line: 3   column: 1" readout just below.
- * Keyboard users must be able to `Tab` out of the editor to reach the
- * toolbar/submit button — Monaco traps Tab by default, so `tabFocusMode` is
- * enabled on mount (see AGENTS.md a11y risk: "the single biggest a11y risk
- * in the feature").
+ * Tab indents, as participants expect in a code editor. Keyboard users can
+ * still leave the editor: Monaco's built-in Ctrl+M (Ctrl+Shift+M on macOS)
+ * toggles Tab into focus-moving mode, which screen readers announce.
+ *
+ * Pasting only accepts text that was copied or cut from this editor: code
+ * brought in from outside (an AI tool, another site) is refused. Two layers,
+ * because Monaco can take a paste by more than one route: the DOM `paste`
+ * event is cancelled before Monaco inserts anything, and `onDidPaste` undoes
+ * any external paste that arrived another way (e.g. the clipboard API). The
+ * context menu and external drops are off as further ways around it. Like the
+ * copy block on the problem statement, this raises the bar rather than being
+ * airtight.
  */
 export interface MonacoWrapperProps {
   value: string;
@@ -24,6 +33,28 @@ export interface MonacoWrapperProps {
 }
 
 const THEME = 'cookoff-code';
+
+// Last text the editor put on the clipboard. Module state so code copied in one
+// question can be pasted into another; a reload forgets it.
+let lastInternalCopy: string | null = null;
+
+// Whitespace-insensitive, so Monaco re-indenting a paste or a line-ending
+// difference doesn't turn the contestant's own code into an "external" paste.
+const normalize = (text: string) => text.replace(/\s+/g, '');
+
+/** Only text copied out of an editor is pasteable back in. */
+export function isInternalPaste(text: string): boolean {
+  const pasted = normalize(text);
+  return pasted === '' || (lastInternalCopy !== null && pasted === lastInternalCopy);
+}
+
+export function rememberInternalCopy(text: string) {
+  lastInternalCopy = normalize(text);
+}
+
+function warnExternalPaste() {
+  toast.error('Pasting from outside the editor is disabled.', { id: 'external-paste' });
+}
 
 // Monaco needs literal hex: its stock vs-dark ground (#1e1e1e) would show inside the #131414 panel.
 const defineTheme: BeforeMount = monaco => {
@@ -48,16 +79,68 @@ export function MonacoWrapper({
 }: MonacoWrapperProps) {
   const [position, setPosition] = useState({ line: 1, column: 1 });
 
-  const handleMount: OnMount = editor => {
-    editor.updateOptions({ tabFocusMode: true, accessibilitySupport: 'on' });
+  const handleMount: OnMount = (editor, monaco) => {
+    editor.updateOptions({ accessibilitySupport: 'on' });
+
+    const container = editor.getContainerDomNode();
+    // Bubble phase: Monaco has already filled clipboardData (including the
+    // whole-line copy it does for an empty selection).
+    const recordCopy = (event: ClipboardEvent) => {
+      const text = event.clipboardData?.getData('text/plain');
+      if (text) rememberInternalCopy(text);
+    };
+    container.addEventListener('copy', recordCopy);
+    container.addEventListener('cut', recordCopy);
+    editor.onDidDispose(() => {
+      container.removeEventListener('copy', recordCopy);
+      container.removeEventListener('cut', recordCopy);
+    });
+
+    // Keyboard copy/cut, recorded straight from the model in case the copy
+    // event above is skipped (an empty selection copies the whole line).
+    editor.onKeyDown(event => {
+      const isCopy =
+        (event.ctrlKey || event.metaKey) &&
+        (event.keyCode === monaco.KeyCode.KeyC || event.keyCode === monaco.KeyCode.KeyX);
+      const model = editor.getModel();
+      if (!isCopy || !model) return;
+      const selections = editor.getSelections() ?? [];
+      const text = selections.every(selection => selection.isEmpty())
+        ? selections.map(selection => model.getLineContent(selection.startLineNumber)).join('\n')
+        : selections.map(selection => model.getValueInRange(selection)).join('\n');
+      rememberInternalCopy(text);
+    });
+
+    // Backstop for pastes the capture guard below didn't see.
+    editor.onDidPaste(event => {
+      const model = editor.getModel();
+      if (!model || isInternalPaste(model.getValueInRange(event.range))) return;
+      editor.trigger('paste-guard', 'undo', null);
+      warnExternalPaste();
+    });
+
     editor.onDidChangeCursorPosition(event => {
       setPosition({ line: event.position.lineNumber, column: event.position.column });
     });
   };
 
+  // Capture on the wrapper, not the editor's own container: Monaco's paste
+  // controller registers a capture listener there first and takes the event,
+  // so a listener on the same node never runs. React's capture handler fires
+  // from the root, ahead of anything inside the editor.
+  const guardPaste = (event: ReactClipboardEvent<HTMLDivElement>) => {
+    if (isInternalPaste(event.clipboardData.getData('text/plain'))) return;
+    event.preventDefault();
+    event.stopPropagation();
+    warnExternalPaste();
+  };
+
   return (
     <div className={cn('flex min-h-0 flex-col', className)}>
-      <div className="min-h-0 flex-1 overflow-hidden rounded-[10px] bg-code-panel">
+      <div
+        className="min-h-0 flex-1 overflow-hidden rounded-[10px] bg-code-panel"
+        onPasteCapture={guardPaste}
+      >
         <Editor
           height="100%"
           language={language}
@@ -71,7 +154,16 @@ export function MonacoWrapper({
             minimap: { enabled: false },
             fontSize: 14,
             automaticLayout: true,
-            tabFocusMode: true,
+            // When a language swap replaces the buffer, Monaco trims the
+            // cursor line's indentation and reports it as a user edit — which
+            // lands the old language's code in the new language's draft.
+            trimAutoWhitespace: false,
+            // See the component comment: both would bypass the paste guard.
+            contextmenu: false,
+            dropIntoEditor: { enabled: false },
+            // The native EditContext input path can skip the DOM paste event;
+            // the classic textarea always raises it for the guard above.
+            editContext: false,
             padding: { top: 10 },
           }}
         />

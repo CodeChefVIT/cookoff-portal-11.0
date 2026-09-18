@@ -35,7 +35,14 @@ export type CustomRunRequestInput = z.infer<typeof customRunRequestSchema>;
 
 const submitResponseShape = z.object({ submissionId: z.string() });
 
-const TESTCASE_RESULT_FIELDS = ['id', 'runtime', 'memory', 'status', 'description'] as const;
+const TESTCASE_RESULT_FIELDS = [
+  'id',
+  'runtime',
+  'memory',
+  'status',
+  'description',
+  'stdout',
+] as const;
 
 const testcaseResultShape = z.object({
   testcaseId: z.string(),
@@ -43,6 +50,8 @@ const testcaseResultShape = z.object({
   memory: z.coerce.number().optional(),
   status: z.string(),
   description: z.string().default(''),
+  /** What the participant's program printed. Only `/runcode` returns it today. */
+  stdout: z.string().nullable().optional(),
 });
 
 export type TestcaseResult = z.infer<typeof testcaseResultShape>;
@@ -179,6 +188,7 @@ export async function runCode(
       memory: r.memory ?? undefined,
       status: isPass ? PASSED_STATUS : r.status.description || 'Failed',
       description: outputDesc,
+      stdout: r.stdout ?? null,
     };
   });
 

@@ -77,3 +77,71 @@ describe('TestcasePanel — hidden testcase masking', () => {
     expect(screen.getByText('Compilation Failed !!')).toBeInTheDocument();
   });
 });
+
+describe('TestcasePanel — participant output', () => {
+  function withResult(result: SubmissionVerdict['testcases'][number]): SubmissionVerdict {
+    return { ...verdict, testcases: [result] };
+  }
+
+  it("shows the program's stdout in the Output column", () => {
+    renderPanel(
+      [visibleCase],
+      withResult({
+        testcaseId: 'tc1',
+        status: 'Wrong Answer',
+        description: 'Wrong Answer',
+        stdout: '-1294967296\n',
+      })
+    );
+
+    expect(screen.getByText('-1294967296')).toBeInTheDocument();
+    expect(screen.queryByText('Wrong Answer')).not.toBeInTheDocument();
+  });
+
+  it('keeps a runtime error visible beneath the printed output', () => {
+    renderPanel(
+      [visibleCase],
+      withResult({
+        testcaseId: 'tc1',
+        status: 'Runtime Error (NZEC)',
+        description: 'Exception in thread "main"',
+        stdout: 'partial\n',
+      })
+    );
+
+    expect(screen.getByText(/partial/)).toHaveTextContent(
+      'partial Runtime Error (NZEC): Exception in thread "main"'
+    );
+  });
+
+  it('falls back to the verdict status when there is no stdout', () => {
+    renderPanel(
+      [visibleCase],
+      withResult({
+        testcaseId: 'tc1',
+        status: 'Compilation Error',
+        description: 'Compilation Error',
+      })
+    );
+
+    expect(screen.getByText('Compilation Error')).toBeInTheDocument();
+  });
+
+  it('never renders stdout for a hidden case', () => {
+    renderPanel([visibleCase], {
+      ...verdict,
+      testcases: [
+        { testcaseId: 'tc1', status: 'Success', description: 'Success', stdout: 'visible-out' },
+        {
+          testcaseId: 'tc2',
+          status: 'Wrong Answer',
+          description: '',
+          stdout: 'super-secret-hidden-stdout',
+        },
+      ],
+    });
+
+    expect(screen.getByText('visible-out')).toBeInTheDocument();
+    expect(screen.queryByText(/super-secret-hidden-stdout/)).not.toBeInTheDocument();
+  });
+});

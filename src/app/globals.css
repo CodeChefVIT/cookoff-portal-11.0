@@ -100,6 +100,7 @@
   --color-code-passed-text: var(--code-passed-text);
   --color-code-failed-bg: var(--code-failed-bg);
   --color-code-failed-dot: var(--code-failed-dot);
+  --color-code-passed-dot: var(--code-passed-dot);
   --color-code-fail: var(--code-fail);
   --color-code-gold: var(--code-gold);
   --color-code-enter: var(--code-enter);
@@ -202,6 +203,7 @@
   --code-passed-text: #1ba94c;
   --code-failed-bg: #43201c;
   --code-failed-dot: #bb0b0a;
+  --code-passed-dot: #26ad55;
   --code-fail: #da3012;
   --code-gold: #ccb72f;
   --code-enter: #c5614f;
@@ -299,6 +301,7 @@
   --code-passed-text: #1ba94c;
   --code-failed-bg: #43201c;
   --code-failed-dot: #bb0b0a;
+  --code-passed-dot: #26ad55;
   --code-fail: #da3012;
   --code-gold: #ccb72f;
   --code-enter: #c5614f;

@@ -1,7 +1,6 @@
 'use client';
 
 import type { CSSProperties } from 'react';
-import Image from 'next/image';
 import { parseAsInteger, useQueryState } from 'nuqs';
 
 import { isPassed } from '@/api';
@@ -101,13 +100,12 @@ export function TestcasePanel({
                   : 'bg-code-inset text-code-case-ink'
               )}
             >
-              <Image
-                src={passed ? '/code-round/dot-pass.svg' : '/code-round/dot-fail.svg'}
-                alt=""
-                width={10}
-                height={6}
-                unoptimized
-                className="absolute top-[14.08px] left-[6px] h-[6.49px] w-[10.28px]"
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'absolute top-1/2 left-[6px] size-[10px] -translate-y-1/2 rounded-full',
+                  passed ? 'bg-code-passed-dot' : 'bg-code-failed-dot'
+                )}
               />
               <span className="absolute top-[8px] left-[30px] whitespace-nowrap">
                 Case {index + 1}

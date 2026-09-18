@@ -12,9 +12,9 @@ export interface TestcaseCaseProps {
  * One case: Input / Expected Output / Output columns at Figma `Desktop - 14`
  * geometry (207×157.48 #16191d boxes under Inria Sans captions). Hidden cases
  * NEVER render input/expected/actual — only the aggregate count in
- * TestcasePanel does that job. `dto.TestcaseResult` has no `stdout` field —
- * the Output column shows the verdict status instead of actual program
- * output, which the backend doesn't return per-case.
+ * TestcasePanel does that job. The Output column shows what the program
+ * printed when the result carries `stdout` (Run does; `/result` doesn't), and
+ * falls back to the verdict status — e.g. a compile or runtime error.
  */
 export function TestcaseCase({ testcase, result }: TestcaseCaseProps) {
   if (testcase.hidden) {
@@ -26,11 +26,18 @@ export function TestcaseCase({ testcase, result }: TestcaseCaseProps) {
     );
   }
 
-  const output = result
+  const status = result
     ? result.description && result.description !== result.status
       ? `${result.status}: ${result.description}`
       : result.status
     : '';
+  // Keep a runtime error / TLE visible under whatever was printed before it.
+  const errored = result !== undefined && !isPassed(result) && result.status !== 'Wrong Answer';
+  const output = result?.stdout
+    ? errored
+      ? `${result.stdout.trimEnd()}\n\n${status}`
+      : result.stdout
+    : status;
 
   const columns = [
     ['Input', testcase.input],

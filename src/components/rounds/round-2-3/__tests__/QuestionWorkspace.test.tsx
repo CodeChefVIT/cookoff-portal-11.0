@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -19,6 +19,7 @@ const {
   createAttemptMock,
   submitCodeMock,
   getSubmissionResultMock,
+  runCodeMock,
   routerPushMock,
 } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),
@@ -28,6 +29,7 @@ const {
   createAttemptMock: vi.fn(),
   submitCodeMock: vi.fn(),
   getSubmissionResultMock: vi.fn(),
+  runCodeMock: vi.fn(),
   routerPushMock: vi.fn(),
 }));
 
@@ -42,6 +44,7 @@ vi.mock('@/api', async () => {
     createAttempt: createAttemptMock,
     submitCode: submitCodeMock,
     getSubmissionResult: getSubmissionResultMock,
+    runCode: runCodeMock,
   };
 });
 
@@ -128,15 +131,110 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     await user.click(await screen.findByRole('button', { name: 'Enter' }));
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(await screen.findByText(/1\/1 Test Cases Passed/)).toBeInTheDocument();
     expect(submitCodeMock).toHaveBeenCalledTimes(1);
     expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
     expect(screen.getByText('You earned 10 points and 50 coins.')).toBeInTheDocument();
+  });
+
+  it('does not re-open a closed verdict popup after leaving and returning', async () => {
+    // Own question and submission ids: in-flight submissions and dismissed
+    // verdicts are module state that outlives each test's render.
+    const question = { ...QUESTION_R2, id: 'q-revisit' };
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 100,
+      score: 0,
+      roundQualified: 2,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+    getQuestionsByRoundMock.mockResolvedValue([question]);
+    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+    submitCodeMock.mockResolvedValue({ submissionId: 'sub-revisit' });
+    getSubmissionResultMock.mockResolvedValue({
+      submissionId: 'sub-revisit',
+      questionId: 'q-revisit',
+      passed: 1,
+      failed: 0,
+      description: 'All 1 testcases passed',
+      testcases: [{ testcaseId: 'tc1', status: 'Success', description: 'Success' }],
+    });
+
+    const user = userEvent.setup();
+    const first = renderWorkspace(2, 'q-revisit');
+
+    await user.click(await screen.findByRole('button', { name: 'Enter' }));
+    await user.click(await screen.findByRole('button', { name: /submit code/i }));
+    expect(await screen.findByText('CORRECT ANSWER')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => expect(screen.queryByText('CORRECT ANSWER')).not.toBeInTheDocument());
+
+    // A question-tab switch remounts the workspace.
+    first.unmount();
+    getQuestionsByRoundMock.mockResolvedValue([{ ...question, solved: true }]);
+    renderWorkspace(2, 'q-revisit');
+
+    expect(await screen.findByText(/1\/1 Test Cases Passed/)).toBeInTheDocument();
+    expect(screen.queryByText('CORRECT ANSWER')).not.toBeInTheDocument();
+    expect(screen.queryByText(/already solved/i)).not.toBeInTheDocument();
+    expect(submitCodeMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('shows a later run instead of an earlier failed submission', async () => {
+    getSessionMock.mockResolvedValue({
+      userId: 'u1',
+      email: 'a@b.com',
+      balance: 100,
+      score: 0,
+      roundQualified: 2,
+      isBanned: false,
+    });
+    getRoundTimeMock.mockResolvedValue({
+      serverTime: new Date(),
+      roundStartTime: new Date(Date.now() - 1000),
+      roundEndTime: new Date(Date.now() + 60_000),
+    });
+    getQuestionsByRoundMock.mockResolvedValue([QUESTION_R2]);
+    getPublicTestcasesMock.mockResolvedValue(TESTCASES);
+    createAttemptMock.mockResolvedValue({ unlocked: true, insufficientBalance: false });
+    submitCodeMock.mockResolvedValue({ submissionId: 'sub1' });
+    getSubmissionResultMock.mockResolvedValue({
+      submissionId: 'sub1',
+      questionId: 'q1',
+      passed: 0,
+      failed: 1,
+      description: '0/1 testcases passed (Wrong Answer)',
+      testcases: [{ testcaseId: 'tc1', status: 'Wrong Answer', description: 'Wrong Answer' }],
+    });
+    runCodeMock.mockResolvedValue({
+      submissionId: 'run-1',
+      questionId: 'q1',
+      passed: 1,
+      failed: 0,
+      description: 'All sample testcases passed',
+      testcases: [{ testcaseId: 'tc1', status: 'Success', description: '', stdout: 'out' }],
+    });
+
+    const user = userEvent.setup();
+    renderWorkspace(2, 'q1');
+
+    await user.click(await screen.findByRole('button', { name: 'Enter' }));
+    await user.click(await screen.findByRole('button', { name: /submit code/i }));
+    expect(await screen.findByText(/0\/1 Test Cases Passed/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /run code/i }));
+
+    expect(await screen.findByText(/1\/1 Test Cases Passed/)).toBeInTheDocument();
+    expect(screen.queryByText(/0\/1 Test Cases Passed/)).not.toBeInTheDocument();
+    expect(runCodeMock).toHaveBeenCalledTimes(1);
   });
 
   it('switches the language and swaps the pristine boilerplate', async () => {
@@ -193,10 +291,6 @@ describe('QuestionWorkspace — Round 2 happy path', () => {
     renderWorkspace(2, 'q1');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(await screen.findByText('CONFIRM PURCHASE')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enter' })).toBeInTheDocument();
@@ -227,10 +321,6 @@ describe('QuestionWorkspace — submit failure', () => {
     renderWorkspace(3, 'q2');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
 
@@ -292,10 +382,6 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     renderWorkspace(3, 'q2');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     // Round 3 has no buy-in gate to fall back on, so swallowing this left the player with nothing.
     expect(await screen.findByText('Submission Failed')).toBeInTheDocument();
@@ -313,10 +399,6 @@ describe('QuestionWorkspace — Round 3 (no betting)', () => {
     renderWorkspace(3, 'q2');
 
     await user.click(await screen.findByRole('button', { name: /submit code/i }));
-    const confirmDialog = await screen.findByRole('alertdialog', {
-      name: /confirm final submission/i,
-    });
-    await user.click(within(confirmDialog).getByRole('button', { name: /submit code/i }));
 
     expect(
       await screen.findByText(/round is no longer open for your account/i)

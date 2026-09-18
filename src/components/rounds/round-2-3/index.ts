@@ -5,7 +5,6 @@ import type { CodeEngineProps } from './CodeEngine';
  * Consumers import from `@/components/rounds/round-2-3`.
  */
 export * from './CodeEngine';
-export * from './ConfirmSubmitDialog';
 export * from './QuestionWorkspace';
 export * from './TestcasePanel';
 export * from './TestcaseCase';

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 
 import { DEFAULT_LANGUAGE } from '@/components/rounds/round-2-3/languages';
 
-import { DEFAULT_LANGUAGE_ID, useRoundStore } from '../round-store';
+import { DEFAULT_LANGUAGE_ID, migrateRoundStore, useRoundStore } from '../round-store';
 
 function reset() {
   useRoundStore.setState({ drafts: {} });
@@ -29,13 +29,55 @@ describe('useRoundStore', () => {
     });
   });
 
-  it('never discards a dirty buffer on a language change', () => {
+  it("loads the new language's boilerplate even when the old buffer was edited", () => {
     useRoundStore.getState().resetDraft('q1', 54, 'cpp boilerplate');
-    useRoundStore.getState().setSourceCode('q1', 'my hand-written solution');
-    useRoundStore.getState().setLanguage('q1', 71, 'python boilerplate');
+    useRoundStore.getState().setSourceCode('q1', 'my c++ solution');
+    useRoundStore.getState().setLanguage('q1', 62, 'java boilerplate');
 
-    expect(useRoundStore.getState().getDraft('q1')?.sourceCode).toBe('my hand-written solution');
-    expect(useRoundStore.getState().getDraft('q1')?.languageId).toBe(71);
+    expect(useRoundStore.getState().getDraft('q1')).toMatchObject({
+      sourceCode: 'java boilerplate',
+      languageId: 62,
+    });
+  });
+
+  it('restores each language’s own code when switching back and forth', () => {
+    useRoundStore.getState().resetDraft('q1', 54, 'cpp boilerplate');
+    useRoundStore.getState().setSourceCode('q1', 'my c++ solution');
+    useRoundStore.getState().setLanguage('q1', 62, 'java boilerplate');
+    useRoundStore.getState().setSourceCode('q1', 'my java solution');
+
+    useRoundStore.getState().setLanguage('q1', 54, 'cpp boilerplate');
+    expect(useRoundStore.getState().getDraft('q1')?.sourceCode).toBe('my c++ solution');
+
+    useRoundStore.getState().setLanguage('q1', 62, 'java boilerplate');
+    expect(useRoundStore.getState().getDraft('q1')?.sourceCode).toBe('my java solution');
+  });
+
+  it('keeps the buffer when the same language is re-selected', () => {
+    useRoundStore.getState().resetDraft('q1', 54, 'cpp boilerplate');
+    useRoundStore.getState().setSourceCode('q1', 'my c++ solution');
+    useRoundStore.getState().setLanguage('q1', 54, 'cpp boilerplate');
+
+    expect(useRoundStore.getState().getDraft('q1')?.sourceCode).toBe('my c++ solution');
+  });
+
+  it('carries a pre-upgrade draft’s code into the per-language map', () => {
+    const migrated = migrateRoundStore(
+      {
+        drafts: {
+          q1: {
+            sourceCode: 'old c++',
+            languageId: 54,
+            customInput: '',
+            boilerplateSourceCode: 'b',
+          },
+        },
+      },
+      0
+    );
+
+    expect(migrated.drafts.q1.codeByLanguage).toEqual({ 54: 'old c++' });
+    expect(migrated.drafts.q1).not.toHaveProperty('boilerplateSourceCode');
   });
 
   it('persists custom input independently of source code', () => {

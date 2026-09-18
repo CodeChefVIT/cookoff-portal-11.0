@@ -34,6 +34,14 @@ import type { SubmissionRequestInput } from '@/api';
  */
 const activeSubmissions = new Map<string, string>();
 
+/**
+ * Verdict popups the contestant already closed. Module state for the same
+ * reason as `activeSubmissions`: component state died with the remount on a
+ * question-tab switch, so coming back re-opened the popup for a submission
+ * the contestant had already acknowledged.
+ */
+const dismissedVerdicts = new Set<string>();
+
 export function useCodeSubmission(roundId: number, questionId: string) {
   const queryClient = useQueryClient();
   const [submissionId, setSubmissionIdState] = useState<string | null>(
@@ -82,6 +90,15 @@ export function useCodeSubmission(roundId: number, questionId: string) {
     retry: 0,
   });
 
+  const verdictId = result.data?.submissionId;
+  const [, rerender] = useState(0);
+  const verdictDismissed = verdictId !== undefined && dismissedVerdicts.has(verdictId);
+  const dismissVerdict = useCallback(() => {
+    if (verdictId === undefined) return;
+    dismissedVerdicts.add(verdictId);
+    rerender(n => n + 1);
+  }, [verdictId]);
+
   const timedOut = result.isError && isApiError(result.error) && result.error.status === 408;
 
   useEffect(() => {
@@ -100,6 +117,8 @@ export function useCodeSubmission(roundId: number, questionId: string) {
     submissionId,
     notPurchased,
     timedOut,
+    verdictDismissed,
+    dismissVerdict,
     retryResult: () => void result.refetch(),
     reset: () => {
       setSubmissionId(null);

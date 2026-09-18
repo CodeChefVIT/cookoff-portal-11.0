@@ -19,7 +19,18 @@ vi.mock('@monaco-editor/react', () => ({
     onChange: (value: string) => void;
     onMount?: (editor: unknown, monaco: unknown) => void;
   }) => {
-    onMount?.({ updateOptions: vi.fn(), onDidChangeCursorPosition: vi.fn() }, { editor: {} });
+    onMount?.(
+      {
+        updateOptions: vi.fn(),
+        onDidChangeCursorPosition: vi.fn(),
+        // Paste guard hooks (MonacoWrapper); inert in the stand-in.
+        getContainerDomNode: () => document.createElement('div'),
+        onDidDispose: vi.fn(),
+        onKeyDown: vi.fn(),
+        onDidPaste: vi.fn(),
+      },
+      { editor: {}, KeyCode: { KeyC: 33, KeyX: 54 } }
+    );
     return createElement('textarea', {
       'aria-label': 'Code editor',
       value,

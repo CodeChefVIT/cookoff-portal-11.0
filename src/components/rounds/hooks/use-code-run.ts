@@ -23,6 +23,8 @@ export function useCodeRun() {
       input: SubmissionRequestInput;
       publicTestcases: { id: string }[];
     }) => runCode(input, publicTestcases),
+    // Drop the previous verdict so a re-run never shows the last result as its own.
+    onMutate: () => setRunVerdict(null),
     onSuccess: verdict => {
       setRunVerdict(verdict);
     },
@@ -30,6 +32,7 @@ export function useCodeRun() {
 
   const runCustomInput = useMutation({
     mutationFn: (input: CustomRunRequestInput) => runCustom(input),
+    onMutate: () => setCustomResult(null),
     onSuccess: result => {
       setCustomResult(result);
     },
