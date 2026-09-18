@@ -327,3 +327,24 @@
     @apply font-sans;
   }
 }
+
+/* Loading portal (src/components/ui/loading-screen.tsx) — concentric ring spin + hat bob. */
+@keyframes portal-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes portal-spin-reverse {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes portal-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3%);
+  }
+}
