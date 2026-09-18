@@ -16,8 +16,8 @@ import { useRoundStore } from '@/stores';
 
 import { ProblemPanel } from '../ProblemPanel';
 import { getRoundConfig } from '../round-config';
-import { SolvedBox } from '../SolvedBox';
 import type { Question } from '../types';
+import { VerdictBox } from '../VerdictBox';
 import { EditorToolbar } from './code-editor/EditorToolbar';
 import { LanguageSelector } from './code-editor/LanguageSelector';
 import { MonacoWrapper } from './code-editor/MonacoWrapper';
@@ -247,7 +247,8 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
         isSubmitting={submission.submit.isPending}
       />
       {verdict && allPassed && (
-        <SolvedBox
+        <VerdictBox
+          correct
           open={resultOpen}
           onClose={() => {
             setDismissedSubmissionId(verdict.submissionId);

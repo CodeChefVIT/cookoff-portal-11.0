@@ -161,8 +161,14 @@ describe('VisualQuestionWorkspace — Round 1 happy path', () => {
     await user.click(screen.getByRole('button', { name: 'Print "Hello"' }));
     await user.click(screen.getByRole('button', { name: 'Submit' }));
 
-    expect(await screen.findByText(/Not quite — rearrange your chain/)).toBeInTheDocument();
+    // A wrong answer gets the same full box as a right one, not a banner.
+    const verdict = await screen.findByRole('dialog', { name: 'WRONG ANSWER' });
+    expect(within(verdict).getByText(/Not quite — rearrange your chain/)).toBeInTheDocument();
     expect(screen.queryByText('CORRECT ANSWER')).not.toBeInTheDocument();
+
+    // Dismissing returns to the workspace with the chain untouched, so the
+    // player can reorder rather than rebuild.
+    await user.click(within(verdict).getByRole('button', { name: 'Try Again' }));
 
     const chain = screen.getByRole('region', { name: 'Your chain' });
     expect(within(chain).getByText('Print "Hello"')).toBeInTheDocument();

@@ -16,8 +16,8 @@ import { EMPTY_CHAIN, useChainStore } from '@/stores';
 
 import { useRoundExpired, useVisualBlocks, useVisualSubmissionState } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
-import { SolvedBox } from '../SolvedBox';
 import type { Question, VisualSubmissionResult } from '../types';
+import { VerdictBox } from '../VerdictBox';
 import { DraggableBlock, WorkspaceCanvas } from './block-workspace';
 import { BlockPalette } from './BlockPalette';
 import { insertIndexFor, paletteFor, resolveChain } from './chain';
@@ -141,7 +141,9 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
     }
   }
 
-  const resultOpen = result !== undefined && result.correct && result !== dismissedResult;
+  // Both outcomes open the box — a wrong answer used to be a small banner under
+  // the workspace that was easy to miss next to a full-screen celebration.
+  const resultOpen = result !== undefined && result !== dismissedResult;
 
   if (blocksQuery.isLoading) {
     return (
@@ -196,7 +198,7 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
                 onClear={() => clearChain(question.id)}
                 disabled={disabled}
               />
-              <VisualVerdict result={result} isSubmitting={isPending} />
+              <VisualVerdict isSubmitting={isPending} />
             </div>
           }
           palette={
@@ -212,8 +214,9 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
         </DragOverlay>
       </DndContext>
       {result && (
-        <SolvedBox
+        <VerdictBox
           open={resultOpen}
+          correct={result.correct}
           onClose={() => setDismissedResult(result)}
           question={question}
           pointsAwarded={result.pointsAwarded}
