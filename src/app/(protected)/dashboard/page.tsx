@@ -36,7 +36,7 @@ export default function DashboardPage() {
           className="relative mx-auto flex flex-col items-center gap-10 px-4 pt-6 pb-10 lg:block lg:h-[925px] lg:w-[1440px] lg:p-0"
           style={zoom === null ? undefined : { zoom }}
         >
-          <div className="w-full lg:absolute lg:top-[116px] lg:left-[124px] lg:w-auto">
+          <div className="w-full lg:absolute lg:top-[116px] lg:left-[19px] lg:w-auto">
             <Timeline roundQualified={roundQualified} />
           </div>
           <div className="mt-8 flex w-full flex-col items-center gap-6 lg:contents">

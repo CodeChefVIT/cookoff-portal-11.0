@@ -2,18 +2,25 @@ import Image from 'next/image';
 
 import { timelineMilestone } from './dashboard-stats';
 
-// Flag group left edges as a share of the 1193px track; the dot, label and chef
-// all centre 22px in from there. Figma drew four flags (x 124/499/894/1273) with
-// no stop of its own for Round 3, so a finalist's chef sat on END. START and END
-// keep their frame positions and the three rounds divide the span evenly
-// (96.312 / 4), which stays within ~7% of the original flag spacing.
-const MILESTONES = [
-  { label: 'START', offset: 0 },
-  { label: 'ROUND 1', offset: 24.078 },
-  { label: 'ROUND 2', offset: 48.156 },
-  { label: 'ROUND 3', offset: 72.234 },
-  { label: 'END', offset: 96.312 },
-] as const;
+/**
+ * The track spans the full width of the panels below it — Profile's left edge
+ * (19) to Details' right edge (1421) on the 1440 stage — rather than Figma's
+ * narrower 124→1317 band, so the dashboard reads as one aligned column.
+ *
+ * A flag group is positioned by its left edge and its dot centres `DOT_INSET`
+ * in from there, so the last flag sits `(W - 2·inset) / W` along the track to
+ * leave the same inset at both ends. The rounds divide that span evenly; Figma
+ * drew no stop for Round 3, which is why a finalist's chef used to rest on END.
+ */
+const TRACK_WIDTH_PX = 1402;
+const DOT_INSET_PX = 22;
+const LAST_OFFSET = ((TRACK_WIDTH_PX - DOT_INSET_PX * 2) / TRACK_WIDTH_PX) * 100;
+const LABELS = ['START', 'ROUND 1', 'ROUND 2', 'ROUND 3', 'END'] as const;
+
+const MILESTONES = LABELS.map((label, index) => ({
+  label,
+  offset: (LAST_OFFSET / (LABELS.length - 1)) * index,
+}));
 
 const dotCentre = (offset: number) => `calc(${offset}% + 22px)`;
 
@@ -29,7 +36,7 @@ export function Timeline({ roundQualified }: Props) {
 
   return (
     <div className="relative">
-      <h2 className="font-timeline text-[36px] leading-[25.075px] text-dash-ink capitalize lg:absolute lg:-top-[87px] lg:-left-[36px] lg:text-[48px] lg:whitespace-nowrap">
+      <h2 className="font-timeline text-[36px] leading-[25.075px] text-dash-ink capitalize lg:absolute lg:-top-[87px] lg:left-0 lg:text-[48px] lg:whitespace-nowrap">
         timeline:
       </h2>
       <div
@@ -39,7 +46,7 @@ export function Timeline({ roundQualified }: Props) {
         aria-valuemax={MILESTONES.length - 1}
         aria-valuenow={current}
         aria-valuetext={MILESTONES[current].label}
-        className="relative mt-[87px] mr-[48px] h-[44.399px] rounded-[70px] bg-dash-track lg:mt-0 lg:mr-0 lg:w-[1193px]"
+        className="relative mt-[87px] mr-[48px] h-[44.399px] rounded-[70px] bg-dash-track lg:mt-0 lg:mr-0 lg:w-[1402px]"
       >
         <div
           className="absolute top-0 left-0 h-[44px] rounded-[70px] bg-brand-accent opacity-75"
