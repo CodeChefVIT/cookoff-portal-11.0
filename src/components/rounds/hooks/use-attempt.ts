@@ -30,7 +30,7 @@ export function useAttempt(roundId: RoundId, questionId: string) {
         }
         return;
       }
-      if (getRoundConfig(roundId).hasBuyIn) toast.success('Bet placed — the editor is unlocked.');
+      if (getRoundConfig(roundId).hasBuyIn) toast.success('Bet placed! The editor is unlocked.');
       void queryClient.invalidateQueries({ queryKey: sessionKeys.all() });
       void queryClient.invalidateQueries({ queryKey: questionKeys.list({ round: roundId }) });
     },

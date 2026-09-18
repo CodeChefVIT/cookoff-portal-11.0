@@ -53,7 +53,7 @@ export function SessionGuard({ children }: { children: ReactNode }) {
       >
         <span className="font-display text-2xl tracking-wide text-brand">COOK OFF 11.0</span>
         <p className="text-sm text-muted-foreground">
-          Couldn&rsquo;t reach the kitchen. You&rsquo;re still signed in — this is on our side.
+          Couldn&rsquo;t reach the kitchen. You are still signed in, this one is on us.
         </p>
         <Button variant="outline" onClick={() => void session.refetch()}>
           Try again

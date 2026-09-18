@@ -47,9 +47,11 @@ export function VerdictBox({
 }: VerdictBoxProps) {
   const reward = Number(question.reward);
   const solvedMessage = alreadyAnswered
-    ? 'Already solved — no additional payout for this resubmission.'
+    ? 'You already solved this one, so there is no extra payout this time.'
     : `You earned ${pointsAwarded} points${showReward && reward > 0 ? ` and ${reward} coins` : ''}.`;
-  const message = correct ? solvedMessage : 'Not quite — rearrange your chain and try again.';
+  const message = correct
+    ? solvedMessage
+    : 'Not quite. Try putting the blocks in a different order.';
 
   return (
     <Dialog.Root

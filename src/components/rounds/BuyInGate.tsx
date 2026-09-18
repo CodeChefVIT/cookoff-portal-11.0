@@ -39,7 +39,7 @@ export interface BuyInGateProps {
 
 const BET_FAILED = 'Couldn’t place your bet. Try again.';
 /** 423 — nothing is wrong with the bet or the balance; the round is closed. */
-const ROUND_NOT_RUNNING = 'This round isn’t running right now — your coins weren’t touched.';
+const ROUND_NOT_RUNNING = 'This round is not running right now, so your coins were not touched.';
 
 export function BuyInGate({
   children,
@@ -70,7 +70,7 @@ export function BuyInGate({
   useEffect(() => {
     if (!config.hasBuyIn || !forceLocked) return;
     reset();
-    toast.error('The server didn’t recognize your bet — place it again before submitting.');
+    toast.error('The server did not recognise your bet. Place it again before you submit.');
   }, [config.hasBuyIn, forceLocked, reset]);
 
   if (!config.hasBuyIn) {
@@ -87,10 +87,12 @@ export function BuyInGate({
             className="mx-4 mb-3 flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive lg:mx-[31px]"
           >
             {roundNotRunning ? (
-              <span>This round isn&rsquo;t running right now — hold tight.</span>
+              <span>This round is not running right now. Hold tight.</span>
             ) : (
               <>
-                <span>Couldn&rsquo;t unlock this question — submitting will fail until it is.</span>
+                <span>
+                  Couldn&rsquo;t unlock this question. Submitting will not work until it does.
+                </span>
                 <Button size="sm" variant="outline" onClick={() => unlock()}>
                   Retry unlock
                 </Button>
@@ -109,7 +111,7 @@ export function BuyInGate({
 
   function handleEnter() {
     if (balance < buyIn) {
-      toast.error(`Not enough coins — you need ${buyIn - balance} more.`);
+      toast.error(`Not enough coins. You need ${buyIn - balance} more.`);
       return;
     }
     attempt.mutate(undefined, {
@@ -121,7 +123,7 @@ export function BuyInGate({
         }
         toast.error(
           outcome.insufficientBalance
-            ? `Not enough coins — you need ${buyIn - balance} more.`
+            ? `Not enough coins. You need ${buyIn - balance} more.`
             : BET_FAILED
         );
       },

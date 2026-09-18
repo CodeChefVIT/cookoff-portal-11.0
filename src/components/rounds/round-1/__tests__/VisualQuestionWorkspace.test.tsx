@@ -163,7 +163,7 @@ describe('VisualQuestionWorkspace — Round 1 happy path', () => {
 
     // A wrong answer gets the same full box as a right one, not a banner.
     const verdict = await screen.findByRole('dialog', { name: 'WRONG ANSWER' });
-    expect(within(verdict).getByText(/Not quite — rearrange your chain/)).toBeInTheDocument();
+    expect(within(verdict).getByText(/Not quite\. Try putting the blocks/)).toBeInTheDocument();
     expect(screen.queryByText('CORRECT ANSWER')).not.toBeInTheDocument();
 
     // Dismissing returns to the workspace with the chain untouched, so the

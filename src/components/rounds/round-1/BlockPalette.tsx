@@ -70,7 +70,7 @@ export function BlockPalette({ blocks, onAdd, disabled }: BlockPaletteProps) {
           // that an emptied tray meant a finished chain, which is the single
           // most common way to submit a wrong answer here.
           <p className="p-4 text-center font-scratch-sans text-sm text-scratch-ink/70">
-            No blocks left to place. Not every block belongs in the answer — remove any you
+            No blocks left to place. Not every block belongs in the answer, so remove any you
             don&rsquo;t need with its ✕.
           </p>
         ) : (

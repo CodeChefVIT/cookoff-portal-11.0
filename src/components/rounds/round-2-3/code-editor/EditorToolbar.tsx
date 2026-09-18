@@ -70,7 +70,7 @@ export function EditorToolbar({
           title={
             CAPABILITIES.runCode
               ? undefined
-              : 'Run Code is not available yet — the /runcode contract is undefined (see AGENTS.md L8).'
+              : 'Run Code is not available yet. The /runcode contract is undefined (see AGENTS.md L8).'
           }
           className={cn(
             'h-[26.4px] w-[161.2px] rounded-[10px] bg-code-run font-sans text-[16px] leading-[25.075px] font-semibold text-white enabled:cursor-pointer disabled:cursor-not-allowed lg:absolute lg:top-[5.41px] lg:right-[174.9px]',

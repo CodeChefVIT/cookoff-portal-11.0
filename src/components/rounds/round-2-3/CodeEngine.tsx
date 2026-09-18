@@ -123,7 +123,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     // The round can close while this dialog sits open, so re-check here rather
     // than trusting the button's disabled state from when it was pressed.
     if (isExpired) {
-      toast.error('The round has ended — this submission wasn’t sent.');
+      toast.error('The round has ended, so this submission was not sent.');
       return;
     }
     submission.submit.mutate(
@@ -138,7 +138,9 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
           // the round just isn't open.
           if (isRoundNotRunningError(error)) {
             setSubmitFailed(true);
-            setSubmitError('This round isn’t running right now — your submission wasn’t judged.');
+            setSubmitError(
+              'This round is not running right now, so your submission was not judged.'
+            );
             return;
           }
           if (isNotPurchasedError(error) && getRoundConfig(roundId).hasBuyIn) return;
@@ -146,7 +148,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
           if (isNotQualifiedError(error)) {
             setSubmitError('This round is no longer open for your account.');
           } else if (isNotPurchasedError(error)) {
-            setSubmitError('This question isn’t unlocked yet — reopen it and try again.');
+            setSubmitError('This question is not unlocked yet. Reopen it and try again.');
           }
         },
       }

@@ -35,9 +35,16 @@ export function RoundIntermission({ roundId, variant }: RoundIntermissionProps) 
         ? config.intermissionCopy.ended
         : config.intermissionCopy.pending;
 
+  // The eyebrow exists to name the round when the heading is something else
+  // ("You didn't make the cut"). Now that a round's name is just its number it
+  // would otherwise repeat the heading verbatim, so drop it in that case.
+  const showEyebrow = !heading.startsWith(config.label);
+
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center">
-      <p className="text-xs tracking-widest text-muted-foreground uppercase">{config.label}</p>
+      {showEyebrow && (
+        <p className="text-xs tracking-widest text-muted-foreground uppercase">{config.label}</p>
+      )}
       <h1 className="font-display text-3xl text-brand sm:text-4xl">{heading}</h1>
       <p className="max-w-md text-sm text-muted-foreground sm:text-base">{body}</p>
       {variant === 'pending' && <RoundTimer />}

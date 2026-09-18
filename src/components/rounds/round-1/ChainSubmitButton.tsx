@@ -35,7 +35,7 @@ export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
     // explicit "Clear chain" action in WorkspaceCanvas does that.
     submission.mutate(chain, {
       onError: error => {
-        toast.error(isApiError(error) ? error.message : 'Could not submit — try again.');
+        toast.error(isApiError(error) ? error.message : 'Could not submit. Give it another go.');
       },
     });
   }
