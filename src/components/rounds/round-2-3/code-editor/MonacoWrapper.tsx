@@ -10,10 +10,9 @@ import { cn } from '@/lib/utils';
  *
  * Thin wrapper around @monaco-editor/react: the #131414 editor panel from
  * Figma `Desktop - 15/14` plus its "line: 3   column: 1" readout just below.
- * Keyboard users must be able to `Tab` out of the editor to reach the
- * toolbar/submit button — Monaco traps Tab by default, so `tabFocusMode` is
- * enabled on mount (see AGENTS.md a11y risk: "the single biggest a11y risk
- * in the feature").
+ * Tab indents, as participants expect in a code editor. Keyboard users can
+ * still leave the editor: Monaco's built-in Ctrl+M (Ctrl+Shift+M on macOS)
+ * toggles Tab into focus-moving mode, which screen readers announce.
  */
 export interface MonacoWrapperProps {
   value: string;
@@ -49,7 +48,7 @@ export function MonacoWrapper({
   const [position, setPosition] = useState({ line: 1, column: 1 });
 
   const handleMount: OnMount = editor => {
-    editor.updateOptions({ tabFocusMode: true, accessibilitySupport: 'on' });
+    editor.updateOptions({ accessibilitySupport: 'on' });
     editor.onDidChangeCursorPosition(event => {
       setPosition({ line: event.position.lineNumber, column: event.position.column });
     });
@@ -71,7 +70,6 @@ export function MonacoWrapper({
             minimap: { enabled: false },
             fontSize: 14,
             automaticLayout: true,
-            tabFocusMode: true,
             // When a language swap replaces the buffer, Monaco trims the
             // cursor line's indentation and reports it as a user edit — which
             // lands the old language's code in the new language's draft.
