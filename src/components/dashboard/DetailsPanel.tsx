@@ -30,7 +30,7 @@ function TimeRemaining({ roundQualified }: { roundQualified: number }) {
   const timerRound = time.data?.round;
   const showsThisRound = timerRound === undefined || timerRound === roundQualified;
   const label =
-    mounted && remaining !== null && showsThisRound ? formatRemaining(remaining) : '--:--:--';
+    mounted && remaining !== null && showsThisRound ? formatRemaining(remaining) : '—:—:—';
 
   return (
     <span

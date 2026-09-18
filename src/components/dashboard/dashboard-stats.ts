@@ -7,8 +7,6 @@ export interface RoundStats {
   incomplete: number;
   percent: number;
   score: number;
-  /** Every point on offer this round — the denominator for the profile bar. */
-  totalPoints: number;
 }
 
 export const DASHBOARD_ROUNDS = [1, 2, 3] as const;
@@ -27,14 +25,13 @@ export function summarizeRound(questions: DashboardQuestionSummary[]): RoundStat
     incomplete: total - answered.length,
     percent: total === 0 ? 0 : Math.round((answered.length / total) * 100),
     score: answered.reduce((sum, question) => sum + question.points, 0),
-    totalPoints: questions.reduce((sum, question) => sum + question.points, 0),
   };
 }
 
-// Timeline milestones are START, ROUND 1, ROUND 2, ROUND 3, END. The chef sits
-// on the flag where the qualified round starts, so a finalist now rests on
-// ROUND 3 rather than on END; END is reached only past the last round.
-const TIMELINE_LAST_MILESTONE = 4;
+// Timeline milestones are START, ROUND 1, ROUND 2, END. The chef sits on the
+// flag where the qualified round starts; Round 3 has no flag of its own, so
+// it sits on END.
+const TIMELINE_LAST_MILESTONE = 3;
 
 export function timelineMilestone(roundQualified: number): number {
   return Math.min(Math.max(roundQualified, 0), TIMELINE_LAST_MILESTONE);

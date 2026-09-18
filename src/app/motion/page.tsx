@@ -44,7 +44,7 @@ export default function MotionDemo() {
         </Link>
         <h1 className="text-4xl font-semibold tracking-tight">Motion</h1>
         <p className="max-w-prose text-muted-foreground">
-          Reusable Framer Motion primitives: LazyMotion-powered, tree-shakeable, and reduced-motion
+          Reusable Framer Motion primitives — LazyMotion-powered, tree-shakeable, and reduced-motion
           aware.
         </p>
       </Fade>

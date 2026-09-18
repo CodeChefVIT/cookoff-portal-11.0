@@ -7,13 +7,7 @@ export interface RoundThreeQuestionPageProps {
 }
 
 export default async function RoundThreeQuestionPage({ params }: RoundThreeQuestionPageProps) {
-  const { questionId: rawQuestionId } = await params;
-  // UUIDs are canonically lowercase and the server echoes them that way.
-  // Normalising here keeps the header's Submit button (which only has the
-  // route param) keyed identically to the workspace (which uses the
-  // server's `question.id`), so a shared URL in another case still works.
-  const questionId = rawQuestionId.toLowerCase();
-
+  const { questionId } = await params;
   return (
     <RoundGate roundId={3}>
       <RoundShell roundId={3} activeQuestionId={questionId}>

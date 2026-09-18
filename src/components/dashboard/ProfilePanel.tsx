@@ -7,29 +7,16 @@ import { DashboardPanel, PanelHeading } from './DashboardPanel';
 interface Props {
   className?: string;
   name: string;
+  userId: string;
   email: string;
-  /** Lifetime, cumulative across every round. */
   score: number;
-  roundQualified: number;
-  /** Points banked from answered questions in the current round. */
-  earnedPoints: number;
-  /** Every point on offer in the current round. */
-  totalPoints: number;
 }
 
 const DETAIL_TEXT =
   "absolute left-[73px] right-[28px] h-[34.685px] truncate font-scratch-sans text-[24px] leading-normal font-bold tracking-[0.48px] text-dash-ink [font-variation-settings:'opsz'_14]";
 
 // Figma 323:1916. Coordinates are relative to the panel's top-left (frame 19, 345).
-export function ProfilePanel({
-  className,
-  name,
-  email,
-  score,
-  roundQualified,
-  earnedPoints,
-  totalPoints,
-}: Props) {
+export function ProfilePanel({ className, name, userId, email, score }: Props) {
   return (
     <DashboardPanel
       title="Profile"
@@ -57,70 +44,32 @@ export function ProfilePanel({
         {name}
       </p>
 
-      {/*
-        Email moves up into the first detail slot (Figma's user-id row, 353.57)
-        now that the id is gone, keeping its original 5.25px icon-to-text offset
-        so the row reads the same — just directly under the name.
-      */}
+      <div
+        aria-hidden
+        className="absolute top-[357.66px] left-[30.3px] size-[25.387px] bg-code-sand mask-size-[25.387px_25.386px] mask-no-repeat"
+        style={{ maskImage: 'url("/dashboard/user-mask.png")' }}
+      />
+      <p className={cn(DETAIL_TEXT, 'top-[353.57px]')} title={userId}>
+        <span className="sr-only">User ID: </span>
+        {userId}
+      </p>
+
       <Image
         src="/dashboard/email.png"
         alt=""
         width={24}
         height={24}
-        className="absolute top-[358.82px] left-[31px] size-[24px] max-w-none object-cover opacity-90"
+        className="absolute top-[417px] left-[31px] size-[24px] max-w-none object-cover opacity-90"
       />
-      <p className={cn(DETAIL_TEXT, 'top-[353.57px]')} title={email}>
+      <p className={cn(DETAIL_TEXT, 'top-[411.75px]')} title={email}>
         <span className="sr-only">Email: </span>
         {email}
       </p>
 
-      {/*
-        One stacked block instead of two absolutely-placed numbers: the score
-        had no visible label at all (Figma printed "SCORE" into the panel art,
-        which reads as a bare number on screen), and the round bar had to be
-        wedged in under it. A flex column gives both an honest label and a real
-        gap between them.
-
-        `score` is lifetime and cumulative across rounds, so it has no matching
-        denominator — `GET /dashboard` only returns the current round's
-        questions. The bar therefore tracks *this round's* points, labelled with
-        the round so the two numbers can't be mistaken for each other.
-      */}
-      <div className="absolute inset-x-[28px] top-[452px] flex flex-col gap-[34px]">
-        <div className="text-center">
-          <p className="font-scratch-sans text-[16px] leading-normal font-bold tracking-[0.32px] text-dash-ink opacity-70 [font-variation-settings:'opsz'_14]">
-            Your total score
-          </p>
-          <p className="mt-[6px] font-scratch-sans text-[40px] leading-none font-bold tracking-[0.8px] text-dash-ink opacity-90 [font-variation-settings:'opsz'_14]">
-            {score}
-          </p>
-        </div>
-
-        {totalPoints > 0 && (
-          <div>
-            <p className="flex items-baseline justify-between font-scratch-sans text-[15px] leading-normal font-bold tracking-[0.3px] text-dash-ink opacity-90 [font-variation-settings:'opsz'_14]">
-              <span>Round {roundQualified}</span>
-              <span>
-                <span className="sr-only">: </span>
-                {earnedPoints} / {totalPoints}
-              </span>
-            </p>
-            <div
-              role="progressbar"
-              aria-valuemin={0}
-              aria-valuemax={totalPoints}
-              aria-valuenow={earnedPoints}
-              aria-label={`Round ${roundQualified} points`}
-              className="mt-[8px] h-[8px] w-full overflow-hidden rounded-full bg-dash-ink/20"
-            >
-              <div
-                className="h-full rounded-full bg-code-sand transition-[width] duration-500 motion-reduce:transition-none"
-                style={{ width: `${Math.round((earnedPoints / totalPoints) * 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-      </div>
+      <p className="absolute top-[558px] left-[121px] h-[29px] w-[114px] text-center font-scratch-sans text-[20px] leading-normal font-bold tracking-[0.4px] whitespace-nowrap text-dash-ink opacity-90 [font-variation-settings:'opsz'_14]">
+        <span className="sr-only">Score: </span>
+        {score}
+      </p>
     </DashboardPanel>
   );
 }

@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -8,19 +8,20 @@ import {
   getPublicTestcases,
   isNotPurchasedError,
   isNotQualifiedError,
-  isRoundNotRunningError,
   testcaseKeys,
 } from '@/api';
-import { useCodeSubmission, useRoundExpired } from '@/components/rounds/hooks';
 import { useRoundStore } from '@/stores';
 
+import {
+  useCodeRun,
+  useCodeSubmission,
+  useRoundExpired,
+} from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
+import { SolvedBox } from '../SolvedBox';
 import { getRoundConfig } from '../round-config';
 import type { Question } from '../types';
-import { VerdictBox } from '../VerdictBox';
-import { EditorToolbar } from './code-editor/EditorToolbar';
-import { LanguageSelector } from './code-editor/LanguageSelector';
-import { MonacoWrapper } from './code-editor/MonacoWrapper';
+import { EditorToolbar, LanguageSelector, MonacoWrapper } from './code-editor';
 import { ConfirmSubmitDialog } from './ConfirmSubmitDialog';
 import { CustomInputPanel } from './CustomInputPanel';
 import { DEFAULT_LANGUAGE, getLanguageById } from './languages';
@@ -35,27 +36,19 @@ import { WorkspaceLayout } from './WorkspaceLayout';
  *
  * Orchestrates ProblemPanel + the editor column (round pill, language,
  * Monaco, action row) + the results slot, and owns the `POST /submit` ->
- * `GET /result/:id` lifecycle via `useCodeSubmission`. The parent
- * `RoundShell`/`BuyInGate` handle chrome and the buy-in gate respectively —
- * this component assumes the editor is already unlocked.
+ * `GET /result/:id` lifecycle via `useCodeSubmission` and run lifecycle via `useCodeRun`.
  */
 export interface CodeEngineProps {
   question: Question;
   roundId: 2 | 3;
   onNotPurchased?: () => void;
-  /** A submission the server accepted — any forced re-lock can be cleared. */
-  onPurchased?: () => void;
 }
 
-export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: CodeEngineProps) {
+export function CodeEngine({ question, roundId, onNotPurchased }: CodeEngineProps) {
   const testcases = useQuery({
     queryKey: testcaseKeys.detail(question.id),
     queryFn: () => getPublicTestcases(question.id),
     staleTime: Infinity,
-    // Without a retry, one failed fetch stuck for the whole session: an empty
-    // public set makes `TestcasePanel` classify every result as hidden, so the
-    // contestant loses the input/expected/output columns with nothing to click.
-    retry: 3,
   });
 
   // Subscribe to this question's draft: `use.getDraft` only subscribes to the
@@ -84,18 +77,58 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
   // invalidates the round question list.
   const [wasAlreadySolved, setWasAlreadySolved] = useState(question.solved === true);
 
-  const submission = useCodeSubmission(roundId, question.id);
+  const submission = useCodeSubmission(roundId);
+  const codeRun = useCodeRun();
   const isExpired = useRoundExpired();
 
   useEffect(() => {
     if (submission.notPurchased) onNotPurchased?.();
   }, [submission.notPurchased, onNotPurchased]);
 
-  const verdict = submission.result.data;
-  const allPassed = verdict !== undefined && verdict.failed === 0 && verdict.passed > 0;
-  const resultOpen = allPassed && verdict.submissionId !== dismissedSubmissionId;
+  const verdict = submission.result.data ?? codeRun.runVerdict ?? undefined;
+  const isFinalSubmission = submission.result.data !== undefined;
+  const allPassed =
+    isFinalSubmission &&
+    submission.result.data !== undefined &&
+    submission.result.data.failed === 0 &&
+    submission.result.data.passed > 0;
+  const resultOpen =
+    allPassed && submission.result.data?.submissionId !== dismissedSubmissionId;
 
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+
+  function handleRun() {
+    if (!sourceCode.trim()) {
+      toast.error('Write some code before running.');
+      return;
+    }
+    if (customInputEnabled) {
+      codeRun.runCustomInput.mutate(
+        {
+          languageId,
+          sourceCode,
+          stdin: draft?.customInput ?? '',
+        },
+        {
+          onError: (error: unknown) => {
+            toast.error(error instanceof Error ? error.message : 'Failed to run code with custom input');
+          },
+        }
+      );
+    } else {
+      codeRun.runPublic.mutate(
+        {
+          input: { questionId: question.id, languageId, sourceCode },
+          publicTestcases: testcases.data ?? [],
+        },
+        {
+          onError: (error: unknown) => {
+            toast.error(error instanceof Error ? error.message : 'Failed to run code');
+          },
+        }
+      );
+    }
+  }
 
   function requestSubmit() {
     if (!sourceCode.trim()) {
@@ -105,68 +138,47 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     setConfirmSubmitOpen(true);
   }
 
-  // A failed submit or result fetch shows Figma `Desktop - 18`'s card over whatever verdict is on screen.
+  // A failed submit or result fetch shows error card over whatever verdict is on screen.
   const [submitFailed, setSubmitFailed] = useState(false);
   const [submitError, setSubmitError] = useState<string | undefined>(undefined);
-  // Keyed on *when* the error happened, not on the submission: dismissing once
-  // must not silence a later failure of the same submission's "Check again".
-  const [dismissedErrorAt, setDismissedErrorAt] = useState<number | null>(null);
+  const [dismissedResultErrorFor, setDismissedResultErrorFor] = useState<string | null>(null);
   const resultFailed =
     submission.result.isError &&
     !submission.timedOut &&
-    submission.result.errorUpdatedAt !== dismissedErrorAt;
+    submission.submissionId !== dismissedResultErrorFor;
 
   function confirmSubmit() {
     setConfirmSubmitOpen(false);
     setSubmitFailed(false);
     setSubmitError(undefined);
-    // The round can close while this dialog sits open, so re-check here rather
-    // than trusting the button's disabled state from when it was pressed.
-    if (isExpired) {
-      toast.error('The round has ended, so this submission was not sent.');
-      return;
-    }
     submission.submit.mutate(
       { questionId: question.id, languageId, sourceCode },
       {
-        onSuccess: () => onPurchased?.(),
         onError: error => {
           // In R2 a "not purchased" 402/403 re-locks the question instead
           // (BuyInGate). Every other round has no gate to fall back on, so the
           // card is the only thing that tells the player anything.
-          // A 423 must not re-lock the question — the buy-in is still valid,
-          // the round just isn't open.
-          if (isRoundNotRunningError(error)) {
-            setSubmitFailed(true);
-            setSubmitError(
-              'This round is not running right now, so your submission was not judged.'
-            );
-            return;
-          }
           if (isNotPurchasedError(error) && getRoundConfig(roundId).hasBuyIn) return;
           setSubmitFailed(true);
           if (isNotQualifiedError(error)) {
             setSubmitError('This round is no longer open for your account.');
           } else if (isNotPurchasedError(error)) {
-            setSubmitError('This question is not unlocked yet. Reopen it and try again.');
+            setSubmitError('This question isn’t unlocked yet — reopen it and try again.');
           }
         },
       }
     );
   }
 
-  // Also blocked while the verdict is still being fetched: each result request
-  // holds a 120s server-side long poll, so re-submitting would stack them and
-  // exhaust the browser's per-host connection budget.
   const isSubmitDisabled =
-    isExpired || !sourceCode.trim() || submission.submit.isPending || submission.result.isFetching;
+    isExpired || !sourceCode.trim() || submission.submit.isPending || codeRun.isRunning;
 
   const placeholder = submission.timedOut
     ? 'Taking longer than expected.'
     : submission.submit.isPending || submission.result.isFetching
       ? 'Judging your submission…'
-      : submission.result.isError
-        ? 'Couldn’t fetch your verdict.'
+      : codeRun.runPublic.isPending
+        ? 'Running your code against sample testcases…'
         : 'You must run your code first';
 
   return (
@@ -197,6 +209,8 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
               className="mt-3 min-h-0 flex-1 lg:mt-[19.2px] lg:ml-[6px]"
             />
             <EditorToolbar
+              onRun={handleRun}
+              isRunning={codeRun.isRunning}
               onSubmit={requestSubmit}
               isSubmitting={submission.submit.isPending}
               disabled={isSubmitDisabled}
@@ -211,24 +225,15 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
             <CustomInputPanel
               value={draft?.customInput ?? ''}
               onChange={value => setCustomInput(question.id, value)}
+              result={codeRun.customResult}
+              isRunning={codeRun.runCustomInput.isPending}
             />
           ) : verdict ? (
-            <TestcasePanel
-              testcases={testcases.data ?? []}
-              verdict={verdict}
-              // Distinguishes "this question has no public cases" from "we
-              // couldn't load them", which otherwise both render as a panel
-              // claiming every result is hidden.
-              testcasesUnavailable={testcases.isError}
-              onRetryTestcases={() => void testcases.refetch()}
-            />
+            <TestcasePanel testcases={testcases.data ?? []} verdict={verdict} />
           ) : (
             <ResultsPlaceholder
               message={placeholder}
-              // Any result failure is recoverable by asking again — a 500 or a
-              // dropped connection stranded the player on "You must run your
-              // code first" with no way back to their verdict.
-              onRetry={submission.result.isError ? submission.retryResult : undefined}
+              onRetry={submission.timedOut ? submission.retryResult : undefined}
             />
           )
         }
@@ -239,7 +244,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
         onClose={() => {
           setSubmitFailed(false);
           setSubmitError(undefined);
-          setDismissedErrorAt(submission.result.errorUpdatedAt);
+          setDismissedResultErrorFor(submission.submissionId);
         }}
       />
       <ConfirmSubmitDialog
@@ -248,16 +253,16 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
         onConfirm={confirmSubmit}
         isSubmitting={submission.submit.isPending}
       />
-      {verdict && allPassed && (
-        <VerdictBox
-          correct
+      {submission.result.data && allPassed && (
+        <SolvedBox
           open={resultOpen}
           onClose={() => {
-            setDismissedSubmissionId(verdict.submissionId);
+            if (submission.result.data) {
+              setDismissedSubmissionId(submission.result.data.submissionId);
+            }
             setWasAlreadySolved(true);
           }}
           question={question}
-          // dto.ResultResponse carries no payout or "already answered" flag.
           pointsAwarded={question.points}
           alreadyAnswered={wasAlreadySolved}
           showReward={getRoundConfig(roundId).hasCurrency}

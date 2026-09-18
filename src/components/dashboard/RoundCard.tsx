@@ -13,13 +13,7 @@ interface Props {
 }
 
 // Stand-in stats painted under a locked card's blur, copied from the frame (323:1859).
-const LOCKED_BACKDROP: RoundStats = {
-  completed: 3,
-  incomplete: 1,
-  percent: 75,
-  score: 20,
-  totalPoints: 0,
-};
+const LOCKED_BACKDROP: RoundStats = { completed: 3, incomplete: 1, percent: 75, score: 20 };
 
 const OVERLAY_TEXT =
   "font-scratch-sans text-[16.197px] leading-normal font-bold text-white [font-variation-settings:'opsz'_14]";
