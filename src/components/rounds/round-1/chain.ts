@@ -1,4 +1,4 @@
-import type { VisualBlock } from '../types';
+import type { VisualBlock } from '@/types';
 
 /**
  * ROUND 1 - Pure chain helpers.

@@ -2,10 +2,10 @@ import { screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 
 import { renderWithProviders } from '@/test/utils';
+import type { Question } from '@/types';
 
 import { QuestionTabs } from '../QuestionTabs';
 import { ScratchQuestionTabs } from '../round-1/ScratchQuestionTabs';
-import type { Question } from '../types';
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace: vi.fn(), prefetch: vi.fn() }),

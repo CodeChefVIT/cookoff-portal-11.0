@@ -3,8 +3,7 @@
 import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-query';
 
 import { questionKeys, sessionKeys, submitVisual, visualSubmissionKeys } from '@/api';
-
-import type { VisualSubmissionResult } from '../types';
+import type { VisualSubmissionResult } from '@/types';
 
 /**
  * `POST /submit/visual` — SPEC-ONLY (see AGENTS.md). Synchronous, no

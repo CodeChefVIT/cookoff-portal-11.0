@@ -13,10 +13,10 @@ import {
 
 import { cn } from '@/lib/utils';
 import { EMPTY_CHAIN, useChainStore } from '@/stores';
+import type { Question, VisualSubmissionResult } from '@/types';
 
 import { useRoundExpired, useVisualBlocks, useVisualSubmissionState } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
-import type { Question, VisualSubmissionResult } from '../types';
 import { VerdictBox } from '../VerdictBox';
 import { DraggableBlock, WorkspaceCanvas } from './block-workspace';
 import { BlockPalette } from './BlockPalette';

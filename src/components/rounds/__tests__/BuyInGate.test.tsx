@@ -4,10 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ApiModule from '@/api';
 import { renderWithProviders } from '@/test/utils';
+import type { Question } from '@/types';
 
 import { BuyInGate } from '../BuyInGate';
 import { BuyInLockSurface } from '../BuyInLock';
-import type { Question } from '../types';
 
 const { getSessionMock, createAttemptMock, pushMock } = vi.hoisted(() => ({
   getSessionMock: vi.fn(),

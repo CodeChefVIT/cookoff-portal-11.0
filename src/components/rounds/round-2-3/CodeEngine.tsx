@@ -13,11 +13,11 @@ import {
   testcaseKeys,
 } from '@/api';
 import { useRoundStore } from '@/stores';
+import type { Question } from '@/types';
 
 import { useCodeRun, useCodeSubmission, useRoundExpired, useTimePassed } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
 import { getRoundConfig } from '../round-config';
-import type { Question } from '../types';
 import { VerdictBox } from '../VerdictBox';
 import { EditorToolbar, LanguageSelector, MonacoWrapper } from './code-editor';
 import { CustomInputPanel } from './CustomInputPanel';

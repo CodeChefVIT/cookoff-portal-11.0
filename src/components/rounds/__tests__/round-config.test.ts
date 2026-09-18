@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 
+import type { Question } from '@/types';
+
 import { getRoundConfig, sortQuestionsForRound } from '../round-config';
-import type { Question } from '../types';
 
 function makeQuestion(
   overrides: Partial<Question> & Pick<Question, 'id' | 'title' | 'points'>

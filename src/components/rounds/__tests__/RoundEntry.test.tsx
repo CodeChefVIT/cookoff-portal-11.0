@@ -4,9 +4,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ApiModule from '@/api';
 import { renderWithProviders } from '@/test/utils';
+import type { Question } from '@/types';
 
 import { RoundEntry } from '../RoundEntry';
-import type { Question } from '../types';
 
 const { getQuestionsByRoundMock, getSessionMock, replaceMock } = vi.hoisted(() => ({
   getQuestionsByRoundMock: vi.fn(),

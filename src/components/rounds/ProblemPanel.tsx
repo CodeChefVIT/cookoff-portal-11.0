@@ -3,8 +3,7 @@ import { cva } from 'class-variance-authority';
 
 import { QuestionHeader } from '@/components/ui/question-header';
 import { cn } from '@/lib/utils';
-
-import type { Question } from './types';
+import type { Question } from '@/types';
 
 export interface ProblemPanelProps {
   question: Question;

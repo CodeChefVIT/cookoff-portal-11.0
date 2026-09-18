@@ -3,11 +3,11 @@
 import { useState } from 'react';
 
 import { cn } from '@/lib/utils';
+import type { Question } from '@/types';
 
 import { BuyInGate } from '../BuyInGate';
 import { useQuestion, useRoundQuestions } from '../hooks';
 import { QuestionTabs } from '../QuestionTabs';
-import type { Question } from '../types';
 import { CodeEngine } from './CodeEngine';
 import { workspaceGridTemplate } from './column-resize';
 import { useWorkspaceColumns } from './use-column-resize';

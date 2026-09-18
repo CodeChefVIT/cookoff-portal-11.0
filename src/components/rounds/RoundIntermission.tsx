@@ -1,8 +1,9 @@
 import Link from 'next/link';
 
+import type { RoundId } from '@/types';
+
 import { getRoundConfig } from './round-config';
 import { RoundTimer } from './RoundTimer';
-import type { RoundId } from './types';
 
 export type IntermissionVariant = 'pending' | 'ended' | 'notQualified' | 'finished';
 

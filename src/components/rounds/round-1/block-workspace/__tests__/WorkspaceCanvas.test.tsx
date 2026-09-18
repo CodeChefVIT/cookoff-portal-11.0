@@ -3,7 +3,8 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 
-import type { VisualBlock } from '../../../types';
+import type { VisualBlock } from '@/types';
+
 import { WorkspaceCanvas, type WorkspaceCanvasProps } from '../WorkspaceCanvas';
 
 const BLOCKS: VisualBlock[] = [

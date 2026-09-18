@@ -4,9 +4,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 import { attemptKeys, createAttempt, questionKeys, sessionKeys } from '@/api';
+import type { RoundId } from '@/types';
 
 import { getRoundConfig } from '../round-config';
-import type { RoundId } from '../types';
 
 /**
  * `POST /attempts/:id` has no read counterpart (L3): a `200` and a `409`

@@ -7,8 +7,8 @@ import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import type { VisualBlock } from '@/types';
 
-import type { VisualBlock } from '../../types';
 import { scratchPanelVariants } from '../scratch-panel';
 import { ScratchPanelTitle } from '../ScratchPanelTitle';
 import { DraggableBlock } from './DraggableBlock';

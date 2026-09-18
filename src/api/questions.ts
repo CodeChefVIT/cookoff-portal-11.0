@@ -1,8 +1,8 @@
 import * as z from 'zod';
 
-import type { Question } from '@/components/rounds/types';
 import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
+import type { Question } from '@/types';
 
 import { readFixture } from './fixtures';
 import { request } from './request';

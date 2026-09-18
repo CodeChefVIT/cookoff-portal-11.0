@@ -5,12 +5,12 @@ import { useEffect } from 'react';
 import { toast } from 'sonner';
 
 import { isNotQualifiedError } from '@/api';
+import type { Question, RoundId } from '@/types';
 
 import { BuyInConfirm } from './BuyInConfirm';
 import { BuyInLockContext } from './BuyInLock';
 import { useAttempt, useSession } from './hooks';
 import { getRoundConfig } from './round-config';
-import type { Question, RoundId } from './types';
 
 /**
  * SHARED BUY-IN GATE

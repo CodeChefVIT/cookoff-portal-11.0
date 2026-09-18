@@ -1,8 +1,8 @@
 import * as z from 'zod';
 
-import type { VisualBlock } from '@/components/rounds/types';
 import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
+import type { VisualBlock } from '@/types';
 
 import { readFixture } from './fixtures';
 import { request } from './request';

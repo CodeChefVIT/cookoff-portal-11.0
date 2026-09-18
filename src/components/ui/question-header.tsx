@@ -2,8 +2,7 @@ import Image from 'next/image';
 import { cva } from 'class-variance-authority';
 
 import { cn } from '@/lib/utils';
-
-import type { Question } from '../rounds/types';
+import type { Question } from '@/types';
 
 /**
  * SHARED UI - Question Header

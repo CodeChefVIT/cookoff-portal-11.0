@@ -1,4 +1,4 @@
-import type { Question, RoundId } from './types';
+import type { Question, RoundId } from '@/types';
 
 /**
  * The single seam between Round 1 ("Scratch"), Round 2 ("Chef's Pantry") and

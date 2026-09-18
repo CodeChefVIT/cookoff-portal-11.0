@@ -6,8 +6,8 @@ import { parseAsInteger, useQueryState } from 'nuqs';
 import { isPassed } from '@/api';
 import type { SubmissionVerdict } from '@/api';
 import { cn } from '@/lib/utils';
+import type { Testcase } from '@/types';
 
-import type { Testcase } from '../types';
 import { TestcaseCase } from './TestcaseCase';
 
 export interface TestcasePanelProps {

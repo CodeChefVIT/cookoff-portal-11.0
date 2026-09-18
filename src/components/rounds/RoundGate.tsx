@@ -3,11 +3,11 @@
 import type { ReactNode } from 'react';
 
 import { LoadingScreen } from '@/components/ui';
+import type { RoundId } from '@/types';
 
 import { useRoundTimeQuery, useSession, useTimePassed } from './hooks';
 import { getRoundConfig } from './round-config';
 import { RoundIntermission } from './RoundIntermission';
-import type { RoundId } from './types';
 
 export interface RoundGateProps {
   roundId: RoundId;

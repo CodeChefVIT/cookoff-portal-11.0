@@ -3,13 +3,13 @@
 import type { ReactNode } from 'react';
 
 import { cn } from '@/lib/utils';
+import type { RoundId } from '@/types';
 
 import { useRoundQuestions, useSession } from './hooks';
 import { QuestionTabs } from './QuestionTabs';
 import { ScratchHeader, ScratchQuestionTabs } from './round-1';
 import { getRoundConfig } from './round-config';
 import { RoundHeader } from './RoundHeader';
-import type { RoundId } from './types';
 
 /**
  * SHARED SHELL COMPONENT

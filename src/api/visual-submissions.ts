@@ -1,9 +1,9 @@
 import * as z from 'zod';
 
-import type { VisualSubmissionResult } from '@/components/rounds/types';
 import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import { uuidSchema } from '@/schemas';
+import type { VisualSubmissionResult } from '@/types';
 
 import { readFixture } from './fixtures';
 import { request } from './request';

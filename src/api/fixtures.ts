@@ -7,12 +7,7 @@
  * type as the real request, so flipping the env var off requires no
  * component changes.
  */
-import type {
-  Question,
-  Testcase,
-  VisualBlock,
-  VisualSubmissionResult,
-} from '@/components/rounds/types';
+import type { Question, Testcase, VisualBlock, VisualSubmissionResult } from '@/types';
 
 import type { AttemptOutcome } from './attempts';
 import type { Session } from './session';

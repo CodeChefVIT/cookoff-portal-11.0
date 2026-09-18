@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import type { Question } from '@/components/rounds/types';
+import type { Question } from '@/types';
 
 import { mergeAttemptStatus, questionSchema } from '../questions';
 

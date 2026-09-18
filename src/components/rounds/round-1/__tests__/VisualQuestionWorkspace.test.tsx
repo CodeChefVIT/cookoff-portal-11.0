@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ApiModule from '@/api';
 import { renderWithProviders, resetChainStore, resetRoundStore } from '@/test/utils';
+import type { Question, VisualBlock } from '@/types';
 
-import type { Question, VisualBlock } from '../../types';
 import { ChainSubmitButton } from '../ChainSubmitButton';
 import { VisualQuestionWorkspace } from '../VisualQuestionWorkspace';
 

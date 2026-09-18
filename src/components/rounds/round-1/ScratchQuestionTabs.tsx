@@ -1,9 +1,9 @@
 'use client';
 
 import { cn } from '@/lib/utils';
+import type { Question } from '@/types';
 
 import { useQuestionTabNav } from '../hooks';
-import type { Question } from '../types';
 
 export interface ScratchQuestionTabsProps {
   roundId: number;

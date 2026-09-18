@@ -6,8 +6,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { GripVertical } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
+import type { VisualBlock } from '@/types';
 
-import type { VisualBlock } from '../../types';
 import { BlockShape } from './BlockShape';
 
 // The Scratch stack-block outline is drawn by `BlockShape`; pt clears the top notch.

@@ -6,8 +6,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '@/api';
 import type * as ApiModule from '@/api';
 import { renderWithProviders, resetRoundStore } from '@/test/utils';
+import type { Question, Testcase } from '@/types';
 
-import type { Question, Testcase } from '../../types';
 import { getLanguageById } from '../languages';
 import { QuestionWorkspace } from '../QuestionWorkspace';
 

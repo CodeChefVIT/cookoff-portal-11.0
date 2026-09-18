@@ -5,8 +5,7 @@ import { Dialog } from '@base-ui/react/dialog';
 import { Check, X } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
-
-import type { Question } from './types';
+import type { Question } from '@/types';
 
 export interface VerdictBoxProps {
   open: boolean;

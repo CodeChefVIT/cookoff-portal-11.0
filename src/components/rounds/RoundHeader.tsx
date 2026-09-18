@@ -5,10 +5,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import { CurrencyBox } from '@/components/ui/currency-box';
+import type { RoundId } from '@/types';
 
 import { getRoundConfig } from './round-config';
 import { RoundTimer } from './RoundTimer';
-import type { RoundId } from './types';
 
 export interface RoundHeaderProps {
   roundId: RoundId;
