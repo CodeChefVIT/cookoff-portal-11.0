@@ -1,5 +1,6 @@
 'use client';
 
+import { useRef } from 'react';
 import { useIsMutating } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -26,14 +27,24 @@ export function ChainSubmitButton({ questionId }: ChainSubmitButtonProps) {
   const submission = useVisualSubmission(questionId);
   const isExpired = useRoundExpired();
 
+  // `disabled` only lands on the next render, so a double-click fires both
+  // clicks first; the second request is rate limited and its error replaces
+  // the first one's verdict. Block re-entry synchronously instead.
+  const inFlight = useRef(false);
+
   function handleSubmit() {
+    if (inFlight.current) return;
     if (chain.length === 0) {
       toast.error('Add at least one block to your chain before submitting.');
       return;
     }
     // The chain is never cleared here, on success or on error — only the
     // explicit "Clear chain" action in WorkspaceCanvas does that.
+    inFlight.current = true;
     submission.mutate(chain, {
+      onSettled: () => {
+        inFlight.current = false;
+      },
       onError: error => {
         toast.error(isApiError(error) ? error.message : 'Could not submit. Give it another go.');
       },
