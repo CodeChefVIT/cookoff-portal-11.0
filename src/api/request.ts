@@ -1,4 +1,4 @@
-import type { AxiosInstance, AxiosRequestConfig } from 'axios';
+import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 import type { output as ZodOutput, ZodType } from 'zod';
 
 import { api } from './client';
@@ -14,7 +14,12 @@ export async function request(
   config: AxiosRequestConfig & { schema?: ZodType; client?: AxiosInstance }
 ): Promise<unknown> {
   const { schema, client = api, ...axiosConfig } = config;
-  const response = await client.request(axiosConfig);
+  let response: AxiosResponse;
+  try {
+    response = await client.request(axiosConfig);
+  } catch (error: unknown) {
+    throw toApiError(error);
+  }
   if (schema) {
     // A `.parse()` thrown *inside* a `.transform()` escapes `safeParse` — the
     // shape schemas nest one (see `submissionResultSchema` in
