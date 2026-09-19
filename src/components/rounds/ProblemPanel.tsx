@@ -238,9 +238,9 @@ export function ProblemPanel({
         {question.constraints.length > 0 && (
           <section aria-label="Constraints" className={SECTION}>
             <h3 className={sectionTitleVariants({ variant })}>Constraints</h3>
-            <ul className={cn('list-disc pl-6', BODY_TEXT)}>
+            <div className={cn('pl-0', BODY_TEXT)}>
               {question.constraints.map((constraint, i) => (
-                <li key={i}>
+                <div key={i} className="my-1">
                   <ReactMarkdown
                     components={{
                       ...markdownComponents,
@@ -249,9 +249,9 @@ export function ProblemPanel({
                   >
                     {stripLeadingListMarker(constraint)}
                   </ReactMarkdown>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         )}
       </div>
