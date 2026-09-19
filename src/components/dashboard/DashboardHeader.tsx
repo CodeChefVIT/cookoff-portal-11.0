@@ -12,7 +12,7 @@ export function DashboardHeader({ zoom }: Props) {
         style={zoom === null ? undefined : { zoom }}
       >
         <h1 className="font-wordmark text-[36px] leading-[25.075px] font-black whitespace-nowrap text-code-brand sm:text-[56px] lg:mt-[17px] lg:text-[90px]">
-          COOK OFF <span className="text-brand-accent">11.0</span>
+          COOKOFF <span className="text-brand-accent">11</span>
         </h1>
       </div>
     </header>
