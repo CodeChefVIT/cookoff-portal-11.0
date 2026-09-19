@@ -1,5 +1,12 @@
-import Image from 'next/image';
+'use client';
 
+import { useState } from 'react';
+import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
+import { Loader2, LogOut } from 'lucide-react';
+
+import { logout } from '@/api';
 import { cn } from '@/lib/utils';
 
 import { DashboardPanel, PanelHeading } from './DashboardPanel';
@@ -30,6 +37,22 @@ export function ProfilePanel({
   earnedPoints,
   totalPoints,
 }: Props) {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const router = useRouter();
+  const queryClient = useQueryClient();
+
+  async function handleLogout() {
+    try {
+      setIsLoggingOut(true);
+      await logout();
+    } catch {
+      // Ignore network errors and proceed with client-side session cleanup
+    } finally {
+      queryClient.clear();
+      router.replace('/login');
+    }
+  }
+
   return (
     <DashboardPanel
       title="Profile"
@@ -38,6 +61,24 @@ export function ProfilePanel({
       className={cn('h-[640px] w-[356px] max-w-full shrink-0', className)}
     >
       <PanelHeading className="absolute top-[27px] left-[28px] opacity-90">PROFILE</PanelHeading>
+
+      <div className="absolute top-[24px] right-[24px] z-10">
+        <button
+          type="button"
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+          title="Logout"
+          aria-label="Logout"
+          className="group flex cursor-pointer items-center gap-1.5 rounded-full border border-dash-ink/20 bg-dash-ink/10 px-3 py-1.5 font-scratch-sans text-xs font-bold tracking-wide text-dash-ink transition-all duration-200 hover:border-red-500/50 hover:bg-red-500/10 hover:text-red-400 focus-visible:ring-2 focus-visible:ring-red-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {isLoggingOut ? (
+            <Loader2 className="size-3.5 animate-spin" />
+          ) : (
+            <LogOut className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
+          )}
+          <span>Logout</span>
+        </button>
+      </div>
 
       <div
         aria-hidden

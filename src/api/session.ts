@@ -83,3 +83,12 @@ export async function getSession(): Promise<Session> {
     timeout: SESSION_TIMEOUT_MS,
   });
 }
+
+/** Revokes the participant's active auth cookie session via `POST /logout`. */
+export async function logout(): Promise<void> {
+  await request({
+    url: '/logout',
+    method: 'POST',
+    timeout: SESSION_TIMEOUT_MS,
+  });
+}

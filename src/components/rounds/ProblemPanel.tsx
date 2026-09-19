@@ -1,6 +1,6 @@
 import type { ReactNode, SyntheticEvent } from 'react';
 import { cva } from 'class-variance-authority';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { type Components } from 'react-markdown';
 
 import { QuestionHeader } from '@/components/ui/question-header';
 import { cn } from '@/lib/utils';
@@ -86,16 +86,16 @@ function blockClipboard(event: SyntheticEvent) {
   event.preventDefault();
 }
 
-const markdownComponents = {
-  h1: ({ children }: any) => <h1 className="my-3 text-2xl font-bold text-brand">{children}</h1>,
-  h2: ({ children }: any) => <h2 className="my-2 text-xl font-bold text-brand">{children}</h2>,
-  h3: ({ children }: any) => <h3 className="my-2 text-lg font-bold text-brand">{children}</h3>,
-  h4: ({ children }: any) => <h4 className="my-1 text-base font-bold text-brand">{children}</h4>,
-  p: ({ children }: any) => <p className="mb-2 leading-[30px]">{children}</p>,
-  ul: ({ children }: any) => <ul className="my-2 list-disc pl-6">{children}</ul>,
-  ol: ({ children }: any) => <ol className="my-2 list-decimal pl-6">{children}</ol>,
-  li: ({ children }: any) => <li className="my-1">{children}</li>,
-  code: ({ className, children, ...props }: any) => (
+const markdownComponents: Components = {
+  h1: ({ children }) => <h1 className="my-3 text-2xl font-bold text-brand">{children}</h1>,
+  h2: ({ children }) => <h2 className="my-2 text-xl font-bold text-brand">{children}</h2>,
+  h3: ({ children }) => <h3 className="my-2 text-lg font-bold text-brand">{children}</h3>,
+  h4: ({ children }) => <h4 className="my-1 text-base font-bold text-brand">{children}</h4>,
+  p: ({ children }) => <p className="mb-2 leading-[30px]">{children}</p>,
+  ul: ({ children }) => <ul className="my-2 list-disc pl-6">{children}</ul>,
+  ol: ({ children }) => <ol className="my-2 list-decimal pl-6">{children}</ol>,
+  li: ({ children }) => <li className="my-1">{children}</li>,
+  code: ({ className, children, ...props }) => (
     <code
       className={cn(
         'rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm text-[#f14a16]',
@@ -106,14 +106,14 @@ const markdownComponents = {
       {children}
     </code>
   ),
-  pre: ({ children }: any) => (
+  pre: ({ children }) => (
     <pre className="my-2 overflow-x-auto rounded-[8px] border border-white/10 bg-code-inset p-3 font-mono text-sm leading-6 whitespace-pre text-white">
       {children}
     </pre>
   ),
-  strong: ({ children }: any) => <strong className="font-bold text-white">{children}</strong>,
-  em: ({ children }: any) => <em className="text-white/90 italic">{children}</em>,
-  blockquote: ({ children }: any) => (
+  strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+  em: ({ children }) => <em className="text-white/90 italic">{children}</em>,
+  blockquote: ({ children }) => (
     <blockquote className="my-2 border-l-4 border-brand pl-4 text-white/80 italic">
       {children}
     </blockquote>
@@ -240,7 +240,7 @@ export function ProblemPanel({
                   <ReactMarkdown
                     components={{
                       ...markdownComponents,
-                      p: ({ children }: any) => <span className="inline">{children}</span>,
+                      p: ({ children }) => <span className="inline">{children}</span>,
                     }}
                   >
                     {constraint}
