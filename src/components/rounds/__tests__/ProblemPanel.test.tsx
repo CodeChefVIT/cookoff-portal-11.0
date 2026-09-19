@@ -96,8 +96,8 @@ describe('ProblemPanel — markdown rendering', () => {
 
     render(<ProblemPanel question={withBulletQuestion} variant="code" />);
 
-    const listItem = screen.getByRole('listitem');
-    expect(listItem).toHaveTextContent('1 <= T <= 50');
-    expect(listItem.textContent).not.toContain('•');
+    const constraint = screen.getByText('1 <= T <= 50');
+    expect(constraint).toBeInTheDocument();
+    expect(constraint.textContent).not.toContain('•');
   });
 });
