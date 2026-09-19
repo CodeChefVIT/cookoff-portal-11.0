@@ -106,8 +106,8 @@ export const metadata: Metadata = {
   },
   description: 'The competitive programming contest platform for CodeChef-VIT Cookoff 11.',
   icons: {
-    icon: [{ url: '/favicon.ico' }, { url: '/login-logo.svg', type: 'image/svg+xml' }],
-    apple: [{ url: '/login-logo.svg' }],
+    icon: [{ url: '/cc-logo.svg', type: 'image/svg+xml' }, { url: '/favicon.ico' }],
+    apple: [{ url: '/cc-logo.svg' }],
   },
   openGraph: {
     title: 'Cookoff 11 | CodeChef-VIT',
@@ -116,7 +116,7 @@ export const metadata: Metadata = {
     siteName: 'Cookoff 11',
     images: [
       {
-        url: '/login-logo.svg',
+        url: '/cc-logo.svg',
         width: 512,
         height: 512,
         alt: 'CodeChef-VIT Cookoff 11',
@@ -128,7 +128,7 @@ export const metadata: Metadata = {
     card: 'summary',
     title: 'Cookoff 11 | CodeChef-VIT',
     description: 'The competitive programming contest platform for CodeChef-VIT Cookoff 11.',
-    images: ['/login-logo.svg'],
+    images: ['/cc-logo.svg'],
   },
   keywords: [
     'Cookoff 11',
