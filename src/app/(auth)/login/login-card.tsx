@@ -14,6 +14,7 @@ const LOGIN_ERRORS: Record<string, string> = {
   banned: 'This account has been banned. Contact the organisers if you think this is a mistake.',
   oauth_failed: 'Google sign-in did not complete. Please try again.',
   server_error: 'Something went wrong on our side. Please try again in a moment.',
+  not_vit_student: 'Only @vitstudent.ac.in email addresses are allowed to sign in.',
 };
 
 export function LoginCard({ error }: { error?: string }) {
