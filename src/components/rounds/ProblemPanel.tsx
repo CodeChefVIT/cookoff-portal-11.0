@@ -86,6 +86,10 @@ function blockClipboard(event: SyntheticEvent) {
   event.preventDefault();
 }
 
+function stripLeadingListMarker(text: string) {
+  return text.replace(/^(?:[-*•]|\d+\.)\s+/, '').trim();
+}
+
 const markdownComponents: Components = {
   h1: ({ children }) => <h1 className="my-3 text-2xl font-bold text-brand">{children}</h1>,
   h2: ({ children }) => <h2 className="my-2 text-xl font-bold text-brand">{children}</h2>,
@@ -243,7 +247,7 @@ export function ProblemPanel({
                       p: ({ children }) => <span className="inline">{children}</span>,
                     }}
                   >
-                    {constraint}
+                    {stripLeadingListMarker(constraint)}
                   </ReactMarkdown>
                 </li>
               ))}

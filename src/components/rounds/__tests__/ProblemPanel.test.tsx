@@ -87,4 +87,17 @@ describe('ProblemPanel — markdown rendering', () => {
     expect(screen.getByText('1 <= total_items <= 10^5')).toHaveClass('font-mono');
     expect(screen.getByText('computed_sum')).toHaveClass('font-mono');
   });
+
+  it('removes a leading bullet marker from each constraint before rendering', () => {
+    const withBulletQuestion: Question = {
+      ...MARKDOWN_QUESTION,
+      constraints: ['• 1 <= T <= 50'],
+    };
+
+    render(<ProblemPanel question={withBulletQuestion} variant="code" />);
+
+    const listItem = screen.getByRole('listitem');
+    expect(listItem).toHaveTextContent('1 <= T <= 50');
+    expect(listItem.textContent).not.toContain('•');
+  });
 });
