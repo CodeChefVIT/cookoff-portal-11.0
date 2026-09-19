@@ -114,36 +114,31 @@ export function MonacoWrapper({
       rememberInternalCopy(text);
     });
 
-    // Backstop for pastes the capture guard below didn't see.
-    editor.onDidPaste(event => {
-      const model = editor.getModel();
-      if (!model || isInternalPaste(model.getValueInRange(event.range))) return;
-      editor.trigger('paste-guard', 'undo', null);
-      warnExternalPaste();
-    });
+    // Temporarily disabled: re-enable the paste guard when the restriction is
+    // needed again.
+    // editor.onDidPaste(event => {
+    //   const model = editor.getModel();
+    //   if (!model || isInternalPaste(model.getValueInRange(event.range))) return;
+    //   editor.trigger('paste-guard', 'undo', null);
+    //   warnExternalPaste();
+    // });
 
     editor.onDidChangeCursorPosition(event => {
       setPosition({ line: event.position.lineNumber, column: event.position.column });
     });
   };
 
-  // Capture on the wrapper, not the editor's own container: Monaco's paste
-  // controller registers a capture listener there first and takes the event,
-  // so a listener on the same node never runs. React's capture handler fires
-  // from the root, ahead of anything inside the editor.
-  const guardPaste = (event: ReactClipboardEvent<HTMLDivElement>) => {
-    if (isInternalPaste(event.clipboardData.getData('text/plain'))) return;
-    event.preventDefault();
-    event.stopPropagation();
-    warnExternalPaste();
-  };
+  // Temporarily disabled: capture guard for external paste attempts.
+  // const guardPaste = (event: ReactClipboardEvent<HTMLDivElement>) => {
+  //   if (isInternalPaste(event.clipboardData.getData('text/plain'))) return;
+  //   event.preventDefault();
+  //   event.stopPropagation();
+  //   warnExternalPaste();
+  // };
 
   return (
     <div className={cn('flex min-h-0 flex-col', className)}>
-      <div
-        className="min-h-0 flex-1 overflow-hidden rounded-[10px] bg-code-panel"
-        onPasteCapture={guardPaste}
-      >
+      <div className="min-h-0 flex-1 overflow-hidden rounded-[10px] bg-code-panel">
         {monacoReady && (
           <Editor
             height="100%"
