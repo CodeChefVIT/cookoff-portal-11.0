@@ -147,6 +147,7 @@ export function ProblemPanel({
       explanation: question.explanation[i] ?? '',
     })
   );
+  const showSamples = question.round !== 1 && samples.length > 0;
 
   return (
     // Deters copying the statement out (e.g. into an AI tool): text can't be
@@ -200,7 +201,7 @@ export function ProblemPanel({
           </section>
         )}
 
-        {samples.length > 0 && (
+        {showSamples && (
           <section aria-label="Samples" className={SECTION}>
             <h3 className={sectionTitleVariants({ variant })}>
               {samples.length === 1 ? 'Sample' : 'Samples'}
