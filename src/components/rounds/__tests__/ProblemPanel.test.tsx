@@ -22,6 +22,23 @@ const QUESTION: Question = {
   explanation: [],
 };
 
+const MARKDOWN_QUESTION: Question = {
+  id: 'q2',
+  title: 'Markdown Problem',
+  description: '## Compiler Question\n\nWrite a **program** to read `two integers`.',
+  inputFormat: ['First line contains integer `total_items`.'],
+  outputFormat: ['Print the `result_value`.'],
+  buyIn: '0',
+  reward: '10',
+  points: 20,
+  round: 2,
+  type: 'code',
+  constraints: ['`1 <= total_items <= 10^5`'],
+  sampleTestInput: ['5\n1 2 3 4 5'],
+  sampleTestOutput: ['15'],
+  explanation: ['The **sum** of elements is `computed_sum`.'],
+};
+
 describe('ProblemPanel — copy protection', () => {
   it.each([
     ['copy', createEvent.copy],
@@ -42,5 +59,32 @@ describe('ProblemPanel — copy protection', () => {
     render(<ProblemPanel question={QUESTION} variant="code" />);
 
     expect(screen.getByRole('region', { name: /sum of an array/i })).toHaveClass('select-none');
+  });
+});
+
+describe('ProblemPanel — markdown rendering', () => {
+  it('renders markdown heading, bold text, and inline code in description', () => {
+    render(<ProblemPanel question={MARKDOWN_QUESTION} variant="code" />);
+
+    const heading = screen.getByRole('heading', { level: 2, name: /compiler question/i });
+    expect(heading).toBeInTheDocument();
+    expect(heading).toHaveClass('text-brand');
+
+    expect(screen.getByText('program')).toBeInTheDocument();
+    expect(screen.getByText('two integers')).toHaveClass('font-mono');
+  });
+
+  it('renders markdown in input and output formats', () => {
+    render(<ProblemPanel question={MARKDOWN_QUESTION} variant="code" />);
+
+    expect(screen.getByText('total_items')).toHaveClass('font-mono');
+    expect(screen.getByText('result_value')).toHaveClass('font-mono');
+  });
+
+  it('renders markdown in constraints and sample explanation', () => {
+    render(<ProblemPanel question={MARKDOWN_QUESTION} variant="code" />);
+
+    expect(screen.getByText('1 <= total_items <= 10^5')).toHaveClass('font-mono');
+    expect(screen.getByText('computed_sum')).toHaveClass('font-mono');
   });
 });
