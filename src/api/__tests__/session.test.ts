@@ -1,3 +1,4 @@
+import type { InternalAxiosRequestConfig } from 'axios';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { api } from '../client';
@@ -59,7 +60,7 @@ describe('logout', () => {
       data: null,
       headers: {},
       statusText: 'No Content',
-      config: {} as any,
+      config: {} as InternalAxiosRequestConfig,
     });
 
     await logout();
