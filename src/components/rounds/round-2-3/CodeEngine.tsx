@@ -1,6 +1,6 @@
-﻿'use client';
+'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
@@ -82,6 +82,9 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
   const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
   const cooledDown = useTimePassed(cooldownUntil);
   const coolingDown = cooldownUntil !== null && !cooledDown;
+
+  const tryLaterHandled = useRef(false);
+
   function handleTryLater(error: unknown): boolean {
     if (!isTryLaterError(error)) return false;
     const seconds = error.retryAfter ?? 3;
@@ -89,6 +92,17 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     toast.error(`${error.message}. Try again in ${seconds}s.`);
     return true;
   }
+
+  useEffect(() => {
+    if (submission.result.isError && !submission.timedOut && !tryLaterHandled.current) {
+      if (handleTryLater(submission.result.error)) {
+        tryLaterHandled.current = true;
+      }
+    }
+    if (!submission.result.isError) {
+      tryLaterHandled.current = false;
+    }
+  }, [submission.result.isError, submission.timedOut, submission.result.error]);
 
   function handleRun() {
     if (!sourceCode.trim()) {
@@ -191,9 +205,11 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
       ? 'Judging your submission…'
       : codeRun.runPublic.isPending
         ? 'Running your code against sample testcases…'
-        : submission.result.isError
-          ? 'Couldn’t fetch your verdict.'
-          : 'You must run your code first';
+        : submission.result.isError && isTryLaterError(submission.result.error)
+          ? 'Rate limited. Please wait before trying again.'
+          : submission.result.isError
+            ? 'Couldn’t fetch your verdict.'
+            : 'You must run your code first';
 
   return (
     <>
