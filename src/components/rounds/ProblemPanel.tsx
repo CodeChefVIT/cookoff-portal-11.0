@@ -86,6 +86,10 @@ function blockClipboard(event: SyntheticEvent) {
   event.preventDefault();
 }
 
+function stripLeadingListMarker(text: string) {
+  return text.replace(/^(?:[-*•]|\d+\.)\s+/, '').trim();
+}
+
 const markdownComponents: Components = {
   h1: ({ children }) => <h1 className="my-3 text-2xl font-bold text-brand">{children}</h1>,
   h2: ({ children }) => <h2 className="my-2 text-xl font-bold text-brand">{children}</h2>,
@@ -234,20 +238,20 @@ export function ProblemPanel({
         {question.constraints.length > 0 && (
           <section aria-label="Constraints" className={SECTION}>
             <h3 className={sectionTitleVariants({ variant })}>Constraints</h3>
-            <ul className={cn('list-disc pl-6', BODY_TEXT)}>
+            <div className={cn('pl-0', BODY_TEXT)}>
               {question.constraints.map((constraint, i) => (
-                <li key={i}>
+                <div key={i} className="my-1">
                   <ReactMarkdown
                     components={{
                       ...markdownComponents,
                       p: ({ children }) => <span className="inline">{children}</span>,
                     }}
                   >
-                    {constraint}
+                    {stripLeadingListMarker(constraint)}
                   </ReactMarkdown>
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           </section>
         )}
       </div>
