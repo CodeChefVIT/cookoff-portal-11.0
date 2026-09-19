@@ -51,7 +51,7 @@ export function SessionGuard({ children }: { children: ReactNode }) {
         role="alert"
         className="flex min-h-dvh flex-col items-center justify-center gap-4 bg-background px-6 text-center"
       >
-        <span className="font-display text-2xl tracking-wide text-brand">COOK OFF 11.0</span>
+        <span className="font-display text-2xl tracking-wide text-brand">COOKOFF 11</span>
         <p className="text-sm text-muted-foreground">
           Couldn&rsquo;t reach the kitchen. You are still signed in, this one is on us.
         </p>

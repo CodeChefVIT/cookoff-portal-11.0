@@ -38,7 +38,7 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-// Display serif for the "COOK OFF 11.0" wordmark and problem headings
+// Display serif for the "COOKOFF 11" wordmark and problem headings
 // (src/figma/Desktop - 15.png). Exact face pending designer confirmation —
 // Instrument Serif is the closest freely licensed match to the mockup.
 const instrumentSerif = Instrument_Serif({
@@ -99,8 +99,45 @@ const robotoLogin = Roboto({
 const novaSquare = Nova_Square({ variable: '--font-timeline', subsets: ['latin'], weight: '400' });
 
 export const metadata: Metadata = {
-  title: 'CookOff 11.0',
-  description: 'The competitive programming contest platform for CodeChef-VIT CookOff 11.0.',
+  metadataBase: new URL('https://cookoff.codechefvit.com'),
+  title: {
+    default: 'Cookoff 11 | CodeChef-VIT',
+    template: '%s | Cookoff 11',
+  },
+  description: 'The competitive programming contest platform for CodeChef-VIT Cookoff 11.',
+  icons: {
+    icon: [{ url: '/cc-logo.svg', type: 'image/svg+xml' }, { url: '/favicon.ico' }],
+    apple: [{ url: '/cc-logo.svg' }],
+  },
+  openGraph: {
+    title: 'Cookoff 11 | CodeChef-VIT',
+    description: 'The competitive programming contest platform for CodeChef-VIT Cookoff 11.',
+    url: 'https://cookoff.codechefvit.com',
+    siteName: 'Cookoff 11',
+    images: [
+      {
+        url: '/cc-logo.svg',
+        width: 512,
+        height: 512,
+        alt: 'CodeChef-VIT Cookoff 11',
+      },
+    ],
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Cookoff 11 | CodeChef-VIT',
+    description: 'The competitive programming contest platform for CodeChef-VIT Cookoff 11.',
+    images: ['/cc-logo.svg'],
+  },
+  keywords: [
+    'Cookoff 11',
+    'CodeChef-VIT',
+    'CodeChef',
+    'Competitive Programming',
+    'Coding Contest',
+    'VIT Vellore',
+  ],
 };
 
 export default function RootLayout({

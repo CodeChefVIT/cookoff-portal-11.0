@@ -1,5 +1,6 @@
 import type { ReactNode, SyntheticEvent } from 'react';
 import { cva } from 'class-variance-authority';
+import ReactMarkdown, { type Components } from 'react-markdown';
 
 import { QuestionHeader } from '@/components/ui/question-header';
 import { cn } from '@/lib/utils';
@@ -85,6 +86,40 @@ function blockClipboard(event: SyntheticEvent) {
   event.preventDefault();
 }
 
+const markdownComponents: Components = {
+  h1: ({ children }) => <h1 className="my-3 text-2xl font-bold text-brand">{children}</h1>,
+  h2: ({ children }) => <h2 className="my-2 text-xl font-bold text-brand">{children}</h2>,
+  h3: ({ children }) => <h3 className="my-2 text-lg font-bold text-brand">{children}</h3>,
+  h4: ({ children }) => <h4 className="my-1 text-base font-bold text-brand">{children}</h4>,
+  p: ({ children }) => <p className="mb-2 leading-[30px]">{children}</p>,
+  ul: ({ children }) => <ul className="my-2 list-disc pl-6">{children}</ul>,
+  ol: ({ children }) => <ol className="my-2 list-decimal pl-6">{children}</ol>,
+  li: ({ children }) => <li className="my-1">{children}</li>,
+  code: ({ className, children, ...props }) => (
+    <code
+      className={cn(
+        'rounded bg-white/10 px-1.5 py-0.5 font-mono text-sm text-[#f14a16]',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </code>
+  ),
+  pre: ({ children }) => (
+    <pre className="my-2 overflow-x-auto rounded-[8px] border border-white/10 bg-code-inset p-3 font-mono text-sm leading-6 whitespace-pre text-white">
+      {children}
+    </pre>
+  ),
+  strong: ({ children }) => <strong className="font-bold text-white">{children}</strong>,
+  em: ({ children }) => <em className="text-white/90 italic">{children}</em>,
+  blockquote: ({ children }) => (
+    <blockquote className="my-2 border-l-4 border-brand pl-4 text-white/80 italic">
+      {children}
+    </blockquote>
+  ),
+};
+
 /** Left column: full problem statement, independently scrollable. */
 export function ProblemPanel({
   question,
@@ -131,27 +166,33 @@ export function ProblemPanel({
       </div>
 
       <div className={bodyVariants({ variant })}>
-        <p className={cn('whitespace-pre-wrap', BODY_TEXT)}>{question.description}</p>
+        <div className={cn(BODY_TEXT)}>
+          <ReactMarkdown components={markdownComponents}>{question.description}</ReactMarkdown>
+        </div>
 
         {question.inputFormat.length > 0 && (
           <section aria-label="Input format" className={SECTION}>
             <h3 className={sectionTitleVariants({ variant })}>Input Format</h3>
-            <ol className={cn('list-decimal pl-6', BODY_TEXT)}>
+            <div className={cn(BODY_TEXT)}>
               {question.inputFormat.map((line, i) => (
-                <li key={i}>{line}</li>
+                <ReactMarkdown key={i} components={markdownComponents}>
+                  {line}
+                </ReactMarkdown>
               ))}
-            </ol>
+            </div>
           </section>
         )}
 
         {question.outputFormat.length > 0 && (
           <section aria-label="Output format" className={SECTION}>
             <h3 className={sectionTitleVariants({ variant })}>Output Format</h3>
-            <ol className={cn('list-decimal pl-6', BODY_TEXT)}>
+            <div className={cn(BODY_TEXT)}>
               {question.outputFormat.map((line, i) => (
-                <li key={i}>{line}</li>
+                <ReactMarkdown key={i} components={markdownComponents}>
+                  {line}
+                </ReactMarkdown>
               ))}
-            </ol>
+            </div>
           </section>
         )}
 
@@ -177,9 +218,11 @@ export function ProblemPanel({
                   {sample.explanation.trim() && (
                     <div>
                       <p className={sampleLabelVariants({ variant })}>Explanation</p>
-                      <p className={cn('mt-1 whitespace-pre-wrap', BODY_TEXT)}>
-                        {sample.explanation}
-                      </p>
+                      <div className={cn('mt-1', BODY_TEXT)}>
+                        <ReactMarkdown components={markdownComponents}>
+                          {sample.explanation}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -193,7 +236,16 @@ export function ProblemPanel({
             <h3 className={sectionTitleVariants({ variant })}>Constraints</h3>
             <ul className={cn('list-disc pl-6', BODY_TEXT)}>
               {question.constraints.map((constraint, i) => (
-                <li key={i}>{constraint}</li>
+                <li key={i}>
+                  <ReactMarkdown
+                    components={{
+                      ...markdownComponents,
+                      p: ({ children }) => <span className="inline">{children}</span>,
+                    }}
+                  >
+                    {constraint}
+                  </ReactMarkdown>
+                </li>
               ))}
             </ul>
           </section>

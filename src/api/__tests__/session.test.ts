@@ -1,6 +1,8 @@
-import { describe, expect, it } from 'vitest';
+import type { InternalAxiosRequestConfig } from 'axios';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { sessionSchema } from '../session';
+import { api } from '../client';
+import { logout, sessionSchema } from '../session';
 
 describe('sessionSchema', () => {
   it('unwraps the /dashboard envelope and maps dto.DashboardResponse', () => {
@@ -44,5 +46,30 @@ describe('sessionSchema', () => {
     });
     expect(parsed.questions).toEqual([]);
     expect(parsed.roundQualified).toBe(2);
+  });
+});
+
+describe('logout', () => {
+  beforeEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('sends POST /logout to invalidate cookies and session', async () => {
+    const postSpy = vi.spyOn(api, 'request').mockResolvedValueOnce({
+      status: 204,
+      data: null,
+      headers: {},
+      statusText: 'No Content',
+      config: {} as InternalAxiosRequestConfig,
+    });
+
+    await logout();
+
+    expect(postSpy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        url: '/logout',
+        method: 'POST',
+      })
+    );
   });
 });

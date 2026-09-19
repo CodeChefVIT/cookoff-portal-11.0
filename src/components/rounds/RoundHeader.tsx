@@ -40,7 +40,7 @@ export function RoundHeader({ roundId, balance, headerAction }: RoundHeaderProps
           className="size-12 shrink-0 object-cover lg:size-[60px]"
         />
         <span className="font-wordmark text-[28px] leading-none font-black whitespace-nowrap text-code-brand sm:text-[40px] lg:text-[44px] lg:leading-[60px] xl:text-[min(72px,5vw)]">
-          COOK OFF <span className="text-brand-accent">11.0</span>
+          COOKOFF <span className="text-brand-accent">11</span>
         </span>
       </div>
       <div className="flex items-center gap-4 lg:gap-[36px]">

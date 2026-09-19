@@ -1,4 +1,4 @@
-﻿export { api, createApiClient } from './client';
+export { api, createApiClient } from './client';
 export {
   ApiError,
   ERROR_CODES,
@@ -12,7 +12,7 @@ export {
 export { request } from './request';
 export { envelope, normalizeWire, unwrapEnvelope } from './wire';
 
-export { getSession, sessionKeys, sessionSchema } from './session';
+export { getSession, logout, sessionKeys, sessionSchema } from './session';
 export type { Session, DashboardQuestionSummary } from './session';
 
 export {
