@@ -185,7 +185,7 @@ export function ScratchEngine({ question }: ScratchEngineProps) {
               heading={<ScratchPanelTitle>Question</ScratchPanelTitle>}
               className={cn(
                 scratchPanelVariants({ tone: 'question' }),
-                'block overflow-y-auto px-5 pt-0 pb-5'
+                'short-scrollbar block overflow-y-auto px-5 pt-0 pb-5'
               )}
             />
           }

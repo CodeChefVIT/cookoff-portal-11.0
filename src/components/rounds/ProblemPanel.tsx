@@ -23,8 +23,8 @@ const BODY_TEXT = 'font-sans text-base leading-[30px] text-white';
 const panelVariants = cva('h-full min-h-0 text-card-foreground', {
   variants: {
     variant: {
-      default: 'overflow-y-auto rounded-2xl border border-border bg-card p-5',
-      code: 'overflow-y-auto rounded-[10px] bg-code-panel',
+      default: 'short-scrollbar overflow-y-auto rounded-2xl border border-border bg-card p-5',
+      code: 'short-scrollbar overflow-y-auto rounded-[10px] bg-code-panel',
     },
   },
   defaultVariants: { variant: 'default' },
