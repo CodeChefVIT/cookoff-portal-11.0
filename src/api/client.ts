@@ -58,6 +58,11 @@ export function createApiClient(baseURL: string) {
         }
       }
 
+      const status = error.response?.status;
+      if (status === 429 || status === 503) {
+        return Promise.reject(toApiError(error));
+      }
+
       return Promise.reject(toApiError(error));
     }
   );
