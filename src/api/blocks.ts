@@ -1,12 +1,10 @@
 import * as z from 'zod';
 
-import type { VisualBlock } from '@/components/rounds/types';
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
+import type { VisualBlock } from '@/types';
 
-import { readFixture } from './fixtures';
 import { request } from './request';
-import { normalizeWire, unwrapEnvelope } from './wire';
+import { envelope, normalizeWire } from './wire';
 
 const BLOCK_FIELDS = ['id', 'content'] as const;
 
@@ -31,11 +29,12 @@ export const blockKeys = createQueryKeys('blocks');
 /**
  * `GET /question/:id/blocks` — Round 1 only (LLD §2.2, `questions.go#ListBlocks`
  * 404s for a non-`round=1`/non-`visual` question). Response is a
- * `dto.SuccessResponse{data: VisualBlockResponse[]}` envelope; `unwrapEnvelope`
- * strips it before the list schema runs.
+ * `dto.SuccessResponse{data: VisualBlockResponse[]}` envelope.
  */
 export async function getVisualBlocks(questionId: string): Promise<VisualBlock[]> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('visualBlocks', questionId);
-  const raw = await request<unknown>({ url: `/question/${questionId}/blocks`, method: 'GET' });
-  return visualBlockListSchema.parse(unwrapEnvelope(raw));
+  return request({
+    url: `/question/${questionId}/blocks`,
+    method: 'GET',
+    schema: envelope(visualBlockListSchema),
+  });
 }

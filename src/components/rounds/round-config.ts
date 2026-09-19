@@ -1,4 +1,4 @@
-import type { Question, RoundId } from './types';
+import type { RoundId } from '@/types';
 
 /**
  * The single seam between Round 1 ("Scratch"), Round 2 ("Chef's Pantry") and
@@ -12,7 +12,11 @@ export interface RoundConfig {
   label: string;
   /** Which gameplay engine renders the question: block-chain (R1) or Monaco (R2/R3). */
   engine: 'visual' | 'code';
-  /** R1 has no buy-in; R2 gates the editor behind `POST /question/:id/attempt`; R3 does not. */
+  /**
+   * Only R2 gates the editor behind a buy-in (`POST /attempts/:id`). R1 and R3
+   * need no attempt up front: the backend opens one on the first visual
+   * submission (R1) or when a verdict is finalized (R3).
+   */
   hasBuyIn: boolean;
   /** R1/R3 hide the balance HUD entirely — R1 has no in-round currency, R3 wants it minimal. */
   hasCurrency: boolean;
@@ -20,11 +24,6 @@ export interface RoundConfig {
   headerSubmit: boolean;
   /** Visual identity of the header, tabs and page: R1's Figma `scratch` frame vs the R2/R3 IDE look. */
   chrome: 'scratch' | 'code';
-  /**
-   * R1 has no buy-in, yet `/submit/visual` 403s without a `bought` attempt
-   * (L14) — so the attempt is created silently when a question opens.
-   */
-  autoAttempt: boolean;
   /** R3 has no next round: completion freezes the platform. */
   isFinalRound: boolean;
   intermissionCopy: {
@@ -44,7 +43,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     hasCurrency: false,
     headerSubmit: true,
     chrome: 'scratch',
-    autoAttempt: true,
     isFinalRound: false,
     intermissionCopy: {
       pending: 'Round 1 begins shortly. Warm up your block-building skills.',
@@ -61,7 +59,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     hasCurrency: true,
     headerSubmit: false,
     chrome: 'code',
-    autoAttempt: false,
     isFinalRound: false,
     intermissionCopy: {
       pending: 'Round 2 begins shortly. Place your bets wisely once the kitchen opens.',
@@ -78,10 +75,6 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
     hasCurrency: false,
     headerSubmit: false,
     chrome: 'code',
-    // `/submit` requires a `bought`/`answered` attempt in every round
-    // (`submission.go:85-97`), so R3 unlocks silently on open. Its questions
-    // are free (`buy_in = 0`), so this costs the finalist nothing.
-    autoAttempt: true,
     isFinalRound: true,
     intermissionCopy: {
       pending: 'Round 3 begins shortly. Only the top contestants made it this far.',
@@ -94,13 +87,4 @@ const ROUND_CONFIG: Record<RoundId, RoundConfig> = {
 
 export function getRoundConfig(roundId: RoundId): RoundConfig {
   return ROUND_CONFIG[roundId];
-}
-
-/**
- * No `difficulty` or ordering column exists on `questions` (L6). `points`
- * is the closest available proxy for difficulty per the product doc's
- * "increasing order of difficulty" requirement; title is a stable tiebreak.
- */
-export function sortQuestionsForRound(questions: Question[]): Question[] {
-  return [...questions].sort((a, b) => a.points - b.points || a.title.localeCompare(b.title));
 }

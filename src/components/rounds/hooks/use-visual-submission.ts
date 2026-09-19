@@ -3,11 +3,10 @@
 import { useMutation, useMutationState, useQueryClient } from '@tanstack/react-query';
 
 import { questionKeys, sessionKeys, submitVisual, visualSubmissionKeys } from '@/api';
-
-import type { VisualSubmissionResult } from '../types';
+import type { VisualSubmissionResult } from '@/types';
 
 /**
- * `POST /submit/visual` — SPEC-ONLY (see AGENTS.md). Synchronous, no
+ * `POST /submit/visual` (`controllers/submit_round1.go`). Synchronous, no
  * polling. Called from `ChainSubmitButton` — Round 1's header Submit button
  * (`RoundConfig.headerSubmit`) — not from `ScratchEngine`, which lives in a
  * separate part of the tree (below `RoundShell`'s header). `ScratchEngine`

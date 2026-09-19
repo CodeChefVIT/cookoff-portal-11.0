@@ -3,7 +3,6 @@
  * Import from `@/components/rounds` so that the shared shell components
  * are available to all rounds equally.
  */
-export * from './types';
 export * from './round-config';
 export * from './RoundShell';
 export * from './RoundGate';

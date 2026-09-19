@@ -1,7 +1,6 @@
 import type { TestcaseResult } from '@/api';
 import { isPassed } from '@/api';
-
-import type { Testcase } from '../types';
+import type { Testcase } from '@/types';
 
 export interface TestcaseCaseProps {
   testcase: Testcase;

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { VisualBlock } from '../../types';
+import type { VisualBlock } from '@/types';
+
 import { insertIndexFor, moveItem, paletteFor, resolveChain } from '../chain';
 
 const BLOCKS: VisualBlock[] = [

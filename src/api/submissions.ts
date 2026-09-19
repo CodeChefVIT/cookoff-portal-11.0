@@ -1,21 +1,30 @@
 ﻿import * as z from 'zod';
 
-import { env } from '@/env';
 import { createQueryKeys } from '@/lib/query';
 import { uuidSchema } from '@/schemas';
 
-import type { CustomRunResult } from './fixtures';
-import { readFixture } from './fixtures';
 import { request } from './request';
 import { envelope, normalizeWire } from './wire';
 
-export type { CustomRunResult };
-
-export const CAPABILITIES = {
-  runCode: true,
-} as const;
+/** What `/runcustom` ran and printed, shaped for the custom-input panel. */
+export interface CustomRunResult {
+  stdout: string | null;
+  stderr: string | null;
+  message: string | null;
+  time?: string;
+  memory?: number;
+  status: { id: number; description: string };
+  isPassed: boolean;
+}
 
 export const PASSED_STATUS = 'Success';
+
+/**
+ * `/runcode` and `/runcustom` wait for Judge0 synchronously; the server allows
+ * them 45s (`runWriteDeadline`, `controllers/runcode.go`), so give it a little
+ * more before giving up.
+ */
+const RUN_TIMEOUT_MS = 50_000;
 
 export const submissionRequestSchema = z.object({
   questionId: uuidSchema,
@@ -111,6 +120,7 @@ export const judge0CallbackPayloadShape = z.object({
   stdout: z.string().nullable().optional(),
   stderr: z.string().nullable().optional(),
   message: z.string().nullable().optional(),
+  compile_output: z.string().nullable().optional(),
   time: z.string().nullable().optional(),
   memory: z.number().nullable().optional(),
   status: judge0StatusShape.default({ id: 0, description: 'Unknown' }),
@@ -122,7 +132,6 @@ export const submissionKeys = createQueryKeys('submissions');
 
 export async function submitCode(input: SubmissionRequestInput): Promise<{ submissionId: string }> {
   const payload = submissionRequestSchema.parse(input);
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('submit', payload);
   return request({
     url: '/submit',
     method: 'POST',
@@ -144,12 +153,12 @@ export async function getSubmissionResult(
   submissionId: string,
   signal?: AbortSignal
 ): Promise<SubmissionVerdict> {
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('result', submissionId);
   return request({
     url: `/result/${submissionId}`,
     method: 'GET',
     schema: envelope(submissionResultSchema),
-    timeout: 130_000,
+    // The server holds the request for up to 90s (`resultLongPollTimeout`).
+    timeout: 100_000,
     signal,
   });
 }
@@ -159,7 +168,6 @@ export async function runCode(
   publicTestcases: { id: string }[] = []
 ): Promise<SubmissionVerdict> {
   const payload = submissionRequestSchema.parse(input);
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('runCode', payload);
 
   const results = await request({
     url: '/runcode',
@@ -170,7 +178,7 @@ export async function runCode(
       source_code: payload.sourceCode,
     },
     schema: envelope(z.array(judge0CallbackPayloadShape)),
-    timeout: 30_000,
+    timeout: RUN_TIMEOUT_MS,
   });
 
   const passed = results.filter(r => r.status.id === 3).length;
@@ -181,7 +189,10 @@ export async function runCode(
     const isPass = r.status.id === 3;
     const testcaseId = publicTestcases[index]?.id ?? `public-case-${index + 1}`;
     const outputDesc =
-      r.stderr || r.message || (isPass ? '' : r.status.description || 'Wrong Answer');
+      r.compile_output ||
+      r.stderr ||
+      r.message ||
+      (isPass ? '' : r.status.description || 'Wrong Answer');
     return {
       testcaseId,
       runtime: r.time ? parseFloat(r.time) * 1000 : undefined,
@@ -207,7 +218,6 @@ export async function runCode(
 
 export async function runCustom(input: CustomRunRequestInput): Promise<CustomRunResult> {
   const payload = customRunRequestSchema.parse(input);
-  if (env.NEXT_PUBLIC_USE_MOCK_API) return readFixture('runCustom', payload);
 
   const raw = await request({
     url: '/runcustom',
@@ -218,12 +228,12 @@ export async function runCustom(input: CustomRunRequestInput): Promise<CustomRun
       stdin: payload.stdin,
     },
     schema: envelope(judge0CallbackPayloadShape),
-    timeout: 30_000,
+    timeout: RUN_TIMEOUT_MS,
   });
 
   return {
     stdout: raw.stdout ?? null,
-    stderr: raw.stderr ?? null,
+    stderr: raw.stderr ?? raw.compile_output ?? null,
     message: raw.message ?? null,
     time: raw.time ?? undefined,
     memory: raw.memory ?? undefined,

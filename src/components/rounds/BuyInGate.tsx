@@ -1,18 +1,16 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import { useEffect, useRef } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { toast } from 'sonner';
 
-import { attemptKeys } from '@/api';
-import { Button } from '@/components/ui/button';
+import { isNotQualifiedError } from '@/api';
+import type { Question, RoundId } from '@/types';
 
 import { BuyInConfirm } from './BuyInConfirm';
 import { BuyInLockContext } from './BuyInLock';
 import { useAttempt, useSession } from './hooks';
 import { getRoundConfig } from './round-config';
-import type { Question, RoundId } from './types';
 
 /**
  * SHARED BUY-IN GATE
@@ -21,12 +19,9 @@ import type { Question, RoundId } from './types';
  * `BuyInConfirm` box (352:744) go down through `BuyInLockContext`; only the
  * `BuyInLockSurface` inside (the editor + results column) blurs and goes
  * inert, so the problem statement stays readable before buying. Only a
- * response with `unlocked: true` opens it — an
- * insufficient-balance response is still a successful call. R1/R3
- * (`RoundConfig.hasBuyIn === false`) are pass-throughs — never a bet prompt,
- * even on a spurious `402` from `/submit` (see AGENTS.md C2/L7). R1
- * (`autoAttempt`) still creates the attempt silently on open, because
- * `/submit/visual` rejects a question with no `bought` attempt (L14).
+ * response with `unlocked: true` opens it — an insufficient-balance response
+ * is still a successful call. R1/R3 (`RoundConfig.hasBuyIn === false`) are
+ * pass-throughs: never a bet prompt and no attempt call.
  */
 export interface BuyInGateProps {
   children: ReactNode;
@@ -51,20 +46,7 @@ export function BuyInGate({
   const config = getRoundConfig(roundId);
   const session = useSession();
   const attempt = useAttempt(roundId, questionId);
-
-  const { mutate: unlock, isIdle, reset } = attempt;
-  const autoUnlock = config.autoAttempt && question.bought !== true;
-  // Dev Strict Mode re-runs this effect before `isIdle` flips, and a remount can
-  // land while the first POST is in flight; a second POST races the first and
-  // its 500 shows the retry banner. Send at most one per question.
-  const queryClient = useQueryClient();
-  const autoUnlockSentFor = useRef<string | null>(null);
-  useEffect(() => {
-    if (!autoUnlock || !isIdle || autoUnlockSentFor.current === questionId) return;
-    if (queryClient.isMutating({ mutationKey: attemptKeys.detail(questionId) }) > 0) return;
-    autoUnlockSentFor.current = questionId;
-    unlock();
-  }, [autoUnlock, isIdle, unlock, questionId, queryClient]);
+  const { reset } = attempt;
 
   // A stale unlock (earlier bet in this mount) must not keep the editor open once the server re-locks.
   useEffect(() => {
@@ -73,37 +55,7 @@ export function BuyInGate({
     toast.error('The server did not recognise your bet. Place it again before you submit.');
   }, [config.hasBuyIn, forceLocked, reset]);
 
-  if (!config.hasBuyIn) {
-    const unlockFailed =
-      config.autoAttempt && (attempt.isError || attempt.data?.unlocked === false);
-    // A 423 is not a broken unlock — the round simply isn't open. Retrying
-    // cannot help until an admin starts it, so don't offer the button.
-    const roundNotRunning = attempt.data?.roundNotRunning === true;
-    return (
-      <>
-        {unlockFailed && (
-          <div
-            role="alert"
-            className="mx-4 mb-3 flex items-center justify-between gap-3 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive lg:mx-[31px]"
-          >
-            {roundNotRunning ? (
-              <span>This round is not running right now. Hold tight.</span>
-            ) : (
-              <>
-                <span>
-                  Couldn&rsquo;t unlock this question. Submitting will not work until it does.
-                </span>
-                <Button size="sm" variant="outline" onClick={() => unlock()}>
-                  Retry unlock
-                </Button>
-              </>
-            )}
-          </div>
-        )}
-        {children}
-      </>
-    );
-  }
+  if (!config.hasBuyIn) return <>{children}</>;
 
   const unlocked = attempt.data?.unlocked === true || (question.bought === true && !forceLocked);
   const buyIn = Number(question.buyIn);
@@ -127,7 +79,10 @@ export function BuyInGate({
             : BET_FAILED
         );
       },
-      onError: () => toast.error(BET_FAILED),
+      onError: error =>
+        toast.error(
+          isNotQualifiedError(error) ? 'This round is not open for your account.' : BET_FAILED
+        ),
     });
   }
 

@@ -1,8 +1,9 @@
 import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
+import type { Question } from '@/types';
+
 import { ProblemPanel } from '../ProblemPanel';
-import type { Question } from '../types';
 
 const QUESTION: Question = {
   id: 'q1',

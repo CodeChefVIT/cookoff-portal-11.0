@@ -16,10 +16,10 @@ import type { SubmissionRequestInput } from '@/api';
 
 /**
  * Owns the submit -> result lifecycle. `GET /result/:id` long-polls
- * server-side for up to 2 minutes and returns the final, terminal verdict
+ * server-side for up to 90 seconds and returns the final, terminal verdict
  * directly (see AGENTS.md) — there is no client-side interval polling loop.
- * A `408` means it genuinely wasn't ready after 2 minutes; the query surfaces
- * a manual "Check again" rather than spending another 2 minutes on an
+ * A `408` means it genuinely wasn't ready after 90 seconds; the query surfaces
+ * a manual "Check again" rather than spending another 90 seconds on an
  * automatic retry.
  * `submissionId` lives in component state only (never persisted) — a page
  * refresh should not replay a verdict for a buffer the user has since
@@ -84,8 +84,8 @@ export function useCodeSubmission(roundId: number, questionId: string) {
     queryFn: ({ signal }) => getSubmissionResult(submissionId ?? '', signal),
     enabled: submissionId !== null,
     staleTime: 0,
-    // `/result/:id` already long-polls for 120s server-side, so the global
-    // `retry: 1` would silently spend another 120s before the 408 ever reached
+    // `/result/:id` already long-polls for 90s server-side, so the global
+    // `retry: 1` would silently spend another 90s before the 408 ever reached
     // the UI. Surface "Check again" after the first timeout instead.
     retry: 0,
   });

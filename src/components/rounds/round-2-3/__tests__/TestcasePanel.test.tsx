@@ -3,8 +3,8 @@ import { NuqsTestingAdapter } from 'nuqs/adapters/testing';
 import { describe, expect, it } from 'vitest';
 
 import type { SubmissionVerdict } from '@/api';
+import type { Testcase } from '@/types';
 
-import type { Testcase } from '../../types';
 import { TestcasePanel } from '../TestcasePanel';
 
 // `GET /question/:id/testcases/public` only ever returns visible cases —

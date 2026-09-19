@@ -4,9 +4,9 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { LoadingScreen } from '@/components/ui';
+import type { RoundId } from '@/types';
 
 import { useRoundQuestions } from './hooks';
-import type { RoundId } from './types';
 
 export interface RoundEntryProps {
   roundId: RoundId;

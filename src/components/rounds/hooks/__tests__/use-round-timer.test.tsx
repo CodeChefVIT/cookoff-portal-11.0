@@ -142,7 +142,7 @@ describe('useRoundTimeQuery', () => {
     expect(getRoundTimeMock).toHaveBeenCalledTimes(1);
 
     await act(async () => {
-      await vi.advanceTimersByTimeAsync(120_000);
+      await vi.advanceTimersByTimeAsync(30_000);
     });
     expect(getRoundTimeMock).toHaveBeenCalledTimes(2);
   });

@@ -8,6 +8,7 @@ import {
   isNotPurchasedError,
   isNotQualifiedError,
   isRoundNotRunningError,
+  isTryLaterError,
   toApiError,
 } from '../errors';
 
@@ -89,36 +90,53 @@ describe('toApiError', () => {
 });
 
 describe('round and purchase error classification', () => {
-  const apiError = (status: number, message: string) => new ApiError({ message, status });
+  const apiError = (status: number, code?: string) =>
+    new ApiError({ message: 'server text is free to change', status, code });
 
-  it('treats the real purchase rejections as not-purchased', () => {
-    // submission.go and submit_round1.go respectively.
-    expect(
-      isNotPurchasedError(
-        apiError(403, 'Question not purchased — buy this question before submitting')
-      )
-    ).toBe(true);
-    expect(isNotPurchasedError(apiError(403, 'Question not bought yet'))).toBe(true);
-    expect(isNotPurchasedError(apiError(402, 'Insufficient balance'))).toBe(true);
+  it('classifies by the server code, not the message', () => {
+    expect(isNotPurchasedError(apiError(403, 'NOT_PURCHASED'))).toBe(true);
+    expect(isNotQualifiedError(apiError(403, 'NOT_QUALIFIED'))).toBe(true);
+    expect(isRoundNotRunningError(apiError(423, 'ROUND_NOT_RUNNING'))).toBe(true);
   });
 
-  // Previously any 403 without "not qualified" counted as a stale buy-in, so an
-  // unrelated 403 re-locked a question the contestant had already paid for.
-  it('does not treat an unrelated 403 as not-purchased', () => {
-    expect(isNotPurchasedError(apiError(403, 'admin access required'))).toBe(false);
-    expect(isNotPurchasedError(apiError(403, 'Account is banned'))).toBe(false);
+  it('does not treat an unrelated 403 as not-purchased or not-qualified', () => {
+    expect(isNotPurchasedError(apiError(403, 'FORBIDDEN'))).toBe(false);
+    expect(isNotQualifiedError(apiError(403, 'FORBIDDEN'))).toBe(false);
+    expect(isNotPurchasedError(apiError(402, 'INSUFFICIENT_BALANCE'))).toBe(false);
   });
 
-  it('keeps the not-qualified 403 separate', () => {
-    const notQualified = apiError(403, 'User not qualified for this round');
-    expect(isNotQualifiedError(notQualified)).toBe(true);
+  it('keeps not-qualified and not-purchased apart', () => {
+    const notQualified = apiError(403, 'NOT_QUALIFIED');
     expect(isNotPurchasedError(notQualified)).toBe(false);
+    expect(isNotQualifiedError(apiError(403, 'NOT_PURCHASED'))).toBe(false);
   });
 
   it('recognises a 423 as the round not running and nothing else', () => {
-    const locked = apiError(423, 'Round is not running');
+    const locked = apiError(423);
     expect(isRoundNotRunningError(locked)).toBe(true);
     expect(isNotPurchasedError(locked)).toBe(false);
     expect(isNotQualifiedError(locked)).toBe(false);
+  });
+
+  it('treats rate limits and a busy judge as try-later', () => {
+    expect(isTryLaterError(apiError(429, 'RATE_LIMITED'))).toBe(true);
+    expect(isTryLaterError(apiError(503, 'JUDGE_BUSY'))).toBe(true);
+    expect(isTryLaterError(apiError(502, 'JUDGE_FAILED'))).toBe(false);
+  });
+});
+
+describe('toApiError retry-after', () => {
+  it('reads Retry-After from the response headers', () => {
+    const axiosErr = new AxiosError('Too many', 'ERR_BAD_REQUEST');
+    Object.defineProperty(axiosErr, 'response', {
+      value: {
+        status: 429,
+        headers: { 'retry-after': '4' },
+        data: { success: false, message: 'Too many requests, slow down', code: 'RATE_LIMITED' },
+      },
+    });
+    const result = toApiError(axiosErr);
+    expect(result.retryAfter).toBe(4);
+    expect(result.code).toBe('RATE_LIMITED');
   });
 });

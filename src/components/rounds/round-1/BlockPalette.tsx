@@ -3,8 +3,8 @@
 import { useDraggable } from '@dnd-kit/core';
 
 import { cn } from '@/lib/utils';
+import type { VisualBlock } from '@/types';
 
-import type { VisualBlock } from '../types';
 import { DraggableBlock } from './block-workspace';
 import { scratchPanelVariants } from './scratch-panel';
 import { ScratchPanelTitle } from './ScratchPanelTitle';

@@ -1,26 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { getRoundConfig, sortQuestionsForRound } from '../round-config';
-import type { Question } from '../types';
-
-function makeQuestion(
-  overrides: Partial<Question> & Pick<Question, 'id' | 'title' | 'points'>
-): Question {
-  return {
-    description: '',
-    type: 'code',
-    inputFormat: [],
-    buyIn: '0',
-    reward: '0',
-    round: 2,
-    constraints: [],
-    outputFormat: [],
-    sampleTestInput: [],
-    sampleTestOutput: [],
-    explanation: [],
-    ...overrides,
-  };
-}
+import { getRoundConfig } from '../round-config';
 
 describe('getRoundConfig', () => {
   it('R1 has no buy-in, no currency, and puts Submit in the header', () => {
@@ -30,7 +10,6 @@ describe('getRoundConfig', () => {
     expect(config.hasCurrency).toBe(false);
     expect(config.headerSubmit).toBe(true);
     expect(config.chrome).toBe('scratch');
-    expect(config.autoAttempt).toBe(true);
     expect(config.isFinalRound).toBe(false);
   });
 
@@ -39,7 +18,6 @@ describe('getRoundConfig', () => {
     expect(config.hasBuyIn).toBe(true);
     expect(config.hasCurrency).toBe(true);
     expect(config.chrome).toBe('code');
-    expect(config.autoAttempt).toBe(false);
     expect(config.isFinalRound).toBe(false);
   });
 
@@ -50,37 +28,6 @@ describe('getRoundConfig', () => {
     expect(config.hasCurrency).toBe(false);
     expect(config.headerSubmit).toBe(false);
     expect(config.chrome).toBe('code');
-    // Free, but still unlocked on open: `/submit` needs an attempt row in every round.
-    expect(config.autoAttempt).toBe(true);
     expect(config.isFinalRound).toBe(true);
-  });
-});
-
-describe('sortQuestionsForRound', () => {
-  it('orders by points ascending', () => {
-    const questions = [
-      makeQuestion({ id: '1', title: 'B', points: 30 }),
-      makeQuestion({ id: '2', title: 'A', points: 10 }),
-      makeQuestion({ id: '3', title: 'C', points: 20 }),
-    ];
-    expect(sortQuestionsForRound(questions).map(q => q.id)).toEqual(['2', '3', '1']);
-  });
-
-  it('breaks ties by title', () => {
-    const questions = [
-      makeQuestion({ id: '1', title: 'Zebra', points: 10 }),
-      makeQuestion({ id: '2', title: 'Apple', points: 10 }),
-    ];
-    expect(sortQuestionsForRound(questions).map(q => q.id)).toEqual(['2', '1']);
-  });
-
-  it('does not mutate the input array', () => {
-    const questions = [
-      makeQuestion({ id: '1', title: 'A', points: 20 }),
-      makeQuestion({ id: '2', title: 'B', points: 10 }),
-    ];
-    const original = [...questions];
-    sortQuestionsForRound(questions);
-    expect(questions).toEqual(original);
   });
 });

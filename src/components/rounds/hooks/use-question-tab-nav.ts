@@ -3,7 +3,7 @@
 import type { KeyboardEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-import type { Question } from '../types';
+import type { Question } from '@/types';
 
 /** Routing + arrow/Home/End handling shared by every question tab strip. */
 export function useQuestionTabNav(roundId: number, questions: Question[]) {

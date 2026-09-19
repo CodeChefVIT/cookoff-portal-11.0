@@ -5,7 +5,9 @@ import { useQuery } from '@tanstack/react-query';
 
 import { getRoundTime, remainingMs, timerKeys } from '@/api';
 
-const RESYNC_INTERVAL_MS = 120_000;
+// An admin Stop or time change reaches players within this. At 350 players
+// it is ~12 requests/s, served from Redis.
+const RESYNC_INTERVAL_MS = 30_000;
 // Readers mounted later in the same page load reuse the owner's response.
 const READER_STALE_TIME_MS = 30_000;
 const TICK_INTERVAL_MS = 1_000;
@@ -22,7 +24,7 @@ export interface UseRoundTimerResult {
 /**
  * One `GET /getTime` query shared by every timer consumer. Only the sync owner
  * (`RoundGate`, mounted around every round page) fetches on mount, re-syncs
- * every 120s and refetches on focus; every other reader just reads the cache,
+ * every 30s and refetches on focus; every other reader just reads the cache,
  * so a page load costs one request and the resync one per interval.
  * `roundEndTime` is already in the local clock (`api/timer.ts`).
  */

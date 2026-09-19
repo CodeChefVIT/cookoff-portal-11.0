@@ -1,6 +1,5 @@
 ﻿import type { CSSProperties } from 'react';
 
-import { CAPABILITIES } from '@/api';
 import { cn } from '@/lib/utils';
 
 export interface EditorToolbarProps {
@@ -63,8 +62,7 @@ export function EditorToolbar({
         <button
           type="button"
           onClick={onRun}
-          disabled={disabled || isRunning || isSubmitting || !CAPABILITIES.runCode}
-          title={CAPABILITIES.runCode ? undefined : 'Run Code is currently unavailable.'}
+          disabled={disabled || isRunning || isSubmitting}
           className={cn(
             'h-[26.4px] w-[161.2px] rounded-[10px] bg-code-run font-sans text-[16px] leading-[25.075px] font-semibold text-white enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60 lg:absolute lg:top-[5.41px] lg:right-[174.9px]',
             BUTTON_SHADOW

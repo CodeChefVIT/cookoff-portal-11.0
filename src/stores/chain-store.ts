@@ -74,3 +74,15 @@ const useChainStoreBase = create<ChainState>()(
 ) as unknown as UseBoundStore<StoreApi<ChainState>>;
 
 export const useChainStore = createSelectors(useChainStoreBase);
+
+type Persisted = { persist: { rehydrate: () => Promise<void> | void } };
+
+// Every write persists this tab's whole state, so a second portal tab would
+// overwrite the drafts the first one saved. Pick up the other tab's writes
+// before making our own.
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', event => {
+    if (event.key === 'chain-store')
+      void (useChainStoreBase as unknown as Persisted).persist.rehydrate();
+  });
+}

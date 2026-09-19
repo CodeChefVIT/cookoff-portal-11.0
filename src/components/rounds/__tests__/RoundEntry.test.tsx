@@ -4,9 +4,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import type * as ApiModule from '@/api';
 import { renderWithProviders } from '@/test/utils';
+import type { Question } from '@/types';
 
 import { RoundEntry } from '../RoundEntry';
-import type { Question } from '../types';
 
 const { getQuestionsByRoundMock, getSessionMock, replaceMock } = vi.hoisted(() => ({
   getQuestionsByRoundMock: vi.fn(),
@@ -47,11 +47,13 @@ afterEach(() => {
 });
 
 describe('RoundEntry', () => {
-  it('replaces the route with the first question in tab order', async () => {
+  // The backend orders the round (points, then title), so the first question
+  // it returns is the first tab.
+  it('replaces the route with the first question the server returns', async () => {
     getSessionMock.mockResolvedValue({ userId: 'u1', balance: 0, score: 0, roundQualified: 2 });
     getQuestionsByRoundMock.mockResolvedValue([
-      makeQuestion({ id: 'q-hard', title: 'Hard', points: 50 }),
       makeQuestion({ id: 'q-easy', title: 'Easy', points: 10 }),
+      makeQuestion({ id: 'q-hard', title: 'Hard', points: 50 }),
     ]);
 
     renderWithProviders(<RoundEntry roundId={2} />);

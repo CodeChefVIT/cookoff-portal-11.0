@@ -9,14 +9,15 @@ import {
   isNotPurchasedError,
   isNotQualifiedError,
   isRoundNotRunningError,
+  isTryLaterError,
   testcaseKeys,
 } from '@/api';
 import { useRoundStore } from '@/stores';
+import type { Question } from '@/types';
 
-import { useCodeRun, useCodeSubmission, useRoundExpired } from '../hooks';
+import { useCodeRun, useCodeSubmission, useRoundExpired, useTimePassed } from '../hooks';
 import { ProblemPanel } from '../ProblemPanel';
 import { getRoundConfig } from '../round-config';
-import type { Question } from '../types';
 import { VerdictBox } from '../VerdictBox';
 import { EditorToolbar, LanguageSelector, MonacoWrapper } from './code-editor';
 import { CustomInputPanel } from './CustomInputPanel';
@@ -76,6 +77,19 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
     submission.result.data.passed > 0;
   const resultOpen = allPassed && !submission.verdictDismissed;
 
+  // A 429 or a full judge (503) says how long to wait; Run and Submit stay
+  // disabled until then instead of letting the player hammer the button.
+  const [cooldownUntil, setCooldownUntil] = useState<number | null>(null);
+  const cooledDown = useTimePassed(cooldownUntil);
+  const coolingDown = cooldownUntil !== null && !cooledDown;
+  function handleTryLater(error: unknown): boolean {
+    if (!isTryLaterError(error)) return false;
+    const seconds = error.retryAfter ?? 3;
+    setCooldownUntil(Date.now() + seconds * 1000);
+    toast.error(`${error.message}. Try again in ${seconds}s.`);
+    return true;
+  }
+
   function handleRun() {
     if (!sourceCode.trim()) {
       toast.error('Write some code before running.');
@@ -90,6 +104,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
         },
         {
           onError: (error: unknown) => {
+            if (handleTryLater(error)) return;
             toast.error(
               error instanceof Error ? error.message : 'Failed to run code with custom input'
             );
@@ -107,6 +122,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
         },
         {
           onError: (error: unknown) => {
+            if (handleTryLater(error)) return;
             toast.error(error instanceof Error ? error.message : 'Failed to run code');
           },
         }
@@ -141,6 +157,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
       {
         onSuccess: () => onPurchased?.(),
         onError: error => {
+          if (handleTryLater(error)) return;
           if (isRoundNotRunningError(error)) {
             setSubmitFailed(true);
             setSubmitError(
@@ -162,6 +179,7 @@ export function CodeEngine({ question, roundId, onNotPurchased, onPurchased }: C
 
   const isSubmitDisabled =
     isExpired ||
+    coolingDown ||
     !sourceCode.trim() ||
     submission.submit.isPending ||
     submission.result.isFetching ||

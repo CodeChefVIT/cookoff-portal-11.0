@@ -4,9 +4,9 @@ import type { CSSProperties } from 'react';
 import Image from 'next/image';
 
 import { cn } from '@/lib/utils';
+import type { Question } from '@/types';
 
 import { useQuestionTabNav } from './hooks';
-import type { Question } from './types';
 
 export interface QuestionTabsProps {
   roundId: number;

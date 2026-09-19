@@ -33,11 +33,11 @@ export function SessionGuard({ children }: { children: ReactNode }) {
 
   // Persisted drafts are keyed by question only, so a shared machine would hand
   // the next contestant the previous one's code. Claim them for whoever is
-  // signed in now.
+  // signed in now — during render, before any child that reads a draft mounts,
+  // so the editor can never show (and re-save) the previous account's code.
+  // `claimDraftsFor` is idempotent: a no-op once this account owns the drafts.
   const userId = session.data?.userId;
-  useEffect(() => {
-    if (userId) claimDraftsFor(userId);
-  }, [userId]);
+  if (userId) claimDraftsFor(userId);
 
   if (session.isLoading) {
     return <LoadingScreen />;
