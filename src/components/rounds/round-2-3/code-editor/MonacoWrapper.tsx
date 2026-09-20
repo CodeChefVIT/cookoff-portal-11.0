@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type ClipboardEvent as ReactClipboardEvent } from 'react';
+import { useState } from 'react';
 import Editor, { type BeforeMount, type OnMount } from '@monaco-editor/react';
 import { toast } from 'sonner';
 
@@ -94,9 +94,11 @@ export function MonacoWrapper({
     };
     container.addEventListener('copy', recordCopy);
     container.addEventListener('cut', recordCopy);
+    container.addEventListener('paste', guardPaste);
     editor.onDidDispose(() => {
       container.removeEventListener('copy', recordCopy);
       container.removeEventListener('cut', recordCopy);
+      container.removeEventListener('paste', guardPaste);
     });
 
     // Keyboard copy/cut, recorded straight from the model in case the copy
@@ -126,8 +128,8 @@ export function MonacoWrapper({
     });
   };
 
-  const guardPaste = (event: ReactClipboardEvent<HTMLDivElement>) => {
-    if (isInternalPaste(event.clipboardData.getData('text/plain'))) return;
+  const guardPaste = (event: ClipboardEvent) => {
+    if (isInternalPaste(event.clipboardData?.getData('text/plain') ?? '')) return;
     event.preventDefault();
     event.stopPropagation();
     warnExternalPaste();
@@ -142,7 +144,6 @@ export function MonacoWrapper({
             language={language}
             value={value}
             onChange={next => onChange(next ?? '')}
-            onPaste={guardPaste}
             beforeMount={defineTheme}
             onMount={handleMount}
             theme={THEME}
