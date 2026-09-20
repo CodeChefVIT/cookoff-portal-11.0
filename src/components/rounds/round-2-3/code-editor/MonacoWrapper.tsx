@@ -94,9 +94,11 @@ export function MonacoWrapper({
     };
     container.addEventListener('copy', recordCopy);
     container.addEventListener('cut', recordCopy);
+    container.addEventListener('paste', guardPaste);
     editor.onDidDispose(() => {
       container.removeEventListener('copy', recordCopy);
       container.removeEventListener('cut', recordCopy);
+      container.removeEventListener('paste', guardPaste);
     });
 
     // Keyboard copy/cut, recorded straight from the model in case the copy
@@ -114,28 +116,24 @@ export function MonacoWrapper({
       rememberInternalCopy(text);
     });
 
-    // Temporarily disabled: re-enable the paste guard when the restriction is
-    // needed again.
-    // editor.onDidPaste(event => {
-    //   const model = editor.getModel();
-    //   if (!model || isInternalPaste(model.getValueInRange(event.range))) return;
-    //   editor.trigger('paste-guard', 'undo', null);
-    //   warnExternalPaste();
-    // });
+    editor.onDidPaste(event => {
+      const model = editor.getModel();
+      if (!model || isInternalPaste(model.getValueInRange(event.range))) return;
+      editor.trigger('paste-guard', 'undo', null);
+      warnExternalPaste();
+    });
 
     editor.onDidChangeCursorPosition(event => {
       setPosition({ line: event.position.lineNumber, column: event.position.column });
     });
   };
 
-  // Temporarily disabled: re-enable the paste guard when the restriction is
-  // needed again.
-  // const guardPaste = (event: ClipboardEvent) => {
-  //   if (isInternalPaste(event.clipboardData?.getData('text/plain') ?? '')) return;
-  //   event.preventDefault();
-  //   event.stopPropagation();
-  //   warnExternalPaste();
-  // };
+  const guardPaste = (event: ClipboardEvent) => {
+    if (isInternalPaste(event.clipboardData?.getData('text/plain') ?? '')) return;
+    event.preventDefault();
+    event.stopPropagation();
+    warnExternalPaste();
+  };
 
   return (
     <div className={cn('flex min-h-0 flex-col', className)}>
