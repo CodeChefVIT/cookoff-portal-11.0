@@ -114,27 +114,24 @@ export function MonacoWrapper({
       rememberInternalCopy(text);
     });
 
-    // Temporarily disabled: re-enable the paste guard when the restriction is
-    // needed again.
-    // editor.onDidPaste(event => {
-    //   const model = editor.getModel();
-    //   if (!model || isInternalPaste(model.getValueInRange(event.range))) return;
-    //   editor.trigger('paste-guard', 'undo', null);
-    //   warnExternalPaste();
-    // });
+    editor.onDidPaste(event => {
+      const model = editor.getModel();
+      if (!model || isInternalPaste(model.getValueInRange(event.range))) return;
+      editor.trigger('paste-guard', 'undo', null);
+      warnExternalPaste();
+    });
 
     editor.onDidChangeCursorPosition(event => {
       setPosition({ line: event.position.lineNumber, column: event.position.column });
     });
   };
 
-  // Temporarily disabled: capture guard for external paste attempts.
-  // const guardPaste = (event: ReactClipboardEvent<HTMLDivElement>) => {
-  //   if (isInternalPaste(event.clipboardData.getData('text/plain'))) return;
-  //   event.preventDefault();
-  //   event.stopPropagation();
-  //   warnExternalPaste();
-  // };
+  const guardPaste = (event: ReactClipboardEvent<HTMLDivElement>) => {
+    if (isInternalPaste(event.clipboardData.getData('text/plain'))) return;
+    event.preventDefault();
+    event.stopPropagation();
+    warnExternalPaste();
+  };
 
   return (
     <div className={cn('flex min-h-0 flex-col', className)}>
@@ -145,6 +142,7 @@ export function MonacoWrapper({
             language={language}
             value={value}
             onChange={next => onChange(next ?? '')}
+            onPaste={guardPaste}
             beforeMount={defineTheme}
             onMount={handleMount}
             theme={THEME}
