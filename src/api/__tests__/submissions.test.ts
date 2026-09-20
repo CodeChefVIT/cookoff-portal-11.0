@@ -29,6 +29,17 @@ describe('submissionResultSchema', () => {
     expect(parsed.testcases.map(testcase => testcase.testcaseId)).toEqual(['tc-1', 'tc-2']);
   });
 
+  it('maps testcase output from wire into stdout', () => {
+    const verdictWithOutput = {
+      ...judgedVerdict,
+      testcases: [
+        { id: 'tc-1', runtime: 0.011, memory: 2048, status: 'Success', description: '', output: '42\n' },
+      ],
+    };
+    const parsed = submissionResultSchema.parse(verdictWithOutput);
+    expect(parsed.testcases[0].stdout).toBe('42\n');
+  });
+
   it('maps the submission’s wire `id` onto `submissionId`', () => {
     expect(submissionResultSchema.parse(judgedVerdict)).toMatchObject({
       submissionId: 'sub-1',

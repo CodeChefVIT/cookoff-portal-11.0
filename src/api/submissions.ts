@@ -51,19 +51,37 @@ const TESTCASE_RESULT_FIELDS = [
   'status',
   'description',
   'stdout',
+  'output',
 ] as const;
 
-const testcaseResultShape = z.object({
-  testcaseId: z.string(),
-  runtime: z.coerce.number().optional(),
-  memory: z.coerce.number().optional(),
-  status: z.string(),
-  description: z.string().default(''),
-  /** What the participant's program printed. Only `/runcode` returns it today. */
-  stdout: z.string().nullable().optional(),
-});
+export interface TestcaseResult {
+  testcaseId: string;
+  runtime?: number;
+  memory?: number;
+  status: string;
+  description?: string;
+  stdout?: string | null;
+}
 
-export type TestcaseResult = z.infer<typeof testcaseResultShape>;
+const testcaseResultShape: z.ZodType<TestcaseResult> = z
+  .object({
+    testcaseId: z.string(),
+    runtime: z.coerce.number().optional(),
+    memory: z.coerce.number().optional(),
+    status: z.string(),
+    description: z.string().default(''),
+    /** What the participant's program printed. Normalized from stdout or output. */
+    stdout: z.string().nullable().optional(),
+    output: z.string().nullable().optional(),
+  })
+  .transform(val => ({
+    testcaseId: val.testcaseId,
+    runtime: val.runtime,
+    memory: val.memory,
+    status: val.status,
+    description: val.description,
+    stdout: val.stdout ?? val.output ?? null,
+  }));
 
 export function isPassed(result: Pick<TestcaseResult, 'status'>): boolean {
   return result.status === PASSED_STATUS;
@@ -199,7 +217,7 @@ export async function runCode(
       memory: r.memory ?? undefined,
       status: isPass ? PASSED_STATUS : r.status.description || 'Failed',
       description: outputDesc,
-      stdout: r.stdout ?? null,
+      stdout: r.stdout ?? (r.compile_output || r.stderr || null),
     };
   });
 
@@ -209,9 +227,11 @@ export async function runCode(
     passed,
     failed,
     submissionTime: new Date().toISOString(),
-    description: allPassed
-      ? 'All sample testcases passed'
-      : `${passed}/${results.length} testcases passed`,
+    description: results.find(r => r.compile_output)?.compile_output
+      ? (results.find(r => r.compile_output)?.compile_output as string)
+      : allPassed
+        ? 'All sample testcases passed'
+        : `${passed}/${results.length} testcases passed`,
     testcases,
   };
 }

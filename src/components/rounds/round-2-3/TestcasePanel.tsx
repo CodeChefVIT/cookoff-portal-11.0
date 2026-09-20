@@ -158,16 +158,26 @@ export function TestcasePanel({
       <p className="mt-[6px] ml-[21px] font-inria text-[14px] leading-[17px] font-bold text-white">
         Compiler Message
       </p>
-      <div className="mt-[8.42px] mr-[20px] ml-[20px] h-[33.585px] rounded-[6px] bg-code-inset pt-[3.63px] pl-[6px]">
+      <div
+        className={cn(
+          'mt-[8.42px] mr-[20px] ml-[20px] rounded-[6px] bg-code-inset pt-[3.63px] pr-[12px] pl-[6px]',
+          compiledOk ? 'h-[33.585px]' : 'min-h-[33.585px] max-h-[140px] overflow-y-auto pb-[6px]'
+        )}
+      >
         <p
           title={compiledOk ? undefined : verdict.description}
           className={cn(
-            'truncate font-sans text-[13px] leading-[25.075px] font-bold',
-            compiledOk ? 'text-code-passed-text' : 'text-code-fail'
+            'font-sans text-[13px] leading-[25.075px] font-bold',
+            compiledOk ? 'truncate text-code-passed-text' : 'text-code-fail'
           )}
         >
           {compiledOk ? 'Compilation Successful !!' : 'Compilation Failed !!'}
         </p>
+        {!compiledOk && verdict.description && !verdict.description.includes('Test Cases Passed') && (
+          <pre className="mt-1 font-sans text-[12px] leading-[18px] text-code-fail break-words whitespace-pre-wrap">
+            {verdict.description}
+          </pre>
+        )}
       </div>
 
       {active && <TestcaseCase testcase={active} result={resultById.get(active.id)} />}
