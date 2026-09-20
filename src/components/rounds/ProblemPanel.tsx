@@ -23,8 +23,8 @@ const BODY_TEXT = 'font-sans text-base leading-[30px] text-white';
 const panelVariants = cva('h-full min-h-0 text-card-foreground', {
   variants: {
     variant: {
-      default: 'overflow-y-auto rounded-2xl border border-border bg-card p-5',
-      code: 'overflow-y-auto rounded-[10px] bg-code-panel',
+      default: 'short-scrollbar overflow-y-auto rounded-2xl border border-border bg-card p-5',
+      code: 'short-scrollbar overflow-y-auto rounded-[10px] bg-code-panel',
     },
   },
   defaultVariants: { variant: 'default' },
@@ -147,6 +147,7 @@ export function ProblemPanel({
       explanation: question.explanation[i] ?? '',
     })
   );
+  const showSamples = question.round !== 1 && samples.length > 0;
 
   return (
     // Deters copying the statement out (e.g. into an AI tool): text can't be
@@ -200,7 +201,7 @@ export function ProblemPanel({
           </section>
         )}
 
-        {samples.length > 0 && (
+        {showSamples && (
           <section aria-label="Samples" className={SECTION}>
             <h3 className={sectionTitleVariants({ variant })}>
               {samples.length === 1 ? 'Sample' : 'Samples'}

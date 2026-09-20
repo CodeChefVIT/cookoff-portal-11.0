@@ -331,6 +331,34 @@
   }
 }
 
+@layer utilities {
+  .short-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(189 133 123 / 0.8) transparent;
+  }
+
+  .short-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .short-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .short-scrollbar::-webkit-scrollbar-thumb {
+    min-height: 44px;
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background: rgb(189 133 123 / 0.8);
+    background-clip: padding-box;
+  }
+
+  .short-scrollbar::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
 /* Loading portal (src/components/ui/loading-screen.tsx) — concentric ring spin + hat bob. */
 @keyframes portal-spin {
   to {
